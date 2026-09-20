@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+*/node_modules/
+*/*/node_modules/
+
+# OS and system files
+.DS_Store
+Thumbs.db
+
+# Large backup or raw files exceeding GitHub's 100MB limit
+*.bak
+*.obj
+
+# Local build logs and temp files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Playground / Site distribution (built by CI for GitHub Pages)
+examples/dist/
+

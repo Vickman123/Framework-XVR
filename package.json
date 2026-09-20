@@ -1,0 +1,47 @@
+{
+  "name": "vxr",
+  "version": "0.1.0",
+  "description": "VXR: High-level interactive WebXR and 3D simulation framework for Three.js",
+  "type": "module",
+  "main": "./VXR/dist/index.js",
+  "module": "./VXR/dist/index.js",
+  "types": "./VXR/dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./VXR/dist/index.d.ts",
+      "import": "./VXR/dist/index.js",
+      "default": "./VXR/dist/index.js"
+    }
+  },
+  "workspaces": [
+    "packages/*",
+    "examples"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=vxr-playground",
+    "build:core": "npm run build --workspace=@vxr/core",
+    "build:playground": "npm run build --workspace=vxr-playground",
+    "build:vxr": "cd VXR && npm run build && npm pack",
+    "build": "npm run build:core && npm run build:vxr && npm run build:playground",
+    "build:pages": "npm run build && mkdir -p examples/dist/projects/visor-xr examples/dist/projects/virus-purge examples/dist/projects/simulador-pcpuma examples/dist/docs && cp -R \"PCPuma Visor arquitectonico/dist/\"* examples/dist/projects/visor-xr/ 2>/dev/null || true && cp -R \"shooter simulator/docs/\"* examples/dist/projects/virus-purge/ 2>/dev/null || true && cp -R \"pcpum<a simulador/docs/\"* examples/dist/projects/simulador-pcpuma/ 2>/dev/null || true && cp -R docs/* examples/dist/docs/ 2>/dev/null || true"
+  },
+  "dependencies": {
+    "three": ">=0.170.0"
+  },
+  "peerDependencies": {
+    "three": ">=0.170.0"
+  },
+  "keywords": [
+    "webxr",
+    "threejs",
+    "three",
+    "vr",
+    "meta-quest",
+    "framework",
+    "spatial-computing",
+    "3d",
+    "typescript"
+  ],
+  "author": "VXR Framework",
+  "license": "MIT"
+}
