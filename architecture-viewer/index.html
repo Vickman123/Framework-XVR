@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>VXR — Architecture / 3D Model Viewer</title>
+  <style>
+    /* Top Left Header */
+    .arch-header {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      padding: 16px 20px;
+      max-width: 320px;
+    }
+    h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+    p {
+      font-size: 13px;
+      color: var(--vxr-text-secondary);
+      line-height: 1.4;
+    }
+
+    /* Right Sidebar (CAD / BIM Inspector) */
+    .arch-sidebar {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      bottom: 20px;
+      width: 330px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--vxr-accent-bright);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Object Inspector Card */
+    .inspector-card {
+      background: rgba(30, 41, 59, 0.4);
+      border: 1px solid var(--vxr-border);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 12px;
+    }
+
+    .inspector-empty {
+      color: var(--vxr-text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 16px 8px;
+    }
+
+    /* Preset Buttons Group */
+    .btn-group {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .btn-toggle {
+      width: 100%;
+      justify-content: flex-start;
+      gap: 8px;
+    }
+
+    .toggle-active {
+      border-color: var(--vxr-accent-bright);
+      background: rgba(14, 165, 233, 0.2);
+      color: #ffffff;
+    }
+  </style>
+  <script type="module" crossorigin src="../assets/architectureViewer-D7VeNExP.js"></script>
+  <link rel="modulepreload" crossorigin href="../assets/XRApp-D-Vc0-Jl.js">
+  <link rel="stylesheet" crossorigin href="../assets/XRApp-DqCYpvMI.css">
+</head>
+<body>
+  <!-- 3D Canvas -->
+  <div id="app" class="vxr-canvas-container"></div>
+
+  <!-- Header Panel -->
+  <div class="vxr-panel vxr-panel-accent arch-header">
+    <a href="/" class="vxr-back-link" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: #38bdf8; margin-bottom: 8px;">🏠 ← Volver al Catálogo</a>
+    <div class="vxr-badge" style="margin-bottom: 8px;">
+      <span class="vxr-dot"></span>
+      AEC & BIM Inspection
+    </div>
+    <h1>Architecture Viewer</h1>
+    <p>Haz clic en cualquier elemento del edificio para inspeccionar sus propiedades geométricas y estructurales.</p>
+  </div>
+
+  <!-- Inspector & Tools Sidebar -->
+  <aside class="vxr-panel arch-sidebar">
+    <!-- 1. Inspector de Objeto Seleccionado -->
+    <div>
+      <div class="section-title">
+        <span>🔍</span> Inspector de Objeto
+      </div>
+      <div id="inspector-card" class="inspector-card">
+        <div id="inspector-empty" class="inspector-empty">
+          Ningún componente seleccionado.<br>Haz clic en el modelo 3D.
+        </div>
+        <div id="inspector-details" style="display: none;">
+          <div class="vxr-metric-row">
+            <span class="vxr-metric-label">Nombre:</span>
+            <span id="obj-name" class="vxr-metric-val" style="max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">-</span>
+          </div>
+          <div class="vxr-metric-row">
+            <span class="vxr-metric-label">Geometría:</span>
+            <span id="obj-geom" class="vxr-metric-val">-</span>
+          </div>
+          <div class="vxr-metric-row">
+            <span class="vxr-metric-label">Triángulos:</span>
+            <span id="obj-tris" class="vxr-metric-val">-</span>
+          </div>
+          <div class="vxr-metric-row">
+            <span class="vxr-metric-label">Vértices:</span>
+            <span id="obj-verts" class="vxr-metric-val">-</span>
+          </div>
+          <div class="vxr-metric-row">
+            <span class="vxr-metric-label">Material:</span>
+            <span id="obj-mat" class="vxr-metric-val">-</span>
+          </div>
+          <button id="btn-deselect" class="vxr-btn" style="width: 100%; margin-top: 10px; padding: 5px 10px;">
+            ✕ Deseleccionar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Visibilidad y Capas -->
+    <div>
+      <div class="section-title">
+        <span>👁️</span> Visibilidad y Capas
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button id="btn-toggle-grid" class="vxr-btn btn-toggle toggle-active">
+          <span>📐</span> Rejilla de Referencia
+        </button>
+        <button id="btn-toggle-model" class="vxr-btn btn-toggle toggle-active">
+          <span>🏢</span> Modelo Arquitectónico
+        </button>
+        <button id="btn-reset-view" class="vxr-btn btn-toggle">
+          <span>🔄</span> Restablecer Encuadre
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. Iluminación y Ambiente -->
+    <div>
+      <div class="section-title">
+        <span>☀️</span> Ambiente e Iluminación
+      </div>
+      <div class="btn-group">
+        <button id="env-studio" class="vxr-btn vxr-btn-primary" style="font-size: 11px; padding: 6px 4px;">Studio</button>
+        <button id="env-daylight" class="vxr-btn" style="font-size: 11px; padding: 6px 4px;">Daylight</button>
+        <button id="env-dark" class="vxr-btn" style="font-size: 11px; padding: 6px 4px;">Dark</button>
+      </div>
+    </div>
+
+    <!-- 4. Resumen Global del Edificio -->
+    <div style="margin-top: auto; border-top: 1px solid rgba(148, 163, 184, 0.15); padding-top: 12px;">
+      <div class="section-title">
+        <span>📊</span> Métricas Globales
+      </div>
+      <div class="vxr-metric-row">
+        <span class="vxr-metric-label">Volumen:</span>
+        <span id="meta-dim" class="vxr-metric-val">Cargando...</span>
+      </div>
+      <div class="vxr-metric-row">
+        <span class="vxr-metric-label">Mallas Totales:</span>
+        <span id="meta-meshes" class="vxr-metric-val">-</span>
+      </div>
+      <div class="vxr-metric-row">
+        <span class="vxr-metric-label">Polígonos Totales:</span>
+        <span id="meta-tris" class="vxr-metric-val">-</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Navigation Guide -->
+  <div class="vxr-nav-tip">
+    🖱️ Clic en pieza: Inspeccionar • Arrastrar: Orbitar
+  </div>
+
+</body>
+</html>

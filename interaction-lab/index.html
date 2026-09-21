@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>VXR — XR Interaction Lab</title>
+  <style>
+    /* Top Left Header */
+    .lab-header {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      padding: 16px 20px;
+      max-width: 320px;
+    }
+    h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+    p {
+      font-size: 13px;
+      color: var(--vxr-text-secondary);
+      line-height: 1.4;
+    }
+
+    /* Top Right Contextual HUD */
+    .lab-hud {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 310px;
+      padding: 18px;
+    }
+
+    .hud-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--vxr-accent-bright);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Event Log Box */
+    .event-log {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .log-list {
+      list-style: none;
+      font-family: var(--vxr-font-mono);
+      font-size: 11px;
+      color: var(--vxr-text-secondary);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      max-height: 110px;
+      overflow-y: hidden;
+    }
+
+    .log-item {
+      display: flex;
+      gap: 6px;
+      line-height: 1.3;
+    }
+
+    .log-time {
+      color: var(--vxr-text-muted);
+    }
+
+    .log-msg {
+      color: var(--vxr-accent-bright);
+    }
+  </style>
+  <script type="module" crossorigin src="../assets/interactionLab-Bu4WPY8e.js"></script>
+  <link rel="modulepreload" crossorigin href="../assets/XRApp-D-Vc0-Jl.js">
+  <link rel="stylesheet" crossorigin href="../assets/XRApp-DqCYpvMI.css">
+</head>
+<body>
+  <!-- 3D Canvas -->
+  <div id="app" class="vxr-canvas-container"></div>
+
+  <!-- Header Panel -->
+  <div class="vxr-panel vxr-panel-accent lab-header">
+    <a href="/" class="vxr-back-link" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: #38bdf8; margin-bottom: 8px;">🏠 ← Volver al Catálogo</a>
+    <div class="vxr-badge" style="margin-bottom: 8px;">
+      <span class="vxr-dot"></span>
+      Spatial Interaction Lab
+    </div>
+    <h1>XR Interaction Lab</h1>
+    <p>Apunta y haz clic sobre los instrumentos 3D para accionar estados, rotaciones y señales lumínicas.</p>
+  </div>
+
+  <!-- Contextual HUD Panel -->
+  <div class="vxr-panel lab-hud">
+    <div class="hud-title">
+      <span>📡 Telemetría Espacial</span>
+      <span id="hud-mode" class="vxr-badge" style="font-size: 9px; padding: 2px 6px;">Desktop</span>
+    </div>
+
+    <div class="vxr-metric-row">
+      <span class="vxr-metric-label">Objeto enfocado:</span>
+      <span id="hud-target" class="vxr-metric-val">Ninguno</span>
+    </div>
+    <div class="vxr-metric-row">
+      <span class="vxr-metric-label">Distancia al rayo:</span>
+      <span id="hud-dist" class="vxr-metric-val">-</span>
+    </div>
+    <div class="vxr-metric-row">
+      <span class="vxr-metric-label">Estado actual:</span>
+      <span id="hud-state" class="vxr-metric-val">-</span>
+    </div>
+
+    <!-- Live Event Log -->
+    <div class="event-log">
+      <div style="font-size: 10px; font-weight: 700; color: var(--vxr-text-muted); text-transform: uppercase; margin-bottom: 6px;">
+        Registro de Interacciones
+      </div>
+      <ul id="log-list" class="log-list">
+        <li class="log-item">
+          <span class="log-time">[00:00]</span>
+          <span class="log-msg">Laboratorio listo.</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Navigation Guide -->
+  <div class="vxr-nav-tip">
+    🎯 Desktop: Clic en objetos • VR: Apuntar con láser y apretar gatillo
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>VXR — Scenario & Room Builder</title>
+  <style>
+    /* Overlay Header */
+    .overlay-header {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      padding: 16px 20px;
+      max-width: 360px;
+      z-index: 20;
+    }
+    h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+    p {
+      font-size: 13px;
+      color: var(--vxr-text-secondary);
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+
+    /* Controls & Room Selector Panel */
+    .control-panel {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      padding: 16px 20px;
+      min-width: 270px;
+      max-width: 320px;
+      z-index: 20;
+    }
+    .panel-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--vxr-text-primary);
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+    }
+    .ctrl-group {
+      margin-bottom: 10px;
+    }
+    .ctrl-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+      display: block;
+    }
+    .ctrl-select, .ctrl-btn-action {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #f8fafc;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .ctrl-select:hover, .ctrl-btn-action:hover {
+      border-color: #38bdf8;
+      background: rgba(30, 41, 59, 0.9);
+    }
+
+    /* Navigation Guide Badge */
+    .nav-guide {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      backdrop-filter: blur(8px);
+      padding: 8px 18px;
+      border-radius: 9999px;
+      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: 500;
+      pointer-events: none;
+      z-index: 20;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Mobile Joystick Zone */
+    #mobile-joystick {
+      position: fixed;
+      bottom: 30px;
+      left: 30px;
+      width: 110px;
+      height: 110px;
+      background: rgba(15, 23, 42, 0.5);
+      border: 2px solid rgba(56, 189, 248, 0.3);
+      border-radius: 50%;
+      touch-action: none;
+      z-index: 30;
+      display: none; /* Shown on touch screens */
+    }
+    #joystick-knob {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 44px;
+      height: 44px;
+      background: radial-gradient(circle, #38bdf8 0%, #0284c7 100%);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+      pointer-events: none;
+    }
+
+    /* Code Modal */
+    #code-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-content {
+      background: #0b1120;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: 12px;
+      max-width: 680px;
+      width: 100%;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #38bdf8;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .modal-close:hover {
+      color: #ffffff;
+    }
+    .modal-body {
+      padding: 16px 20px;
+      overflow-y: auto;
+    }
+    pre {
+      margin: 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #a5f3fc;
+      background: #030712;
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      white-space: pre-wrap;
+    }
+
+    @media (max-width: 768px) {
+      .overlay-header {
+        max-width: calc(100vw - 32px);
+      }
+      .control-panel {
+        top: auto;
+        bottom: 150px;
+        right: 16px;
+        min-width: 160px;
+      }
+      .nav-guide {
+        display: none;
+      }
+    }
+  </style>
+  <script type="module" crossorigin src="../assets/scenarioBuilder-DrAvklv8.js"></script>
+  <link rel="modulepreload" crossorigin href="../assets/XRApp-D-Vc0-Jl.js">
+  <link rel="stylesheet" crossorigin href="../assets/XRApp-DqCYpvMI.css">
+</head>
+<body>
+  <!-- 3D Canvas Container -->
+  <div id="app" class="vxr-canvas-container"></div>
+
+  <!-- Header Overlay -->
+  <div class="vxr-panel vxr-panel-accent overlay-header">
+    <a href="../" class="vxr-back-link" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: #38bdf8; margin-bottom: 8px;">🏠 ← Volver al Catálogo</a>
+    <div class="vxr-badge" style="margin-bottom: 8px;">
+      <span class="vxr-dot"></span>
+      VXR v0.3.0 • Módulos Interdisciplinarios & Escenarios
+    </div>
+    <h1>Museo Virtual & Práctica 3D</h1>
+    <p>Escenarios modulares con pedestales interactivos, pantallas 3D, audio procedural nativo, checklist guiado y Drag & Drop sin servidor.</p>
+    
+    <div style="display: flex; gap: 8px;">
+      <button id="btn-toggle-cam" class="vxr-btn vxr-btn-primary" style="flex: 1;">
+        🚶 Primera Persona
+      </button>
+      <button id="btn-show-code" class="vxr-btn" style="flex: 1; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(56, 189, 248, 0.4); color: #fff;">
+        { } Ver Código
+      </button>
+    </div>
+  </div>
+
+  <!-- Interactive Controls Panel -->
+  <div class="vxr-panel control-panel">
+    <div class="panel-title">Navegación & Audio</div>
+    
+    <div class="ctrl-group">
+      <label class="ctrl-label" for="select-room">Teletransporte a Sala</label>
+      <select id="select-room" class="ctrl-select">
+        <option value="lobby">🏛️ Sala 01: Galería / Lobby</option>
+        <option value="lab">🧪 Sala 02: Laboratorio Sci-Fi</option>
+        <option value="office">💼 Sala 03: Sala Ejecutiva</option>
+      </select>
+    </div>
+
+    <div class="ctrl-group">
+      <label class="ctrl-label" for="select-theme">Tema de Sala Actual</label>
+      <select id="select-theme" class="ctrl-select">
+        <option value="gallery">Gallery (Blanco & Madera)</option>
+        <option value="scifi">Sci-Fi (Cyberpunk Neón)</option>
+        <option value="office">Office (Gris Corporativo)</option>
+        <option value="cozy">Cozy (Madera Cálida)</option>
+        <option value="minimal">Minimal (Grafito & Contraste)</option>
+      </select>
+    </div>
+
+    <div class="ctrl-group" style="margin-top: 10px;">
+      <button id="btn-toggle-sound" class="ctrl-btn-action" style="background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.5); color: #38bdf8;">
+        🔊 Sonido Procedural: ON
+      </button>
+    </div>
+
+    <div class="ctrl-group" style="margin-top: 8px;">
+      <button id="btn-add-room" class="ctrl-btn-action">
+        ➕ Añadir 4ª Sala en Tiempo Real
+      </button>
+    </div>
+
+    <div class="vxr-metric-row" style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(148, 163, 184, 0.1);">
+      <span class="vxr-metric-label">Salas activas:</span>
+      <span id="metric-rooms-count" class="vxr-metric-val">3</span>
+    </div>
+    <div class="vxr-metric-row">
+      <span class="vxr-metric-label">Exhibidores 3D:</span>
+      <span class="vxr-metric-val" style="color: #38bdf8;">3 Activos</span>
+    </div>
+    <div class="vxr-metric-row">
+      <span class="vxr-metric-label">Suelta de 3D (.glb):</span>
+      <span class="vxr-metric-val" style="color: #4ade80;">Habilitada</span>
+    </div>
+  </div>
+
+  <!-- Mobile Joystick Element -->
+  <div id="mobile-joystick">
+    <div id="joystick-knob"></div>
+  </div>
+
+  <!-- Navigation Guide Bottom Badge -->
+  <div class="nav-guide">
+    <span>🎮 <b>Modo Paseo:</b> Teclas <code>W, A, S, D</code> + Ratón para mirar</span>
+    <span>•</span>
+    <span>🛸 <b>Modo Drone:</b> Clic y arrastrar para orbitar</span>
+  </div>
+
+  <!-- Modal for JSON & Code -->
+  <div id="code-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Código TypeScript & Configuración JSON</div>
+        <button id="btn-close-modal" class="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: #94a3b8; font-size: 13px; margin-bottom: 10px;">
+          Cualquier persona puede crear salas como esta con solo 1 llamada de TypeScript o un archivo <code>escenario.json</code>:
+        </p>
+        <pre id="code-display"></pre>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>VXR — Basic Viewer</title>
+  <style>
+    /* Overlay Header */
+    .overlay-header {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      padding: 16px 20px;
+      max-width: 340px;
+    }
+    h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+    p {
+      font-size: 13px;
+      color: var(--vxr-text-secondary);
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+    /* Metrics HUD */
+    .metrics-panel {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 16px 20px;
+      min-width: 240px;
+    }
+    .panel-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--vxr-text-primary);
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+    }
+  </style>
+  <script type="module" crossorigin src="../assets/basicViewer-BULWP_1E.js"></script>
+  <link rel="modulepreload" crossorigin href="../assets/XRApp-D-Vc0-Jl.js">
+  <link rel="stylesheet" crossorigin href="../assets/XRApp-DqCYpvMI.css">
+</head>
+<body>
+  <!-- 3D Canvas Container -->
+  <div id="app" class="vxr-canvas-container"></div>
+
+  <!-- Header Overlay -->
+  <div class="vxr-panel vxr-panel-accent overlay-header">
+    <a href="/" class="vxr-back-link" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: #38bdf8; margin-bottom: 8px;">🏠 ← Volver al Catálogo</a>
+    <div class="vxr-badge" style="margin-bottom: 8px;">
+      <span class="vxr-dot"></span>
+      Basic Viewer
+    </div>
+    <h1>Explorador Fundamental</h1>
+    <p>Carga de modelo GLTF/GLB en 3 líneas con auto-grounding y controles de órbita.</p>
+    <button id="btn-reset-camera" class="vxr-btn vxr-btn-primary" style="width: 100%;">
+      🔄 Reset de Cámara
+    </button>
+  </div>
+
+  <!-- Model Metrics Panel -->
+  <div class="vxr-panel metrics-panel">
+    <div class="panel-title">Métricas del Modelo</div>
+    <div class="vxr-metric-row">
+      <span class="vxr-metric-label">Dimensiones:</span>
+      <span id="metric-dim" class="vxr-metric-val">Cargando...</span>
+    </div>
+    <div class="vxr-metric-row">
+      <span class="vxr-metric-label">Mallas:</span>
+      <span id="metric-meshes" class="vxr-metric-val">-</span>
+    </div>
+    <div class="vxr-metric-row">
+      <span class="vxr-metric-label">Triángulos:</span>
+      <span id="metric-tris" class="vxr-metric-val">-</span>
+    </div>
+    <div class="vxr-metric-row">
+      <span class="vxr-metric-label">Vértices:</span>
+      <span id="metric-verts" class="vxr-metric-val">-</span>
+    </div>
+  </div>
+
+  <!-- Navigation Guide -->
+  <div class="vxr-nav-tip">
+    🖱️ Clic izq: Rotar • Rueda: Zoom • Clic der: Desplazar
+  </div>
+
+</body>
+</html>
