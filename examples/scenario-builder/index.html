@@ -212,24 +212,24 @@
     <a href="../" class="vxr-back-link" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: #38bdf8; margin-bottom: 8px;">🏠 ← Volver al Catálogo</a>
     <div class="vxr-badge" style="margin-bottom: 8px;">
       <span class="vxr-dot"></span>
-      VXR v0.2.0 • Scenario & Room Builder
+      VXR v0.3.0 • Módulos Interdisciplinarios & Escenarios
     </div>
-    <h1>Creador de Escenarios & Salas</h1>
-    <p>Salas 3D procedimentales con vanos de puertas calculados, pasillos, colisiones de pared y carga JSON.</p>
+    <h1>Museo Virtual & Práctica 3D</h1>
+    <p>Escenarios modulares con pedestales interactivos, pantallas 3D, audio procedural nativo, checklist guiado y Drag & Drop sin servidor.</p>
     
     <div style="display: flex; gap: 8px;">
       <button id="btn-toggle-cam" class="vxr-btn vxr-btn-primary" style="flex: 1;">
         🚶 Primera Persona
       </button>
       <button id="btn-show-code" class="vxr-btn" style="flex: 1; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(56, 189, 248, 0.4); color: #fff;">
-        { } Ver JSON
+        { } Ver Código
       </button>
     </div>
   </div>
 
   <!-- Interactive Controls Panel -->
   <div class="vxr-panel control-panel">
-    <div class="panel-title">Navegación & Estilos</div>
+    <div class="panel-title">Navegación & Audio</div>
     
     <div class="ctrl-group">
       <label class="ctrl-label" for="select-room">Teletransporte a Sala</label>
@@ -251,7 +251,13 @@
       </select>
     </div>
 
-    <div class="ctrl-group" style="margin-top: 14px;">
+    <div class="ctrl-group" style="margin-top: 10px;">
+      <button id="btn-toggle-sound" class="ctrl-btn-action" style="background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.5); color: #38bdf8;">
+        🔊 Sonido Procedural: ON
+      </button>
+    </div>
+
+    <div class="ctrl-group" style="margin-top: 8px;">
       <button id="btn-add-room" class="ctrl-btn-action">
         ➕ Añadir 4ª Sala en Tiempo Real
       </button>
@@ -262,8 +268,12 @@
       <span id="metric-rooms-count" class="vxr-metric-val">3</span>
     </div>
     <div class="vxr-metric-row">
-      <span class="vxr-metric-label">Colisión de pared:</span>
-      <span class="vxr-metric-val" style="color: #4ade80;">Activa (AABB)</span>
+      <span class="vxr-metric-label">Exhibidores 3D:</span>
+      <span class="vxr-metric-val" style="color: #38bdf8;">3 Activos</span>
+    </div>
+    <div class="vxr-metric-row">
+      <span class="vxr-metric-label">Suelta de 3D (.glb):</span>
+      <span class="vxr-metric-val" style="color: #4ade80;">Habilitada</span>
     </div>
   </div>
 

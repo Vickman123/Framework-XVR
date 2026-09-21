@@ -142,6 +142,50 @@ VXR **NO oculta Three.js**. Tienes acceso directo a los objetos nativos en cualq
 - `app.scene` → Módulo `XRScene` de VXR
 - `app.assets` → Módulo `XRAssetManager` de VXR
 - `app.session` → Módulo `XRSession` de VXR
+- `app.scenario` → Módulo `XRScenario` / `XRRoom` (Salas 3D procedimentales)
+- `app.audio` → Módulo `XRAudio` (Síntesis de sonido Web Audio, 0 MB)
+- `app.addExhibit()` → Módulo `XRExhibit` (Pedestales 3D con pantallas informativas)
+- `app.createTutorial()` → Módulo `XRTutorial` (Misiones educativas y checklist HUD)
+- `app.enableLocalFileDrop()` → Carga directa de modelos 3D sin servidor
+
+---
+
+## 🏛️ Creación de Museos y Prácticas Interdisciplinarias
+
+```typescript
+import { XRApp } from 'vxr';
+
+const app = new XRApp({ enableVR: true });
+
+// 1. Crear Sala de Museo
+const sala = app.createRoom({
+  name: 'Sala de Ciencias',
+  dimensions: { width: 12, depth: 10 },
+  theme: 'scifi' // 'gallery' | 'scifi' | 'office' | 'cozy' | 'minimal'
+});
+
+// 2. Montar Pedestal Interactivo
+app.addExhibit({
+  title: 'Espécimen Criogénico A-102',
+  category: 'INVESTIGACIÓN BIOLÓGICA',
+  specs: ['ESTADO: Preservado', 'TEMP: -196 °C'],
+  position: [0, 0, -2]
+});
+
+// 3. Crear Guía de Misiones Educativas
+const tutorial = app.createTutorial({
+  title: 'Práctica de Laboratorio',
+  tasks: [
+    { id: '1', title: 'Explorar la sala' },
+    { id: '2', title: 'Examinar el espécimen' }
+  ]
+});
+
+// 4. Arrastrar y soltar modelos 3D (.glb) desde la PC
+app.enableLocalFileDrop({ maxDimension: 2.0 });
+
+app.start();
+```
 
 ---
 

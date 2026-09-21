@@ -8,4 +8,8 @@ export { XRSession } from './XRSession.js';
 export { XRAssetManager } from './XRAssetManager.js';
 export { XRRoom } from './scenario/XRRoom.js';
 export { XRScenario } from './scenario/XRScenario.js';
+export { XRAudio } from './audio/XRAudio.js';
+export { XRExhibit } from './exhibit/XRExhibit.js';
+export { XRTutorial } from './tutorial/XRTutorial.js';
+export { enableLocalFileDrop } from './utils/localDrop.js';
 //# sourceMappingURL=index.js.map

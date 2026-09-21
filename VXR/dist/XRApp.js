@@ -5,6 +5,10 @@ import { XRRenderer } from './XRRenderer.js';
 import { XRSession } from './XRSession.js';
 import { XRAssetManager } from './XRAssetManager.js';
 import { XRScenario } from './scenario/XRScenario.js';
+import { XRAudio } from './audio/XRAudio.js';
+import { XRExhibit } from './exhibit/XRExhibit.js';
+import { XRTutorial } from './tutorial/XRTutorial.js';
+import { enableLocalFileDrop } from './utils/localDrop.js';
 /**
  * XRApp is the high-level entry point for VXR applications.
  *
@@ -37,6 +41,14 @@ export class XRApp {
     currentModel = null;
     /** Active multi-room scenario, if any */
     activeScenario = null;
+    /** Procedural Web Audio synthesizer */
+    xrAudio = null;
+    /** Active museum / showcase exhibits */
+    exhibits = [];
+    /** Interactive tutorial / mission guide */
+    tutorial = null;
+    /** Drop listener unregister callback */
+    dropCleanup = null;
     constructor(options = {}) {
         // 1. Initialize core subsystems
         this.scene = new XRScene({
@@ -99,6 +111,15 @@ export class XRApp {
      */
     get controllers() {
         return this.session.controllers;
+    }
+    /**
+     * Procedural Web Audio synthesizer (zero external downloads).
+     */
+    get audio() {
+        if (!this.xrAudio) {
+            this.xrAudio = new XRAudio();
+        }
+        return this.xrAudio;
     }
     /**
      * Resets camera and orbit target to default coordinates or specific target.
@@ -297,10 +318,57 @@ export class XRApp {
         return this.activeScenario.clampMovement(currentPos, proposedPos, radius);
     }
     /**
+     * Adds an interactive 3D exhibit pedestal with info panel and model support.
+     */
+    addExhibit(options) {
+        const exhibit = new XRExhibit(options);
+        this.scene.nativeScene.add(exhibit.group);
+        this.exhibits.push(exhibit);
+        // Register updatable for smooth model rotation
+        this.renderer.addUpdatable((delta) => exhibit.update(delta));
+        return exhibit;
+    }
+    /**
+     * Creates and mounts an interactive guided tutorial / mission HUD.
+     */
+    createTutorial(options) {
+        if (this.tutorial) {
+            this.tutorial.destroy();
+        }
+        this.tutorial = new XRTutorial(options, this.audio);
+        return this.tutorial;
+    }
+    /**
+     * Enables zero-server client-side 3D model drag & drop with automatic metrics and grounding.
+     */
+    enableLocalFileDrop(options = {}) {
+        if (this.dropCleanup) {
+            this.dropCleanup();
+        }
+        this.dropCleanup = enableLocalFileDrop(this, options);
+        return this.dropCleanup;
+    }
+    /**
      * Disposes the application, closing sessions, clearing models, and releasing WebGL resources.
      */
     dispose() {
         this.stop();
+        if (this.dropCleanup) {
+            this.dropCleanup();
+            this.dropCleanup = null;
+        }
+        if (this.tutorial) {
+            this.tutorial.destroy();
+            this.tutorial = null;
+        }
+        for (const exhibit of this.exhibits) {
+            exhibit.dispose();
+        }
+        this.exhibits.length = 0;
+        if (this.xrAudio) {
+            this.xrAudio.dispose();
+            this.xrAudio = null;
+        }
         if (this.controls) {
             this.controls.dispose();
         }

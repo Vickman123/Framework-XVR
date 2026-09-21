@@ -11,6 +11,13 @@ export type { SessionStateCallback, ControllerSelectCallback } from './XRSession
 export { XRAssetManager } from './XRAssetManager.js';
 export { XRRoom } from './scenario/XRRoom.js';
 export { XRScenario } from './scenario/XRScenario.js';
+export { XRAudio } from './audio/XRAudio.js';
+export { XRExhibit } from './exhibit/XRExhibit.js';
+export type { XRExhibitOptions } from './exhibit/types.js';
+export { XRTutorial } from './tutorial/XRTutorial.js';
+export type { TutorialTask, XRTutorialOptions } from './tutorial/types.js';
+export { enableLocalFileDrop } from './utils/localDrop.js';
+export type { LocalDropOptions } from './utils/localDrop.js';
 
 export type {
   XRAppOptions,

@@ -193,6 +193,19 @@ await app.loadScenario('./escenario.json');
 
 ---
 
+## 🎓 Módulos Interdisciplinarios: Educación, Museos y Prácticas (`v0.3.0`)
+
+VXR incluye herramientas de alto nivel para docentes, divulgadores e investigadores de cualquier área (Historia, Biología, Medicina, Arquitectura o Ciencias):
+
+* 🏛️ **`app.addExhibit()`**: Pedestales 3D de museo con consolas inclinadas y pantallas de datos generadas dinámicamente sobre canvas con tipografía nítida y fichas técnicas automáticas.
+* 🔊 **`app.audio`**: Motor de sonido procedural nativo con Web Audio API (0 descargas externas, 0 MB). Genera pasos al caminar, clics mecánicos, chimes de éxito y sonidos de teletransporte.
+* 🎯 **`app.createTutorial()`**: Checklist de misiones educativas con HUD flotante glassmorphism para guiar y evaluar a estudiantes paso a paso.
+* 📥 **`app.enableLocalFileDrop()`**: Arrastrar y soltar archivos `.glb` directamente desde la computadora del alumno. Se procesa 100% en el navegador (sin subir a ningún servidor) y se calcula su tamaño métrico real en metros.
+
+👉 **[Consulta la Guía Rápida: Crear un Proyecto Interdisciplinario en 15 Minutos](./docs/guides/crear-proyecto-interdisciplinario.md)**
+
+---
+
 ## 🎮 Catálogo Interactivo de Experiencias
 
 El repositorio incluye un catálogo interactivo con **7 experiencias en vivo** listas para probar:
@@ -202,7 +215,7 @@ El repositorio incluye un catálogo interactivo con **7 experiencias en vivo** l
 | **📐 Basic Viewer** | Demo Core | `@vxr/core`, Three.js | Carga rápida GLTF/GLB, auto-grounding y reset orbital. |
 | **🏛️ Architecture Viewer** | Demo Core | `@vxr/core`, Three.js | Inspección de mallas CAD/BIM con raycast, highlight y presets de luz. |
 | **⚡ XR Interaction Lab** | Demo Core | `@vxr/core`, WebXR | Interacción física dual: hover/clic en PC y mandos con láser en VR. |
-| **🏛️ Scenario & Room Builder** | Demo Core v0.2 | `@vxr/core`, WebXR | Creación de salas procedimentales, vanos de puertas, pasillos y colisiones AABB. |
+| **🏛️ Scenario & Room Builder** | Demo Core v0.3 | `@vxr/core`, WebXR | Creación de salas, pedestales de museo, audio procedural y checklist de misiones. |
 | **🏢 PCPuma Visor XR** | Referencia | React 19, R3F, Quest AR | Visor arquitectónico con manipulación bimanual y passthrough AR. |
 | **👾 Virus Purge** | Referencia | Three.js, WebXR | Videojuego arcade shooter FPS inmersivo en el ciberespacio. |
 | **💻 Simulador PC PUMA** | Referencia | Three.js, WebXR | Simulador interactivo de ensamble, mantenimiento y tareas guiadas. |
@@ -215,6 +228,7 @@ El repositorio incluye un catálogo interactivo con **7 experiencias en vivo** l
 
 Toda la documentación técnica y pedagógica está disponible en la carpeta [`docs/`](./docs):
 
+* 🎓 **[Guía: Proyectos Interdisciplinarios y Museos (15 min)](./docs/guides/crear-proyecto-interdisciplinario.md)**: Plantillas para docentes y estudiantes de cualquier área.
 * 🚀 **[Guía de Inicio Rápido (Getting Started)](./docs/getting-started.md)**: Configura tu proyecto en 5 minutos.
 * 🏛️ **[Guía: Escenarios y Salas 3D (Scenario & Rooms)](./docs/guides/scenario-and-rooms.md)**: Tutorial paso a paso para crear salas y mapas transitables.
 * 📖 **[Referencia de la API v0.1.0](./docs/api-reference.md)**: Documentación exhaustiva de todas las clases y métodos.

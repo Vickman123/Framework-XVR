@@ -8,6 +8,12 @@ import { XRRoom } from './scenario/XRRoom.js';
 import { XRScenario } from './scenario/XRScenario.js';
 import type { XRRoomOptions, WallDirection, CorridorOptions, ScenarioJSON } from './scenario/types.js';
 import type { LoadedModel, LoadModelOptions, UpdatableCallback, XRAppOptions } from './types.js';
+import { XRAudio } from './audio/XRAudio.js';
+import { XRExhibit } from './exhibit/XRExhibit.js';
+import type { XRExhibitOptions } from './exhibit/types.js';
+import { XRTutorial } from './tutorial/XRTutorial.js';
+import type { XRTutorialOptions } from './tutorial/types.js';
+import { type LocalDropOptions } from './utils/localDrop.js';
 /**
  * XRApp is the high-level entry point for VXR applications.
  *
@@ -40,6 +46,14 @@ export declare class XRApp {
     private currentModel;
     /** Active multi-room scenario, if any */
     private activeScenario;
+    /** Procedural Web Audio synthesizer */
+    private xrAudio;
+    /** Active museum / showcase exhibits */
+    readonly exhibits: XRExhibit[];
+    /** Interactive tutorial / mission guide */
+    tutorial: XRTutorial | null;
+    /** Drop listener unregister callback */
+    private dropCleanup;
     constructor(options?: XRAppOptions);
     /**
      * Convenience getter for the primary PerspectiveCamera.
@@ -61,6 +75,10 @@ export declare class XRApp {
      * WebXR controller spaces (0: primary, 1: secondary).
      */
     get controllers(): THREE.XRTargetRaySpace[];
+    /**
+     * Procedural Web Audio synthesizer (zero external downloads).
+     */
+    get audio(): XRAudio;
     /**
      * Resets camera and orbit target to default coordinates or specific target.
      */
@@ -157,6 +175,18 @@ export declare class XRApp {
      * @param radius Player collision radius in meters (default: 0.35)
      */
     constrainToScenario(currentPos: THREE.Vector3, proposedPos: THREE.Vector3, radius?: number): THREE.Vector3;
+    /**
+     * Adds an interactive 3D exhibit pedestal with info panel and model support.
+     */
+    addExhibit(options: XRExhibitOptions): XRExhibit;
+    /**
+     * Creates and mounts an interactive guided tutorial / mission HUD.
+     */
+    createTutorial(options: XRTutorialOptions): XRTutorial;
+    /**
+     * Enables zero-server client-side 3D model drag & drop with automatic metrics and grounding.
+     */
+    enableLocalFileDrop(options?: LocalDropOptions): () => void;
     /**
      * Disposes the application, closing sessions, clearing models, and releasing WebGL resources.
      */

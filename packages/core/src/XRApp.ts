@@ -18,6 +18,12 @@ import type {
   UpdatableCallback,
   XRAppOptions,
 } from './types.js';
+import { XRAudio } from './audio/XRAudio.js';
+import { XRExhibit } from './exhibit/XRExhibit.js';
+import type { XRExhibitOptions } from './exhibit/types.js';
+import { XRTutorial } from './tutorial/XRTutorial.js';
+import type { XRTutorialOptions } from './tutorial/types.js';
+import { enableLocalFileDrop, type LocalDropOptions } from './utils/localDrop.js';
 
 /**
  * XRApp is the high-level entry point for VXR applications.
@@ -59,6 +65,18 @@ export class XRApp {
 
   /** Active multi-room scenario, if any */
   private activeScenario: XRScenario | null = null;
+
+  /** Procedural Web Audio synthesizer */
+  private xrAudio: XRAudio | null = null;
+
+  /** Active museum / showcase exhibits */
+  public readonly exhibits: XRExhibit[] = [];
+
+  /** Interactive tutorial / mission guide */
+  public tutorial: XRTutorial | null = null;
+
+  /** Drop listener unregister callback */
+  private dropCleanup: (() => void) | null = null;
 
   constructor(options: XRAppOptions = {}) {
     // 1. Initialize core subsystems
@@ -142,6 +160,16 @@ export class XRApp {
    */
   public get controllers(): THREE.XRTargetRaySpace[] {
     return this.session.controllers;
+  }
+
+  /**
+   * Procedural Web Audio synthesizer (zero external downloads).
+   */
+  public get audio(): XRAudio {
+    if (!this.xrAudio) {
+      this.xrAudio = new XRAudio();
+    }
+    return this.xrAudio;
   }
 
   /**
@@ -384,10 +412,61 @@ export class XRApp {
   }
 
   /**
+   * Adds an interactive 3D exhibit pedestal with info panel and model support.
+   */
+  public addExhibit(options: XRExhibitOptions): XRExhibit {
+    const exhibit = new XRExhibit(options);
+    this.scene.nativeScene.add(exhibit.group);
+    this.exhibits.push(exhibit);
+
+    // Register updatable for smooth model rotation
+    this.renderer.addUpdatable((delta) => exhibit.update(delta));
+    return exhibit;
+  }
+
+  /**
+   * Creates and mounts an interactive guided tutorial / mission HUD.
+   */
+  public createTutorial(options: XRTutorialOptions): XRTutorial {
+    if (this.tutorial) {
+      this.tutorial.destroy();
+    }
+    this.tutorial = new XRTutorial(options, this.audio);
+    return this.tutorial;
+  }
+
+  /**
+   * Enables zero-server client-side 3D model drag & drop with automatic metrics and grounding.
+   */
+  public enableLocalFileDrop(options: LocalDropOptions = {}): () => void {
+    if (this.dropCleanup) {
+      this.dropCleanup();
+    }
+    this.dropCleanup = enableLocalFileDrop(this, options);
+    return this.dropCleanup;
+  }
+
+  /**
    * Disposes the application, closing sessions, clearing models, and releasing WebGL resources.
    */
   public dispose(): void {
     this.stop();
+    if (this.dropCleanup) {
+      this.dropCleanup();
+      this.dropCleanup = null;
+    }
+    if (this.tutorial) {
+      this.tutorial.destroy();
+      this.tutorial = null;
+    }
+    for (const exhibit of this.exhibits) {
+      exhibit.dispose();
+    }
+    this.exhibits.length = 0;
+    if (this.xrAudio) {
+      this.xrAudio.dispose();
+      this.xrAudio = null;
+    }
     if (this.controls) {
       this.controls.dispose();
     }
