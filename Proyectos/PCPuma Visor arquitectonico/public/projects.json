@@ -1,0 +1,34 @@
+[
+  {
+    "id": "ffyl",
+    "name": "Facultad de Filosofía y Letras",
+    "description": "Módulo arquitectónico académico más reciente con estructura porticada y aulas modulares.",
+    "thumbnail": "thumbnails/result.webp",
+    "model": "models/result.glb",
+    "category": "Académico"
+  },
+  {
+    "id": "casa",
+    "name": "Casa Residencial",
+    "description": "Residencia contemporánea de 2 niveles con estructura de hormigón, ventanales panorámicos y terraza.",
+    "thumbnail": "thumbnails/casa.webp",
+    "model": "models/casa.glb",
+    "category": "Residencial"
+  },
+  {
+    "id": "edificio",
+    "name": "Edificio Corporativo",
+    "description": "Complejo de oficinas de 4 plantas con fachada acristalada continua y núcleo de servicios.",
+    "thumbnail": "thumbnails/edificio.webp",
+    "model": "models/edificio.glb",
+    "category": "Corporativo"
+  },
+  {
+    "id": "laboratorio",
+    "name": "Laboratorio Tecnológico",
+    "description": "Pabellón de investigación y biotecnología con atrio central acristalado y particiones técnicas.",
+    "thumbnail": "thumbnails/laboratorio.webp",
+    "model": "models/laboratorio.glb",
+    "category": "Tecnológico"
+  }
+]

@@ -4,6 +4,9 @@ import { XRScene } from './XRScene.js';
 import { XRRenderer } from './XRRenderer.js';
 import { XRSession, ControllerSelectCallback } from './XRSession.js';
 import { XRAssetManager } from './XRAssetManager.js';
+import { XRRoom } from './scenario/XRRoom.js';
+import { XRScenario } from './scenario/XRScenario.js';
+import type { XRRoomOptions, WallDirection, CorridorOptions, ScenarioJSON } from './scenario/types.js';
 import type { LoadedModel, LoadModelOptions, UpdatableCallback, XRAppOptions } from './types.js';
 /**
  * XRApp is the high-level entry point for VXR applications.
@@ -35,6 +38,8 @@ export declare class XRApp {
     private initialCameraTarget;
     /** Active model currently loaded via loadModel, if any */
     private currentModel;
+    /** Active multi-room scenario, if any */
+    private activeScenario;
     constructor(options?: XRAppOptions);
     /**
      * Convenience getter for the primary PerspectiveCamera.
@@ -105,6 +110,53 @@ export declare class XRApp {
      * Pauses the animation loop.
      */
     stop(): this;
+    /**
+     * Active multi-room scenario, if initialized.
+     */
+    get scenario(): XRScenario | null;
+    /**
+     * Creates or activates a multi-room scenario.
+     */
+    createScenario(name?: string): XRScenario;
+    /**
+     * Rapidly creates and attaches an XRRoom to the application.
+     * If no scenario exists, automatically creates a default one.
+     *
+     * @example
+     * ```typescript
+     * const room = app.createRoom({
+     *   name: 'Lobby',
+     *   theme: 'gallery',
+     *   dimensions: { width: 12, depth: 10 }
+     * });
+     * ```
+     */
+    createRoom(options?: XRRoomOptions): XRRoom;
+    /**
+     * Connects two existing rooms with an automatic covered corridor.
+     */
+    connectRooms(fromRoomId: string, fromWall: WallDirection, toRoomId: string, toWall: WallDirection, options?: CorridorOptions): void;
+    /**
+     * Loads a complete scenario from a declarative JSON configuration or URL.
+     *
+     * @example
+     * ```typescript
+     * await app.loadScenario("./escenario.json");
+     * ```
+     */
+    loadScenario(configOrUrl: ScenarioJSON | string): Promise<XRScenario>;
+    /**
+     * Teleports camera and controls to the spawn point of a room.
+     */
+    teleportToRoom(roomId: string): void;
+    /**
+     * Constrains player / avatar movement to valid walkable room and corridor bounds.
+     *
+     * @param currentPos Current valid position
+     * @param proposedPos Desired target position
+     * @param radius Player collision radius in meters (default: 0.35)
+     */
+    constrainToScenario(currentPos: THREE.Vector3, proposedPos: THREE.Vector3, radius?: number): THREE.Vector3;
     /**
      * Disposes the application, closing sessions, clearing models, and releasing WebGL resources.
      */

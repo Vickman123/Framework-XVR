@@ -144,18 +144,65 @@ VXR **NO oculta Three.js**. Tienes acceso directo a la API nativa de Three.js en
 * `app.renderer` → Módulo [`XRRenderer`](./docs/learning/xrrenderer-explained.md) (resize y bucle).
 * `app.session` → Módulo [`XRSession`](./docs/learning/xrsession-explained.md) (mandos, rayos láser y VR button).
 * `app.assets` → Módulo [`XRAssetManager`](./docs/learning/xrassetmanager-explained.md) (GLTF, DRACO, métricas).
+* `app.scenario` → Módulo [`XRScenario` / `XRRoom`](./docs/guides/scenario-and-rooms.md) (salas 3D procedimentales y colisiones).
+
+---
+
+## 🏛️ Creación Rápida de Escenarios y Salas 3D (`v0.2.0`)
+
+Diseñado especialmente para principiantes y personas con poca experiencia en programación. Crea salas completas con paredes, suelos, techos, lámparas y vanos de puertas calculados automáticamente:
+
+```typescript
+import { XRApp } from 'vxr';
+
+const app = new XRApp({ enableVR: true });
+const scenario = app.createScenario('Campus Virtual');
+
+// 1. Crear Sala Galería
+const lobby = scenario.addRoom({
+  id: 'lobby',
+  dimensions: { width: 12, depth: 10, height: 3.5 },
+  theme: 'gallery', // 'gallery' | 'scifi' | 'office' | 'cozy' | 'minimal'
+  doors: [{ wall: 'north', targetRoomId: 'lab' }]
+});
+
+// 2. Crear Sala Laboratorio
+const lab = scenario.addRoom({
+  id: 'lab',
+  center: [0, 0, -18],
+  dimensions: { width: 14, depth: 12, height: 4.2 },
+  theme: 'scifi',
+  doors: [{ wall: 'south', targetRoomId: 'lobby' }]
+});
+
+// 3. Conectar automáticamente con un pasillo iluminado
+scenario.connectRooms('lobby', 'north', 'lab', 'south');
+
+// 4. Colisiones de pared automáticas (el jugador no puede atravesar muros)
+app.onUpdate((delta) => {
+  const proposedPos = player.position.clone().add(velocity.multiplyScalar(delta));
+  const safePos = app.constrainToScenario(player.position, proposedPos);
+  player.position.copy(safePos);
+});
+
+app.start();
+
+// O si prefieres no programar, cárgalo directo de un archivo JSON:
+await app.loadScenario('./escenario.json');
+```
 
 ---
 
 ## 🎮 Catálogo Interactivo de Experiencias
 
-El repositorio incluye un catálogo interactivo con **6 experiencias en vivo** listas para probar:
+El repositorio incluye un catálogo interactivo con **7 experiencias en vivo** listas para probar:
 
 | Experiencia | Categoría | Tecnologías | Descripción |
 |---|---|---|---|
 | **📐 Basic Viewer** | Demo Core | `@vxr/core`, Three.js | Carga rápida GLTF/GLB, auto-grounding y reset orbital. |
 | **🏛️ Architecture Viewer** | Demo Core | `@vxr/core`, Three.js | Inspección de mallas CAD/BIM con raycast, highlight y presets de luz. |
 | **⚡ XR Interaction Lab** | Demo Core | `@vxr/core`, WebXR | Interacción física dual: hover/clic en PC y mandos con láser en VR. |
+| **🏛️ Scenario & Room Builder** | Demo Core v0.2 | `@vxr/core`, WebXR | Creación de salas procedimentales, vanos de puertas, pasillos y colisiones AABB. |
 | **🏢 PCPuma Visor XR** | Referencia | React 19, R3F, Quest AR | Visor arquitectónico con manipulación bimanual y passthrough AR. |
 | **👾 Virus Purge** | Referencia | Three.js, WebXR | Videojuego arcade shooter FPS inmersivo en el ciberespacio. |
 | **💻 Simulador PC PUMA** | Referencia | Three.js, WebXR | Simulador interactivo de ensamble, mantenimiento y tareas guiadas. |
@@ -169,6 +216,7 @@ El repositorio incluye un catálogo interactivo con **6 experiencias en vivo** l
 Toda la documentación técnica y pedagógica está disponible en la carpeta [`docs/`](./docs):
 
 * 🚀 **[Guía de Inicio Rápido (Getting Started)](./docs/getting-started.md)**: Configura tu proyecto en 5 minutos.
+* 🏛️ **[Guía: Escenarios y Salas 3D (Scenario & Rooms)](./docs/guides/scenario-and-rooms.md)**: Tutorial paso a paso para crear salas y mapas transitables.
 * 📖 **[Referencia de la API v0.1.0](./docs/api-reference.md)**: Documentación exhaustiva de todas las clases y métodos.
 * 🏗️ **[Especificación de Arquitectura](./docs/architecture.md)**: Diseño por capas y principios.
 * 🧠 **[Modo Aprendizaje (Learning Mode)](./docs/learning/)**:

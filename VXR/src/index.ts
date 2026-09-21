@@ -9,6 +9,8 @@ export { XRRenderer } from './XRRenderer.js';
 export { XRSession } from './XRSession.js';
 export type { SessionStateCallback, ControllerSelectCallback } from './XRSession.js';
 export { XRAssetManager } from './XRAssetManager.js';
+export { XRRoom } from './scenario/XRRoom.js';
+export { XRScenario } from './scenario/XRScenario.js';
 
 export type {
   XRAppOptions,
@@ -17,3 +19,22 @@ export type {
   ModelMetrics,
   UpdatableCallback,
 } from './types.js';
+
+export type {
+  RoomTheme,
+  WallDirection,
+  DoorConfig,
+  XRRoomDimensions,
+  RoomFloorOptions,
+  RoomWallsOptions,
+  RoomCeilingOptions,
+  RoomLightingOptions,
+  XRRoomOptions,
+  WalkableAABB,
+  DoorAperture,
+  CorridorOptions,
+  ScenarioRoomJSON,
+  ScenarioConnectionJSON,
+  ScenarioJSON,
+} from './scenario/types.js';
+

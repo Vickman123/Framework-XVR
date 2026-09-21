@@ -1259,10 +1259,10 @@ app.<span class="fn">start</span>();
       <!-- Navigation Filter Tabs -->
       <nav class="filter-tabs" aria-label="Filtros del catálogo">
         <button class="tab-btn active" data-filter="all">
-          🌟 Todas las Experiencias <span class="tab-count">6</span>
+          🌟 Todas las Experiencias <span class="tab-count">7</span>
         </button>
         <button class="tab-btn" data-filter="vxr-core">
-          🔬 Demos VXR Core <span class="tab-count">3</span>
+          🔬 Demos VXR Core <span class="tab-count">4</span>
         </button>
         <button class="tab-btn" data-filter="reference">
           🏢 Proyectos de Referencia <span class="tab-count">3</span>
@@ -1365,7 +1365,38 @@ app.<span class="fn">start</span>();
           </div>
         </article>
 
-        <!-- 4. Visor XR (Proyecto de Referencia) -->
+        <!-- 4. Scenario & Room Builder -->
+        <article class="exp-card" data-category="vxr-core">
+          <div class="card-banner" style="background: linear-gradient(135deg, rgba(14, 165, 233, 0.25) 0%, rgba(99, 102, 241, 0.2) 100%);">
+            <div class="card-icon">🏛️</div>
+            <div class="card-badge-group">
+              <span class="tech-badge badge-vxr">@vxr/core v0.2.0</span>
+              <span class="tech-badge" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border-color: rgba(56, 189, 248, 0.4);">Salas 3D & Mapas</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-tagline" style="color: #38bdf8;">Arquitectura Procedural</div>
+            <h3 class="card-title">Scenario & Room Builder</h3>
+            <p class="card-desc">
+              Crea salas 3D interconectadas en segundos. Vanos de puertas automáticos, pasillos, colisiones de pared AABB con deslizamiento continuo, 5 presets temáticos y carga declarativa desde JSON.
+            </p>
+            <ul class="feature-list">
+              <li class="feature-item"><span class="feature-dot" style="background: #38bdf8;"></span>Paredes, puertas, techos y lámparas automáticas</li>
+              <li class="feature-item"><span class="feature-dot" style="background: #38bdf8;"></span>Colisiones AABB sin atravesar paredes</li>
+              <li class="feature-item"><span class="feature-dot" style="background: #38bdf8;"></span>Controles híbridos PC (WASD/Mouse) y Móvil (Joystick táctil)</li>
+            </ul>
+            <div class="card-actions">
+              <button class="btn-test" data-launch="./scenario-builder/" data-title="Scenario & Room Builder (VXR Core)">
+                ⚡ Probar en Catálogo
+              </button>
+              <a href="./scenario-builder/" target="_blank" class="btn-open-tab" title="Abrir en pestaña independiente">
+                ↗
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <!-- 5. Visor XR (Proyecto de Referencia) -->
         <article class="exp-card" data-category="reference">
           <div class="card-banner card-banner-emerald">
             <div class="card-icon">🏢</div>
@@ -1484,6 +1515,12 @@ app.<span class="fn">start</span>();
               <a href="./docs/getting-started.md" target="_blank" class="doc-item-link">
                 <span class="doc-item-name">Getting Started <span>↗</span></span>
                 <span class="doc-item-desc">Guía de inicio rápido para crear tu primera escena en 5 minutos.</span>
+              </a>
+            </li>
+            <li>
+              <a href="./docs/guides/scenario-and-rooms.md" target="_blank" class="doc-item-link">
+                <span class="doc-item-name">Escenarios & Salas 3D <span>↗</span></span>
+                <span class="doc-item-desc">Crea salas, puertas, pasillos y mapas completos con colisiones automáticas.</span>
               </a>
             </li>
             <li>

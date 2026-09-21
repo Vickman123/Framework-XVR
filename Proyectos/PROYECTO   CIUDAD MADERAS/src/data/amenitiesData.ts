@@ -1,0 +1,100 @@
+import type { Amenity } from '../types/realEstate';
+
+export const AMENITIES_LIST: Amenity[] = [
+  {
+    id: 'family-club',
+    name: 'Family Club',
+    tag: 'Club Privado & Deportes',
+    category: 'club',
+    icon: '🏠',
+    description: 'Exclusivo club deportivo y social para residentes. Cuenta con alberca semiolímpica templada, canchas de tenis y pádel, gimnasio de última generación, salón de eventos y asadores campestres.',
+    image: 'images/amenities/family-club.jpg',
+    coords: { x: 25, y: 25 },
+    pinColor: '#3b82f6', // Azul vibrante como en la referencia
+    accentColor: '#60a5fa',
+    features: [
+      'Alberca semiolímpica y chapoteadero',
+      'Canchas de pádel y tenis reglamentarias',
+      'Gimnasio equipado con vista panorámica',
+      'Salón de eventos con terraza lounge',
+      'Vestidores, regaderas y vapor',
+      'Área de asadores y convivencia familiar',
+    ],
+  },
+  {
+    id: 'parque-centrales',
+    name: 'Parque Centrales',
+    tag: 'Áreas Recreativas & Infantiles',
+    category: 'parque',
+    icon: '🌳',
+    description: 'Espacio verde central diseñado para el esparcimiento familiar, con juegos infantiles de alta seguridad, trotapista arbolada, amplias zonas de lectura y mobiliario urbano de descanso.',
+    image: 'images/amenities/parque-centrales.jpg',
+    coords: { x: 24.5, y: 37.5 },
+    pinColor: '#eab308', // Amarillo cálido como en la referencia
+    accentColor: '#facc15',
+    features: [
+      'Juegos infantiles temáticos seguros',
+      'Circuito para trote y caminata',
+      'Bancas ergonómicas y pérgolas con sombra',
+      'Jardines botánicos con especies endémicas',
+      'Zona pet-friendly delimitada',
+    ],
+  },
+  {
+    id: 'camellones',
+    name: 'Camellones con Áreas Verdes',
+    tag: 'Conectividad Ecológica',
+    category: 'verde',
+    icon: '🌿',
+    description: 'Vialidades principales ajardinadas con arbolado maduro y paisajismo sostenible que brindan microclima fresco, ciclovías seguras e iluminación LED de bajo consumo en todo el desarrollo.',
+    image: 'images/amenities/camellones.jpg',
+    coords: { x: 53, y: 39 },
+    pinColor: '#22c55e', // Verde natural como en la referencia
+    accentColor: '#4ade80',
+    features: [
+      'Camellón central arbolado y florido',
+      'Ciclovía segregada continua',
+      'Iluminación solar inteligente',
+      'Glorietas ornamentales con fuentes',
+      'Riego por goteo con aguas tratadas',
+    ],
+  },
+  {
+    id: 'zona-comercial',
+    name: 'Zona Comercial',
+    tag: 'Comercio & Servicios Inmediatos',
+    category: 'comercial',
+    icon: '🛍️',
+    description: 'Plaza comercial integrada para satisfacer las necesidades diarias de los residentes sin salir del desarrollo: tiendas de conveniencia, farmacias, cafeterías de especialidad y servicios básicos.',
+    image: 'images/amenities/zona-comercial.jpg',
+    coords: { x: 63.5, y: 60 },
+    pinColor: '#a855f7', // Púrpura como en la referencia
+    accentColor: '#c084fc',
+    features: [
+      'Locales para tiendas de conveniencia',
+      'Cafeterías y restaurantes con terraza',
+      'Estacionamiento amplio para visitantes',
+      'Acceso peatonal preferente desde privadas',
+      'Farmacia y servicios bancarios',
+    ],
+  },
+  {
+    id: 'entrada',
+    name: 'Entrada Principal',
+    tag: 'Acceso Controlado & Seguridad',
+    category: 'acceso',
+    icon: '🚪',
+    description: 'Monumental arco de bienvenida con caseta de vigilancia 24/7 sobre Libramiento Sur-Poniente, carriles automatizados para residentes mediante tag y bahías exclusivas de inspección para visitantes.',
+    image: 'images/amenities/entrada.jpg',
+    coords: { x: 82.5, y: 63 },
+    pinColor: '#ef4444', // Rojo como en la referencia
+    accentColor: '#f87171',
+    features: [
+      'Acceso monumental distintivo',
+      'Vigilancia privada 24/7 y circuito cerrado (CCTV)',
+      'Carril automatizado de residentes (TAG RFID)',
+      'Bahía de acceso seguro para visitantes',
+      'Conexión directa con Libramiento Sur-Poniente',
+    ],
+  },
+];

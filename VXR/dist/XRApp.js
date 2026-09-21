@@ -4,6 +4,7 @@ import { XRScene } from './XRScene.js';
 import { XRRenderer } from './XRRenderer.js';
 import { XRSession } from './XRSession.js';
 import { XRAssetManager } from './XRAssetManager.js';
+import { XRScenario } from './scenario/XRScenario.js';
 /**
  * XRApp is the high-level entry point for VXR applications.
  *
@@ -34,6 +35,8 @@ export class XRApp {
     initialCameraTarget = [0, 0.8, 0];
     /** Active model currently loaded via loadModel, if any */
     currentModel = null;
+    /** Active multi-room scenario, if any */
+    activeScenario = null;
     constructor(options = {}) {
         // 1. Initialize core subsystems
         this.scene = new XRScene({
@@ -202,12 +205,109 @@ export class XRApp {
         return this;
     }
     /**
+     * Active multi-room scenario, if initialized.
+     */
+    get scenario() {
+        return this.activeScenario;
+    }
+    /**
+     * Creates or activates a multi-room scenario.
+     */
+    createScenario(name = 'Scenario') {
+        if (this.activeScenario) {
+            this.scene.nativeScene.remove(this.activeScenario.nativeGroup);
+            this.activeScenario.dispose();
+        }
+        this.activeScenario = new XRScenario(name);
+        this.scene.nativeScene.add(this.activeScenario.nativeGroup);
+        return this.activeScenario;
+    }
+    /**
+     * Rapidly creates and attaches an XRRoom to the application.
+     * If no scenario exists, automatically creates a default one.
+     *
+     * @example
+     * ```typescript
+     * const room = app.createRoom({
+     *   name: 'Lobby',
+     *   theme: 'gallery',
+     *   dimensions: { width: 12, depth: 10 }
+     * });
+     * ```
+     */
+    createRoom(options = {}) {
+        if (!this.activeScenario) {
+            this.createScenario('DefaultScenario');
+        }
+        return this.activeScenario.addRoom(options);
+    }
+    /**
+     * Connects two existing rooms with an automatic covered corridor.
+     */
+    connectRooms(fromRoomId, fromWall, toRoomId, toWall, options = {}) {
+        if (!this.activeScenario) {
+            console.warn('[XRApp] Cannot connect rooms: No active scenario found.');
+            return;
+        }
+        this.activeScenario.connectRooms(fromRoomId, fromWall, toRoomId, toWall, options);
+    }
+    /**
+     * Loads a complete scenario from a declarative JSON configuration or URL.
+     *
+     * @example
+     * ```typescript
+     * await app.loadScenario("./escenario.json");
+     * ```
+     */
+    async loadScenario(configOrUrl) {
+        const sc = this.createScenario();
+        if (typeof configOrUrl === 'string') {
+            await sc.loadFromURL(configOrUrl);
+        }
+        else {
+            sc.loadFromJSON(configOrUrl);
+        }
+        return sc;
+    }
+    /**
+     * Teleports camera and controls to the spawn point of a room.
+     */
+    teleportToRoom(roomId) {
+        if (!this.activeScenario)
+            return;
+        const room = this.activeScenario.getRoom(roomId);
+        if (!room) {
+            console.warn(`[XRApp] Cannot teleport: Room '${roomId}' not found.`);
+            return;
+        }
+        const spawn = room.getSpawnPosition();
+        this.resetCamera([spawn.x, spawn.y, spawn.z], [room.center.x, spawn.y, room.center.z]);
+    }
+    /**
+     * Constrains player / avatar movement to valid walkable room and corridor bounds.
+     *
+     * @param currentPos Current valid position
+     * @param proposedPos Desired target position
+     * @param radius Player collision radius in meters (default: 0.35)
+     */
+    constrainToScenario(currentPos, proposedPos, radius = 0.35) {
+        if (!this.activeScenario) {
+            return proposedPos;
+        }
+        return this.activeScenario.clampMovement(currentPos, proposedPos, radius);
+    }
+    /**
      * Disposes the application, closing sessions, clearing models, and releasing WebGL resources.
      */
     dispose() {
         this.stop();
         if (this.controls) {
             this.controls.dispose();
+        }
+        if (this.activeScenario) {
+            this.scene.nativeScene.remove(this.activeScenario.nativeGroup);
+            this.activeScenario.dispose();
+            this.activeScenario = null;
         }
         this.session.dispose();
         this.assets.dispose();

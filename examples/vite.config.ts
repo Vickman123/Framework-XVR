@@ -51,17 +51,25 @@ function serveStaticFolder(prefix: string, folderPath: string) {
   };
 }
 
+function resolveFolder(relativePath: string): string {
+  const p1 = path.resolve(__dirname, '..', relativePath);
+  if (fs.existsSync(p1)) return p1;
+  const p2 = path.resolve(__dirname, '../Proyectos', relativePath);
+  if (fs.existsSync(p2)) return p2;
+  return p1;
+}
+
 const serveReferenceProjectsPlugin: Plugin = {
   name: 'serve-reference-projects',
   configureServer(server) {
     server.middlewares.use(
-      serveStaticFolder('/projects/visor-xr', path.resolve(__dirname, '../PCPuma Visor arquitectonico/dist'))
+      serveStaticFolder('/projects/visor-xr', resolveFolder('PCPuma Visor arquitectonico/dist'))
     );
     server.middlewares.use(
-      serveStaticFolder('/projects/virus-purge', path.resolve(__dirname, '../shooter simulator/docs'))
+      serveStaticFolder('/projects/virus-purge', resolveFolder('shooter simulator/docs'))
     );
     server.middlewares.use(
-      serveStaticFolder('/projects/simulador-pcpuma', path.resolve(__dirname, '../pcpum<a simulador/docs'))
+      serveStaticFolder('/projects/simulador-pcpuma', resolveFolder('pcpum<a simulador/docs'))
     );
     server.middlewares.use(
       serveStaticFolder('/docs', path.resolve(__dirname, '../docs'))
@@ -84,6 +92,7 @@ export default defineConfig({
         basicViewer: path.resolve(__dirname, 'basic-viewer/index.html'),
         architectureViewer: path.resolve(__dirname, 'architecture-viewer/index.html'),
         interactionLab: path.resolve(__dirname, 'interaction-lab/index.html'),
+        scenarioBuilder: path.resolve(__dirname, 'scenario-builder/index.html'),
       },
     },
   },
