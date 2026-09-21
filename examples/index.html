@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VXR — High-Level WebXR & 3D Interactive Framework</title>
+  <title>VXR — Tu Puerta de Entrada al Desarrollo 3D y WebXR</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Caveat:wght@600&display=swap" rel="stylesheet" />
@@ -732,6 +732,277 @@
     }
 
     /* ==========================================================================
+       El Viaje del Creador en 5 Pasos (Aprende -> Crea -> Prueba -> Publica -> Comparte)
+       ========================================================================== */
+    .journey-section {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      border-top: 1px solid var(--vxr-border);
+      padding-top: 56px;
+    }
+
+    .journey-steps-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 1200px) {
+      .journey-steps-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .journey-steps-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .journey-step-card {
+      background: var(--vxr-bg-card);
+      border: 1px solid var(--vxr-border);
+      border-radius: 16px;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 10px 25px -8px rgba(0, 0, 0, 0.5);
+    }
+
+    .journey-step-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--vxr-border-hover);
+      background: rgba(22, 32, 58, 0.9);
+      box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.7), 0 0 25px -6px rgba(56, 189, 248, 0.3);
+    }
+
+    .journey-step-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      width: fit-content;
+      font-family: var(--font-mono);
+      border: 1px solid transparent;
+    }
+
+    .badge-step-1 {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+    }
+
+    .badge-step-2 {
+      background: rgba(129, 140, 248, 0.15);
+      border-color: rgba(129, 140, 248, 0.4);
+      color: #818cf8;
+    }
+
+    .badge-step-3 {
+      background: rgba(251, 191, 36, 0.15);
+      border-color: rgba(251, 191, 36, 0.4);
+      color: #fbbf24;
+    }
+
+    .badge-step-4 {
+      background: rgba(192, 132, 252, 0.15);
+      border-color: rgba(192, 132, 252, 0.4);
+      color: #c084fc;
+    }
+
+    .badge-step-5 {
+      background: rgba(52, 211, 153, 0.15);
+      border-color: rgba(52, 211, 153, 0.4);
+      color: #34d399;
+    }
+
+    .journey-step-icon {
+      font-size: 32px;
+      line-height: 1;
+      margin-top: 4px;
+    }
+
+    .journey-step-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+    }
+
+    .journey-step-subtitle {
+      font-size: 11px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: -6px;
+    }
+
+    .journey-step-desc {
+      font-size: 12.5px;
+      color: var(--vxr-text-sub);
+      line-height: 1.55;
+      flex: 1;
+    }
+
+    .journey-highlights {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin: 6px 0 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding-top: 10px;
+    }
+
+    .journey-hl-item {
+      font-size: 11.5px;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .journey-link {
+      font-size: 12px;
+      font-weight: 700;
+      color: #38bdf8;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+      margin-top: auto;
+    }
+
+    .journey-link:hover {
+      color: #ffffff;
+      transform: translateX(3px);
+    }
+
+    /* ==========================================================================
+       Ecosistema y Comunidad en México & LatAm
+       ========================================================================== */
+    .ecosystem-section {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      border-top: 1px solid var(--vxr-border);
+      padding-top: 56px;
+    }
+
+    .ecosystem-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 960px) {
+      .ecosystem-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .ecosystem-card {
+      background: var(--vxr-bg-card);
+      border: 1px solid var(--vxr-border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: all 0.25s ease;
+    }
+
+    .ecosystem-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(56, 189, 248, 0.4);
+      box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.6);
+      background: rgba(22, 32, 58, 0.85);
+    }
+
+    .ecosystem-icon {
+      font-size: 36px;
+      line-height: 1;
+    }
+
+    .ecosystem-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .ecosystem-desc {
+      font-size: 13.5px;
+      color: var(--vxr-text-sub);
+      line-height: 1.6;
+      flex: 1;
+    }
+
+    .ecosystem-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .ecosystem-tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.1);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+    }
+
+    .ecosystem-banner {
+      background: linear-gradient(135deg, rgba(2, 132, 199, 0.18) 0%, rgba(99, 102, 241, 0.15) 100%);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 16px;
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .ecosystem-banner-text {
+      max-width: 680px;
+    }
+
+    .ecosystem-banner-text h4 {
+      font-size: 19px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 6px;
+    }
+
+    .ecosystem-banner-text p {
+      font-size: 13.5px;
+      color: #cbd5e1;
+      line-height: 1.55;
+    }
+
+    .ecosystem-banner-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* ==========================================================================
        Transition Header
        ========================================================================== */
     .transition-block {
@@ -1311,17 +1582,17 @@
         <span class="brand-logo-text">VXR</span>
         <div class="brand-meta">
           <span class="brand-name">Framework-XVR</span>
-          <span class="brand-tagline">BUILD IMMERSIVE WORLDS</span>
+          <span class="brand-tagline">DEMOCRATIZANDO EL MUNDO 3D & XR</span>
         </div>
       </a>
 
       <ul class="nav-menu">
         <li><a href="#top" class="nav-item-link active">Inicio</a></li>
-        <li><a href="#caracteristicas" class="nav-item-link">Características</a></li>
-        <li><a href="#catalogo" class="nav-item-link">Demos</a></li>
-        <li><a href="#documentacion" class="nav-item-link">Documentación</a></li>
-        <li><a href="#codigo" class="nav-item-link">Ejemplos</a></li>
-        <li><a href="https://github.com/Vickman123/Framework-XVR" target="_blank" rel="noopener noreferrer" class="nav-item-link">Comunidad ↗</a></li>
+        <li><a href="#viaje" class="nav-item-link">El Viaje XR</a></li>
+        <li><a href="#caracteristicas" class="nav-item-link">Aprende & Crea</a></li>
+        <li><a href="#catalogo" class="nav-item-link">Demos en Vivo</a></li>
+        <li><a href="#comunidad" class="nav-item-link">Ecosistema LatAm</a></li>
+        <li><a href="#documentacion" class="nav-item-link">Docs</a></li>
       </ul>
 
       <div class="nav-actions">
@@ -1330,8 +1601,8 @@
             <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"></path>
           </svg>
         </a>
-        <button id="btn-get-vxr-action" class="btn-get-vxr" title="Copiar comando npm e ir al código">
-          Obtener VXR →
+        <button id="btn-get-vxr-action" class="btn-get-vxr" title="Empezar a crear con VXR">
+          Empezar a Crear →
         </button>
       </div>
     </div>
@@ -1345,25 +1616,24 @@
       <div class="hero-content">
         <div class="version-pill">
           <span class="pill-glow-dot"></span>
-          <span>v0.1.0 • High-Level WebXR & 3D Framework</span>
+          <span>v0.2.0 • Framework 3D & WebXR de Código Abierto</span>
         </div>
 
         <h1 class="hero-heading">
-          Crea experiencias<br>
-          3D y WebXR<br>
-          <span class="hero-gradient-text">en minutos</span>
+          Tu puerta de entrada al desarrollo<br>
+          <span class="hero-gradient-text">3D y WebXR</span>
         </h1>
 
         <p class="hero-lead">
-          VXR es una capa de abstracción de alto nivel en TypeScript sobre Three.js y la WebXR Device API. Diseñada para visualizadores arquitectónicos, simuladores técnicos y videojuegos inmersivos, eliminando más del 70% del código repetitivo.
+          VXR nació para democratizar la creación inmersiva. De una idea a tu primera experiencia en 3D, Realidad Virtual o Aumentada en minutos. Diseñado para estudiantes, desarrolladores web, educadores e investigadores sin barreras técnicas opacas y con acceso 100% abierto a Three.js.
         </p>
 
         <div class="hero-cta-group">
-          <a href="#catalogo" class="btn-cta-primary">
-            ▶ Explorar Demos →
+          <a href="#viaje" class="btn-cta-primary">
+            ✨ El Viaje en 5 Pasos →
           </a>
-          <a href="#codigo" class="btn-cta-secondary">
-            &lt;/&gt; Comenzar Ahora
+          <a href="#catalogo" class="btn-cta-secondary">
+            🥽 Explorar Demos en Vivo
           </a>
         </div>
 
@@ -1372,7 +1642,7 @@
             <span class="tech-pill-icon" style="color: #38bdf8;">TS</span>
             <span>TypeScript 5.8</span>
           </a>
-          <a href="https://threejs.org/" target="_blank" rel="noopener noreferrer" class="tech-pill-link" title="Three.js r174">
+          <a href="https://threejs.org/" target="_blank" rel="noopener noreferrer" class="tech-pill-link" title="Three.js r174 (Open Facade)">
             <span class="tech-pill-icon" style="color: #94a3b8;">🔺</span>
             <span>Three.js r174</span>
           </a>
@@ -1384,7 +1654,11 @@
             <span class="tech-pill-icon" style="color: #60a5fa;">♾️</span>
             <span>Meta Quest</span>
           </a>
-          <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer" class="tech-pill-link" title="Licencia MIT de código abierto">
+          <a href="#comunidad" class="tech-pill-link" title="Impulsando el ecosistema XR en México y Latinoamérica">
+            <span class="tech-pill-icon" style="color: #34d399;">🇲🇽</span>
+            <span>Ecosistema LatAm</span>
+          </a>
+          <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer" class="tech-pill-link" title="Licencia MIT 100% de código abierto">
             <span class="tech-pill-icon" style="color: #a78bfa;">⚖️</span>
             <span>MIT License</span>
           </a>
@@ -1408,16 +1682,24 @@
         <div class="metric-col">
           <span class="metric-icon-box" style="color: #38bdf8;">⚡</span>
           <div>
-            <span class="metric-num">70%</span>
-            <span class="metric-desc">menos código repetitivo</span>
+            <span class="metric-num">0 Barreras</span>
+            <span class="metric-desc">Crea directo en el navegador</span>
           </div>
         </div>
 
         <div class="metric-col">
           <span class="metric-icon-box" style="color: #818cf8;">📦</span>
           <div>
-            <span class="metric-num">3D + XR</span>
-            <span class="metric-desc">en una sola API</span>
+            <span class="metric-num">4 Líneas</span>
+            <span class="metric-desc">Para tu primera escena 3D</span>
+          </div>
+        </div>
+
+        <div class="metric-col">
+          <span class="metric-icon-box" style="color: #34d399;">🏛️</span>
+          <div>
+            <span class="metric-num">Interdisciplinario</span>
+            <span class="metric-desc">Educación, arte, ciencia y BIM</span>
           </div>
         </div>
 
@@ -1425,30 +1707,122 @@
           <span class="metric-icon-box" style="color: #38bdf8;">📱</span>
           <div>
             <span class="metric-num">Multi-Plataforma</span>
-            <span class="metric-desc">PC, Móvil y Meta Quest</span>
+            <span class="metric-desc">PC, móvil y Meta Quest</span>
           </div>
         </div>
 
         <div class="metric-col">
-          <span class="metric-icon-box" style="color: #c084fc;">🚀</span>
+          <span class="metric-icon-box" style="color: #c084fc;">🌐</span>
           <div>
-            <span class="metric-num">Experiencias Reales</span>
-            <span class="metric-desc">7 demos interactivas</span>
-          </div>
-        </div>
-
-        <div class="metric-col">
-          <span class="metric-icon-box" style="color: #38bdf8;">👥</span>
-          <div>
-            <span class="metric-num">Open Source</span>
-            <span class="metric-desc">Comunidad global</span>
+            <span class="metric-num">Ecosistema LatAm</span>
+            <span class="metric-desc">Comunidad abierta en español</span>
           </div>
         </div>
       </div>
 
       <div class="metric-quote">
-        "La forma más rápida de pasar de una idea a una experiencia 3D inmersiva."<br>
-        <b>— VXR Framework</b>
+        "El espacio 3D no debe ser exclusivo de motores cerrados ni configuraciones hostiles. Cualquier desarrollador o estudiante puede construir mundos inmersivos hoy."<br>
+        <b>— Manifiesto VXR</b>
+      </div>
+    </section>
+
+    <!-- ==================== EL VIAJE DEL CREADOR (5 PASOS) ==================== -->
+    <section id="viaje" class="journey-section">
+      <div class="section-header">
+        <span class="section-tag">DE LA CURIOSIDAD A LA PRODUCCIÓN</span>
+        <h2 class="section-title">El Viaje del Creador: De la Idea a la Realidad en 5 Pasos</h2>
+        <p class="section-desc">
+          VXR acorta radicalmente la distancia entre imaginar una experiencia inmersiva y verla cobrar vida en tres dimensiones. Cinco etapas diseñadas para que cualquier persona pueda aprender, construir, probar, publicar y compartir sin fricciones.
+        </p>
+      </div>
+
+      <div class="journey-steps-grid">
+
+        <!-- Paso 1: Aprende -->
+        <div class="journey-step-card">
+          <span class="journey-step-badge badge-step-1">PASO 01 • APRENDE</span>
+          <div class="journey-step-icon">💡</div>
+          <h3 class="journey-step-title">1. Aprende</h3>
+          <span class="journey-step-subtitle">Learning Mode sin jerga opaca</span>
+          <p class="journey-step-desc">
+            Aprende haciendo desde cero. Documentación pedagógica clase por clase, desgloses conceptuales (cámaras, mallas, luces, WebXR) y código pensado para desarrolladores web que dan el salto al 3D.
+          </p>
+          <ul class="journey-highlights">
+            <li class="journey-hl-item"><span class="feature-dot" style="background: #38bdf8;"></span>Explicaciones clase por clase</li>
+            <li class="journey-hl-item"><span class="feature-dot" style="background: #38bdf8;"></span>Conceptos 3D sin complicaciones</li>
+            <li class="journey-hl-item"><span class="feature-dot" style="background: #38bdf8;"></span>Ejemplos interactivos listos</li>
+          </ul>
+          <a href="#documentacion" class="journey-link">Explorar Learning Mode →</a>
+        </div>
+
+        <!-- Paso 2: Crea -->
+        <div class="journey-step-card">
+          <span class="journey-step-badge badge-step-2">PASO 02 • CREA</span>
+          <div class="journey-step-icon">🛠️</div>
+          <h3 class="journey-step-title">2. Crea</h3>
+          <span class="journey-step-subtitle">Plantillas modulares y salas 3D</span>
+          <p class="journey-step-desc">
+            Construye salas procedimentales con XRRoom, suelta modelos 3D con auto-grounding automático (Y=0), añade pedestales de exposición y sonido procedural nativo con Web Audio sin archivos pesados.
+          </p>
+          <ul class="journey-highlights">
+            <li class="journey-hl-item"><span class="feature-dot" style="background: #818cf8;"></span>XRRoom con paredes y puertas</li>
+            <li class="journey-hl-item"><span class="feature-dot" style="background: #818cf8;"></span>Auto-grounding de modelos .glb</li>
+            <li class="journey-hl-item"><span class="feature-dot" style="background: #818cf8;"></span>Audio procedural Web Audio (0 MB)</li>
+          </ul>
+          <a href="#codigo" class="journey-link">Ver Código y Plantillas →</a>
+        </div>
+
+        <!-- Paso 3: Prueba -->
+        <div class="journey-step-card">
+          <span class="journey-step-badge badge-step-3">PASO 03 • PRUEBA</span>
+          <div class="journey-step-icon">🥽</div>
+          <h3 class="journey-step-title">3. Prueba</h3>
+          <span class="journey-step-subtitle">Instantáneo en el navegador</span>
+          <p class="journey-step-desc">
+            Sin compilar APKs ni esperar horas. Abre tu proyecto en Chrome, Edge o en el navegador de Meta Quest. El simulador desktop te permite probar interacciones con mouse y teclado antes de ponerte las gafas.
+          </p>
+          <ul class="journey-highlights">
+            <li class="journey-hl-item"><span class="feature-dot" style="background: #fbbf24;"></span>Simulador desktop automático</li>
+            <li class="journey-hl-item"><span class="feature-dot" style="background: #fbbf24;"></span>Modo VR/AR nativo en Quest</li>
+            <li class="journey-hl-item"><span class="feature-dot" style="background: #fbbf24;"></span>Loop fluido a 90 FPS estables</li>
+          </ul>
+          <a href="#catalogo" class="journey-link">Probar Demos en Vivo →</a>
+        </div>
+
+        <!-- Paso 4: Publica -->
+        <div class="journey-step-card">
+          <span class="journey-step-badge badge-step-4">PASO 04 • PUBLICA</span>
+          <div class="journey-step-icon">🚀</div>
+          <h3 class="journey-step-title">4. Publica</h3>
+          <span class="journey-step-subtitle">CLI & Meta Quest Optimizer</span>
+          <p class="journey-step-desc">
+            Con un simple comando "vxr build --target quest", empaqueta tu proyecto en una Progressive Web App (PWA) optimizada con compresión de assets, HTTPS y auditoría de salud automática con "vxr doctor".
+          </p>
+          <ul class="journey-highlights">
+            <li class="journey-hl-item"><span class="feature-dot" style="background: #c084fc;"></span>Auditoría técnica con vxr doctor</li>
+            <li class="journey-hl-item"><span class="feature-dot" style="background: #c084fc;"></span>PWA WebXR lista para instalar</li>
+            <li class="journey-hl-item"><span class="feature-dot" style="background: #c084fc;"></span>Optimizado para Meta Quest Browser</li>
+          </ul>
+          <a href="#codigo" class="journey-link">Ver Comandos CLI →</a>
+        </div>
+
+        <!-- Paso 5: Comparte -->
+        <div class="journey-step-card">
+          <span class="journey-step-badge badge-step-5">PASO 05 • COMPARTE</span>
+          <div class="journey-step-icon">🌐</div>
+          <h3 class="journey-step-title">5. Comparte</h3>
+          <span class="journey-step-subtitle">Una URL, acceso para todos</span>
+          <p class="journey-step-desc">
+            Tu experiencia vive en la web abierta. Alójala gratis en GitHub Pages, Vercel o tu propio servidor. Envía un enlace o imprime un código QR para que cualquier persona en el mundo entre con un clic.
+          </p>
+          <ul class="journey-highlights">
+            <li class="journey-hl-item"><span class="feature-dot" style="background: #34d399;"></span>Alojamiento web estático gratuito</li>
+            <li class="journey-hl-item"><span class="feature-dot" style="background: #34d399;"></span>Acceso universal por enlace o QR</li>
+            <li class="journey-hl-item"><span class="feature-dot" style="background: #34d399;"></span>Fomenta la comunidad y el aprendizaje</li>
+          </ul>
+          <a href="#comunidad" class="journey-link">Ecosistema y Comunidad →</a>
+        </div>
+
       </div>
     </section>
 
@@ -1459,34 +1833,34 @@
         <!-- 4 Sector Cards -->
         <div class="sector-cards-grid">
           <!-- Card 1: Architecture -->
-          <div class="sector-card btn-test" data-launch="./architecture-viewer/" data-title="Visualizadores Arquitectónicos (VXR Core)">
+          <div class="sector-card btn-test" data-launch="./architecture-viewer/" data-title="Visualizadores Arquitectónicos & Espaciales">
             <div class="sector-img-wrap">
-              <img src="./thumb-arch.jpg" alt="Visualizadores Arquitectónicos" class="sector-img" />
+              <img src="./thumb-arch.jpg" alt="Visualizadores Arquitectónicos & Espaciales" class="sector-img" />
             </div>
             <div class="sector-footer">
-              <span class="sector-title">Visualizadores<br>Arquitectónicos</span>
+              <span class="sector-title">Visualizadores<br>Arquitectónicos & BIM</span>
               <span class="sector-arrow">→</span>
             </div>
           </div>
 
           <!-- Card 2: Technical Simulators -->
-          <div class="sector-card btn-test" data-launch="./projects/tech-simulator/" data-title="Simuladores Técnicos & Hardware">
+          <div class="sector-card btn-test" data-launch="./projects/tech-simulator/" data-title="Simuladores Técnicos & Laboratorios">
             <div class="sector-img-wrap">
-              <img src="./thumb-sim.jpg" alt="Simuladores Técnicos" class="sector-img" />
+              <img src="./thumb-sim.jpg" alt="Simuladores Técnicos & Laboratorios" class="sector-img" />
             </div>
             <div class="sector-footer">
-              <span class="sector-title">Simuladores<br>Técnicos</span>
+              <span class="sector-title">Simuladores Técnicos<br>& Laboratorios</span>
               <span class="sector-arrow">→</span>
             </div>
           </div>
 
           <!-- Card 3: Videojuegos Inmersivos -->
-          <div class="sector-card btn-test" data-launch="./projects/cyber-arcade/" data-title="Videojuegos & Simulación 90 FPS">
+          <div class="sector-card btn-test" data-launch="./projects/cyber-arcade/" data-title="Videojuegos Inmersivos & Acción 90 FPS">
             <div class="sector-img-wrap">
-              <img src="./thumb-game.jpg" alt="Videojuegos Inmersivos" class="sector-img" />
+              <img src="./thumb-game.jpg" alt="Videojuegos Inmersivos & Acción 90 FPS" class="sector-img" />
             </div>
             <div class="sector-footer">
-              <span class="sector-title">Videojuegos<br>Inmersivos</span>
+              <span class="sector-title">Videojuegos Inmersivos<br>& Acción 90 FPS</span>
               <span class="sector-arrow">→</span>
             </div>
           </div>
@@ -1507,9 +1881,10 @@
         <div id="codigo" class="code-preview-card">
           <div class="code-header">
             <div class="code-tabs">
-              <button class="code-tab-btn active" data-tab="ts">TypeScript</button>
+              <button class="code-tab-btn active" data-tab="ts">TypeScript Rápido</button>
+              <button class="code-tab-btn" data-tab="room">Salas & Museo 3D</button>
+              <button class="code-tab-btn" data-tab="quest">Meta Quest CLI</button>
               <button class="code-tab-btn" data-tab="install">Instalación</button>
-              <button class="code-tab-btn" data-tab="basic">Uso básico</button>
             </div>
             <button id="btn-copy-snippet" class="btn-copy-code" title="Copiar código">
               <span>📋</span>
@@ -1799,6 +2174,81 @@ app.<span class="fn">start</span>();</code></pre>
       </div>
     </section>
 
+    <!-- ==================== ECOSISTEMA MÉXICO & LATINOAMÉRICA ==================== -->
+    <section id="comunidad" class="ecosystem-section">
+      <div class="section-header">
+        <span class="section-tag">IMPACTO SOCIAL, CIENTÍFICO Y EDUCATIVO</span>
+        <h2 class="section-title">Impulsando el Ecosistema XR en México y LatAm</h2>
+        <p class="section-desc">
+          VXR nace con una convicción clara: la Realidad Virtual y Aumentada no debe ser un privilegio de estudios con licencias costosas ni hardware privativo. Democratizamos las herramientas inmersivas para el aula, el laboratorio científico, el estudio creativo y los desarrolladores independientes.
+        </p>
+      </div>
+
+      <div class="ecosystem-grid">
+
+        <!-- Card 1: Educación -->
+        <div class="ecosystem-card">
+          <div class="ecosystem-icon">🎓</div>
+          <h3 class="ecosystem-title">Educación Pública & Universidades</h3>
+          <p class="ecosystem-desc">
+            Permite a docentes, escuelas y facultades crear laboratorios virtuales, prácticas técnicas seguras y museos históricos interactivos que se ejecutan directamente en cualquier navegador o visor sin costos de suscripción.
+          </p>
+          <div class="ecosystem-tags">
+            <span class="ecosystem-tag">#AulasInmersivas</span>
+            <span class="ecosystem-tag">#CienciaAbierta</span>
+            <span class="ecosystem-tag">#EducaciónPública</span>
+          </div>
+        </div>
+
+        <!-- Card 2: Desarrolladores Web -->
+        <div class="ecosystem-card">
+          <div class="ecosystem-icon">💻</div>
+          <h3 class="ecosystem-title">Desarrolladores Web & Estudiantes</h3>
+          <p class="ecosystem-desc">
+            Aprovecha tus conocimientos de JavaScript, TypeScript y la web abierta para entrar al mundo 3D y WebXR sin tener que aprender motores cerrados ni lenguajes ajenos. Todo con una arquitectura Open Facade transparente.
+          </p>
+          <div class="ecosystem-tags">
+            <span class="ecosystem-tag">#WebDevToXR</span>
+            <span class="ecosystem-tag">#OpenFacade</span>
+            <span class="ecosystem-tag">#TypeScript</span>
+          </div>
+        </div>
+
+        <!-- Card 3: Artistas y Creadores -->
+        <div class="ecosystem-card">
+          <div class="ecosystem-icon">🎨</div>
+          <h3 class="ecosystem-title">Artistas, Arquitectos & Creadores</h3>
+          <p class="ecosystem-desc">
+            Transforma modelos 3D (.glb) en exposiciones interactivas con fichas técnicas automáticas, sonido espacial y navegación inmersiva en escala 1:1, listas para ser visitadas por el público en minutos.
+          </p>
+          <div class="ecosystem-tags">
+            <span class="ecosystem-tag">#ArteDigital</span>
+            <span class="ecosystem-tag">#Patrimonio</span>
+            <span class="ecosystem-tag">#BIM</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Banner de Comunidad Abierta -->
+      <div class="ecosystem-banner">
+        <div class="ecosystem-banner-text">
+          <h4>🚀 Construyamos la comunidad XR más accesible de la región</h4>
+          <p>
+            VXR es un proyecto 100% de código abierto bajo licencia MIT. Contribuye con nuevas salas, reporta mejoras, crea tutoriales o comparte las experiencias que desarrolles con el framework.
+          </p>
+        </div>
+        <div class="ecosystem-banner-actions">
+          <a href="https://github.com/Vickman123/Framework-XVR" target="_blank" rel="noopener noreferrer" class="btn-cta-primary">
+            Contribuir en GitHub ↗
+          </a>
+          <a href="https://github.com/Vickman123/Framework-XVR/blob/main/docs/guides/crear-proyecto-interdisciplinario.md" target="_blank" rel="noopener noreferrer" class="btn-cta-secondary">
+            Guía Interdisciplinaria ↗
+          </a>
+        </div>
+      </div>
+    </section>
+
     <!-- ==================== DOCUMENTATION SECTION ==================== -->
     <section id="documentacion" class="docs-section">
       <div class="section-header">
@@ -1828,6 +2278,12 @@ app.<span class="fn">start</span>();</code></pre>
               <a href="https://github.com/Vickman123/Framework-XVR/blob/main/docs/guides/scenario-and-rooms.md" target="_blank" rel="noopener noreferrer" class="doc-link-item">
                 <span class="doc-item-name">Escenarios & Salas 3D <span>↗</span></span>
                 <span class="doc-item-desc">Crea salas, puertas, pasillos y mapas completos con colisiones automáticas.</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://github.com/Vickman123/Framework-XVR/blob/main/docs/quest.md" target="_blank" rel="noopener noreferrer" class="doc-link-item">
+                <span class="doc-item-name">Guía Meta Quest & CLI <span>↗</span></span>
+                <span class="doc-item-desc">Build web optimizada para Quest Browser, PWA a 90 FPS y vxr doctor.</span>
               </a>
             </li>
             <li>
@@ -1887,6 +2343,12 @@ app.<span class="fn">start</span>();</code></pre>
           </div>
           <ul class="doc-links-list">
             <li>
+              <a href="https://github.com/Vickman123/Framework-XVR/blob/main/docs/quest-build-architecture.md" target="_blank" rel="noopener noreferrer" class="doc-link-item">
+                <span class="doc-item-name">Arquitectura Meta Quest Build <span>↗</span></span>
+                <span class="doc-item-desc">Pipeline de optimización, compresión PWA y doctor.</span>
+              </a>
+            </li>
+            <li>
               <a href="https://github.com/Vickman123/Framework-XVR/blob/main/docs/architecture.md" target="_blank" rel="noopener noreferrer" class="doc-link-item">
                 <span class="doc-item-name">Arquitectura de VXR <span>↗</span></span>
                 <span class="doc-item-desc">Capas del sistema, flujo de ejecución y responsabilidades.</span>
@@ -1921,11 +2383,13 @@ app.<span class="fn">start</span>();</code></pre>
   <!-- ==================== FOOTER ==================== -->
   <footer class="site-footer">
     <div>
-      <strong>VXR (Virtual & Extended Reality Framework)</strong> • Desarrollado sobre Three.js & WebXR Device API • Licencia MIT
+      <strong>VXR (Virtual & Extended Reality Framework)</strong> • Democratizando la creación 3D & WebXR • Desarrollado sobre Three.js & WebXR • Licencia MIT
     </div>
     <div class="footer-links">
       <a href="https://github.com/Vickman123/Framework-XVR" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub ↗</a>
-      <a href="https://github.com/Vickman123/Framework-XVR/tree/main/docs" target="_blank" rel="noopener noreferrer" class="footer-link">Documentación ↗</a>
+      <a href="#viaje" class="footer-link">El Viaje XR</a>
+      <a href="#comunidad" class="footer-link">Ecosistema LatAm</a>
+      <a href="https://github.com/Vickman123/Framework-XVR/tree/main/docs" target="_blank" rel="noopener noreferrer" class="footer-link">Docs ↗</a>
       <a href="#catalogo" class="footer-link">Demos</a>
     </div>
   </footer>
@@ -2105,6 +2569,7 @@ app.<span class="fn">start</span>();</code></pre>
     const snippets = {
       ts: `<span class="kw">import</span> { <span class="fn">XRApp</span> } <span class="kw">from</span> <span class="str">'vxr'</span>;
 
+<span class="cmt">// 1. Inicializa tu experiencia 3D y WebXR en 4 líneas</span>
 <span class="kw">const</span> app = <span class="kw">new</span> <span class="fn">XRApp</span>({
   <span class="prop">container</span>: <span class="str">"#app"</span>,
   <span class="prop">autoVRButton</span>: <span class="num">true</span>,
@@ -2113,12 +2578,40 @@ app.<span class="fn">start</span>();</code></pre>
   <span class="prop">pixelRatioCap</span>: <span class="num">1.5</span>
 });
 
-<span class="kw">await</span> app.<span class="fn">loadModel</span>(<span class="str">'./models/edificio.glb'</span>, {
+<span class="cmt">// 2. Carga tu modelo 3D con centrado y piso automáticos</span>
+<span class="kw">await</span> app.<span class="fn">loadModel</span>(<span class="str">'./models/artefacto.glb'</span>, {
   <span class="prop">autoGround</span>: <span class="num">true</span>,
   <span class="prop">autoCenter</span>: <span class="num">true</span>
 });
 
 app.<span class="fn">start</span>();`,
+
+      room: `<span class="kw">import</span> { <span class="fn">XRApp</span>, <span class="fn">XRRoom</span>, <span class="fn">ProceduralAudio</span> } <span class="kw">from</span> <span class="str">'vxr'</span>;
+
+<span class="kw">const</span> app = <span class="kw">new</span> <span class="fn">XRApp</span>({ <span class="prop">autoVRButton</span>: <span class="num">true</span> });
+
+<span class="cmt">// 1. Construye una sala de museo con iluminación y colisiones</span>
+<span class="kw">const</span> room = <span class="kw">new</span> <span class="fn">XRRoom</span>({
+  <span class="prop">dimensions</span>: { <span class="prop">width</span>: <span class="num">14</span>, <span class="prop">height</span>: <span class="num">4.5</span>, <span class="prop">depth</span>: <span class="num">14</span> },
+  <span class="prop">materials</span>: { <span class="prop">floor</span>: <span class="str">'marble'</span>, <span class="prop">walls</span>: <span class="str">'matte-white'</span> },
+  <span class="prop">doors</span>: [{ <span class="prop">wall</span>: <span class="str">'north'</span>, <span class="prop">width</span>: <span class="num">2.2</span>, <span class="prop">height</span>: <span class="num">3.0</span> }]
+});
+app.scene.<span class="fn">add</span>(room);
+
+<span class="cmt">// 2. Audio procedural nativo Web Audio (0 descargas de audio)</span>
+<span class="kw">const</span> audio = <span class="kw">new</span> <span class="fn">ProceduralAudio</span>();
+audio.<span class="fn">playExhibitFanfare</span>();
+
+app.<span class="fn">start</span>();`,
+
+      quest: `<span class="cmt"># 1. Auditar salud del proyecto para Meta Quest Browser</span>
+npx vxr doctor
+
+<span class="cmt"># 2. Compilar build web optimizada con WebXR a 90 FPS + PWA</span>
+npx vxr build --target quest
+
+<span class="cmt"># 3. Servir en red local con HTTPS automático para Quest</span>
+npx vxr serve --https`,
 
       install: `<span class="cmt"># 1. Instalar VXR en tu proyecto con npm</span>
 npm install github:Vickman123/Framework-XVR
@@ -2126,14 +2619,7 @@ npm install github:Vickman123/Framework-XVR
 <span class="cmt"># 2. Instalar Three.js como dependencia base</span>
 npm install three @types/three
 
-<span class="cmt"># ¡Listo! Ya puedes importar { XRApp } en cualquier archivo .ts o .js</span>`,
-
-      basic: `<span class="kw">import</span> { <span class="fn">XRApp</span> } <span class="kw">from</span> <span class="str">'vxr'</span>;
-
-<span class="cmt">// Crea una escena 3D WebXR completa en 2 líneas:</span>
-<span class="kw">const</span> app = <span class="kw">new</span> <span class="fn">XRApp</span>({ <span class="prop">enableVR</span>: <span class="num">true</span> });
-<span class="kw">await</span> app.<span class="fn">loadModel</span>(<span class="str">'./modelo.glb'</span>);
-app.<span class="fn">start</span>();`
+<span class="cmt"># ¡Listo! Ya puedes crear mundos 3D y WebXR</span>`
     };
 
     let activeTab = 'ts';
@@ -2155,9 +2641,12 @@ app.<span class="fn">start</span>();`
     const copyText = document.getElementById('copy-text');
     if (btnCopy) {
       btnCopy.addEventListener('click', () => {
-        const rawCode = activeTab === 'install' 
-          ? 'npm install github:Vickman123/Framework-XVR\nnpm install three @types/three'
-          : codeSnippetBox.textContent || '';
+        let rawCode = codeSnippetBox.textContent || '';
+        if (activeTab === 'install') {
+          rawCode = 'npm install github:Vickman123/Framework-XVR\nnpm install three @types/three';
+        } else if (activeTab === 'quest') {
+          rawCode = 'npx vxr doctor\nnpx vxr build --target quest\nnpx vxr serve --https';
+        }
         navigator.clipboard.writeText(rawCode).then(() => {
           if (copyText) copyText.textContent = '¡Copiado!';
           showToast('Código copiado al portapapeles ✓');
@@ -2172,7 +2661,7 @@ app.<span class="fn">start</span>();`
     window.addEventListener('scroll', () => {
       const scrollPos = window.scrollY + 120;
       const navLinks = document.querySelectorAll('.nav-item-link');
-      const sections = ['top', 'caracteristicas', 'catalogo', 'documentacion', 'codigo'];
+      const sections = ['top', 'viaje', 'caracteristicas', 'catalogo', 'comunidad', 'documentacion'];
 
       sections.forEach((id) => {
         const sec = document.getElementById(id);
