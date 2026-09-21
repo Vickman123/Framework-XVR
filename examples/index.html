@@ -3,14 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VXR — Framework WebXR & Three.js | Landing Page & Catálogo</title>
-  <link rel="stylesheet" href="/src/shared/styles.css" />
+  <title>VXR — High-Level WebXR & 3D Interactive Framework</title>
+  <link rel="stylesheet" href="./src/shared/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Caveat:wght@600&display=swap" rel="stylesheet" />
+  
   <style>
     :root {
-      --vxr-bg-gradient: radial-gradient(circle at 50% 10%, #0e172e 0%, #050811 80%);
-      --vxr-card-bg: rgba(15, 23, 42, 0.75);
-      --card-hover-border: rgba(56, 189, 248, 0.55);
-      --section-border: rgba(148, 163, 184, 0.12);
+      --vxr-bg-dark: #050811;
+      --vxr-bg-surface: rgba(13, 19, 36, 0.72);
+      --vxr-bg-card: rgba(15, 23, 42, 0.65);
+      --vxr-border: rgba(255, 255, 255, 0.08);
+      --vxr-border-accent: rgba(56, 189, 248, 0.28);
+      --vxr-border-hover: rgba(56, 189, 248, 0.55);
+      --vxr-cyan: #38bdf8;
+      --vxr-blue: #0284c7;
+      --vxr-indigo: #6366f1;
+      --vxr-purple: #a855f7;
+      --vxr-text-main: #f8fafc;
+      --vxr-text-sub: #94a3b8;
+      --vxr-text-dim: #64748b;
+      --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-hand: 'Caveat', cursive;
     }
 
     * {
@@ -24,33 +40,39 @@
     }
 
     body {
-      overflow-y: auto;
-      background: var(--vxr-bg-gradient);
-      color: #f1f5f9;
-      font-family: var(--vxr-font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+      background-color: var(--vxr-bg-dark);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(14, 165, 233, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 85% 25%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 50% 80%, rgba(168, 85, 247, 0.06) 0%, transparent 60%);
+      background-attachment: fixed;
+      color: var(--vxr-text-main);
+      font-family: var(--font-display);
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      overflow-x: hidden;
+      overflow-y: auto;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* Fixed Top Navigation Bar */
-    .top-nav {
+    /* ==========================================================================
+       Top Navigation Bar
+       ========================================================================== */
+    .site-nav {
       position: sticky;
       top: 0;
       width: 100%;
       z-index: 1000;
-      background: rgba(8, 12, 24, 0.85);
-      backdrop-filter: blur(14px);
-      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-      display: flex;
-      justify-content: center;
+      background: rgba(5, 8, 17, 0.82);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--vxr-border);
     }
 
     .nav-container {
-      width: 100%;
-      max-width: 1200px;
-      padding: 12px 24px;
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 12px 28px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -59,601 +81,842 @@
     .nav-brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       text-decoration: none;
-      color: #ffffff;
-      font-weight: 800;
-      font-size: 18px;
-      letter-spacing: -0.02em;
     }
 
-    .nav-logo-badge {
-      background: linear-gradient(135deg, #0284c7, #38bdf8);
-      color: #ffffff;
-      font-size: 11px;
+    .brand-logo-text {
+      font-size: 26px;
       font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 6px;
-      letter-spacing: 0.05em;
-    }
-
-    .nav-links {
+      letter-spacing: -0.04em;
+      background: linear-gradient(135deg, #ffffff 30%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 25px rgba(56, 189, 248, 0.3);
       display: flex;
       align-items: center;
-      gap: 24px;
-      list-style: none;
     }
 
-    .nav-link {
-      color: #94a3b8;
-      text-decoration: none;
+    .brand-meta {
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid rgba(255, 255, 255, 0.12);
+      padding-left: 10px;
+    }
+
+    .brand-name {
       font-size: 13px;
-      font-weight: 600;
-      transition: color 0.2s ease;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+      line-height: 1.15;
     }
 
-    .nav-link:hover {
+    .brand-tagline {
+      font-size: 8.5px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
       color: #38bdf8;
     }
 
-    .nav-cta {
-      background: linear-gradient(135deg, #0284c7, #0369a1);
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-item-link {
+      color: var(--vxr-text-sub);
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 600;
+      position: relative;
+      padding: 6px 0;
+      transition: color 0.2s ease;
+    }
+
+    .nav-item-link:hover {
+      color: #ffffff;
+    }
+
+    .nav-item-link.active {
+      color: #ffffff;
+    }
+
+    .nav-item-link.active::after {
+      content: '';
+      position: absolute;
+      bottom: -13px;
+      left: 0;
+      width: 100%;
+      height: 2.5px;
+      background: linear-gradient(90deg, #38bdf8, #818cf8);
+      border-radius: 9999px;
+      box-shadow: 0 0 10px #38bdf8;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .btn-github-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--vxr-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      transition: all 0.2s ease;
+    }
+
+    .btn-github-icon:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+    }
+
+    .btn-get-vxr {
+      background: linear-gradient(135deg, #0284c7 0%, #6366f1 100%);
       color: #ffffff;
       text-decoration: none;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 700;
-      padding: 8px 16px;
-      border-radius: 8px;
-      transition: all 0.2s ease;
-      box-shadow: 0 0 14px rgba(2, 132, 199, 0.35);
+      padding: 9px 20px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 18px rgba(2, 132, 199, 0.45);
+      transition: all 0.25s ease;
+      border: 1px solid rgba(255, 255, 255, 0.15);
     }
 
-    .nav-cta:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+    .btn-get-vxr:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(99, 102, 241, 0.6);
+      background: linear-gradient(135deg, #0369a1 0%, #4f46e5 100%);
     }
 
-    @media (max-width: 860px) {
-      .nav-links { display: none; }
+    @media (max-width: 960px) {
+      .nav-menu { display: none; }
     }
 
-    /* Page Container */
-    .page-wrapper {
-      width: 100%;
-      max-width: 1200px;
-      padding: 40px 24px 80px;
+    /* ==========================================================================
+       Main Container & Hero Section
+       ========================================================================== */
+    .main-wrapper {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 48px 28px 100px;
       display: flex;
       flex-direction: column;
       gap: 80px;
     }
 
-    /* Hero Section */
-    .hero-section {
-      text-align: center;
-      padding: 40px 0 20px;
-      display: flex;
-      flex-direction: column;
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 40px;
       align-items: center;
+      padding: 20px 0 30px;
     }
 
-    .brand-pill {
+    .hero-content {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .version-pill {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 18px;
-      background: rgba(14, 165, 233, 0.12);
-      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 5px 14px;
       border-radius: 9999px;
+      background: rgba(14, 165, 233, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
       font-size: 11px;
       font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
+      letter-spacing: 0.04em;
       color: #38bdf8;
       margin-bottom: 24px;
-      box-shadow: 0 0 24px -4px rgba(56, 189, 248, 0.25);
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.15);
     }
 
-    .hero-title {
-      font-size: clamp(38px, 6vw, 68px);
+    .pill-glow-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #38bdf8;
+      box-shadow: 0 0 8px #38bdf8;
+    }
+
+    .hero-heading {
+      font-size: clamp(38px, 5.2vw, 64px);
       font-weight: 800;
-      letter-spacing: -0.04em;
+      letter-spacing: -0.035em;
+      line-height: 1.06;
       color: #ffffff;
-      line-height: 1.05;
-      margin-bottom: 16px;
-      text-shadow: 0 0 45px rgba(56, 189, 248, 0.25);
+      margin-bottom: 20px;
     }
 
-    .hero-title span {
-      background: linear-gradient(135deg, #ffffff 40%, #38bdf8 100%);
+    .hero-gradient-text {
+      background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+    }
+
+    .hero-lead {
+      font-size: 15.5px;
+      line-height: 1.68;
+      color: var(--vxr-text-sub);
+      max-width: 540px;
+      margin-bottom: 32px;
+      font-weight: 400;
+    }
+
+    .hero-cta-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 36px;
+    }
+
+    .btn-cta-primary {
+      background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%);
+      color: #ffffff;
+      font-size: 14.5px;
+      font-weight: 700;
+      padding: 13px 26px;
+      border-radius: 9999px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 22px rgba(2, 132, 199, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.25s ease;
+    }
+
+    .btn-cta-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(99, 102, 241, 0.7);
+    }
+
+    .btn-cta-secondary {
+      background: rgba(15, 23, 42, 0.8);
+      color: #e2e8f0;
+      font-size: 14.5px;
+      font-weight: 600;
+      padding: 13px 24px;
+      border-radius: 9999px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(12px);
+      transition: all 0.25s ease;
+    }
+
+    .btn-cta-secondary:hover {
+      background: rgba(30, 41, 59, 0.9);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .tech-pill-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tech-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--vxr-border);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--vxr-text-sub);
+      transition: border-color 0.2s;
+    }
+
+    .tech-pill:hover {
+      border-color: rgba(56, 189, 248, 0.35);
+      color: #ffffff;
+    }
+
+    .tech-pill-icon {
+      font-size: 13px;
+    }
+
+    /* Hero Right Visual (Mockup Replica) */
+    .hero-visual-card {
+      position: relative;
+      width: 100%;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px -10px rgba(56, 189, 248, 0.25);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      background: #090e1c;
+      transition: transform 0.3s ease, border-color 0.3s ease;
+    }
+
+    .hero-visual-card:hover {
+      border-color: rgba(56, 189, 248, 0.6);
+      transform: translateY(-3px);
+    }
+
+    .hero-visual-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: cover;
+    }
+
+    .hero-visual-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(5, 8, 17, 0.1) 0%, rgba(5, 8, 17, 0.4) 100%);
+    }
+
+    .hero-visual-play-btn {
+      position: absolute;
+      top: 48%;
+      left: 18%;
+      transform: translateY(-50%);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 18px;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(56, 189, 248, 0.5);
+      border-radius: 9999px;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(56, 189, 248, 0.3);
+      transition: all 0.25s ease;
+      text-decoration: none;
+      pointer-events: auto;
+    }
+
+    .hero-visual-play-btn:hover {
+      background: rgba(2, 132, 199, 0.85);
+      border-color: #38bdf8;
+      box-shadow: 0 12px 35px rgba(2, 132, 199, 0.6);
+      transform: translateY(-50%) scale(1.05);
+    }
+
+    .play-icon-circle {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #38bdf8;
+      color: #050811;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    @media (max-width: 960px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 36px;
+      }
+      .hero-visual-card {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+    }
+
+    /* ==========================================================================
+       Metrics Bar (Strip below Hero)
+       ========================================================================== */
+    .metrics-bar {
+      width: 100%;
+      background: rgba(13, 19, 36, 0.8);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--vxr-border);
+      border-radius: 16px;
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+      box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.5);
+    }
+
+    .metric-items-group {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      flex-wrap: wrap;
+    }
+
+    .metric-col {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .metric-icon-box {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .metric-num {
+      font-size: 14px;
+      font-weight: 800;
+      color: #ffffff;
+      display: block;
+      line-height: 1.2;
+    }
+
+    .metric-desc {
+      font-size: 11px;
+      color: var(--vxr-text-dim);
+      font-weight: 500;
+    }
+
+    .metric-quote {
+      font-size: 11.5px;
+      font-style: italic;
+      color: #94a3b8;
+      border-left: 2px solid rgba(56, 189, 248, 0.4);
+      padding-left: 14px;
+      max-width: 380px;
+    }
+
+    .metric-quote b {
+      color: #38bdf8;
+      font-style: normal;
+    }
+
+    /* ==========================================================================
+       Use Cases & Code Showcase (4 Cards + Code Preview)
+       ========================================================================== */
+    .features-section {
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+    }
+
+    .features-grid-wrapper {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    /* 4 Sector Cards Grid (2x2) */
+    .sector-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .sector-card {
+      background: var(--vxr-bg-card);
+      border: 1px solid var(--vxr-border);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+
+    .sector-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--vxr-border-hover);
+      box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.7), 0 0 20px -4px rgba(56, 189, 248, 0.3);
+      background: rgba(22, 32, 58, 0.85);
+    }
+
+    .sector-img-wrap {
+      width: 100%;
+      height: 120px;
+      overflow: hidden;
+      position: relative;
+      background: #000;
+    }
+
+    .sector-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+
+    .sector-card:hover .sector-img {
+      transform: scale(1.06);
+    }
+
+    .sector-footer {
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .sector-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.25;
+    }
+
+    .sector-arrow {
+      color: #38bdf8;
+      font-size: 14px;
+      transition: transform 0.2s ease;
+    }
+
+    .sector-card:hover .sector-arrow {
+      transform: translateX(3px);
+    }
+
+    /* Code Preview Box */
+    .code-preview-card {
+      background: #070c18;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.7);
+    }
+
+    .code-header {
+      background: rgba(15, 23, 42, 0.9);
+      border-bottom: 1px solid var(--vxr-border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .code-tabs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-tab-btn {
+      background: none;
+      border: none;
+      color: var(--vxr-text-dim);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .code-tab-btn.active {
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+    }
+
+    .code-tab-btn:hover:not(.active) {
+      color: #ffffff;
+    }
+
+    .btn-copy-code {
+      background: none;
+      border: none;
+      color: var(--vxr-text-dim);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 4px;
+      transition: color 0.2s;
+    }
+
+    .btn-copy-code:hover {
+      color: #ffffff;
+    }
+
+    .code-body {
+      padding: 18px 20px;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      line-height: 1.7;
+      color: #a5f3fc;
+      overflow-x: auto;
+      flex: 1;
+      position: relative;
+    }
+
+    /* Syntax highlight colors */
+    .kw { color: #f43f5e; font-weight: 600; }
+    .fn { color: #38bdf8; }
+    .str { color: #86efac; }
+    .num { color: #fbbf24; }
+    .prop { color: #cbd5e1; }
+    .cmt { color: #64748b; font-style: italic; }
+
+    .code-annotation {
+      position: absolute;
+      bottom: 40px;
+      right: 28px;
+      font-family: var(--font-hand);
+      color: #38bdf8;
+      font-size: 19px;
+      font-weight: 600;
+      transform: rotate(-4deg);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+    }
+
+    @media (max-width: 960px) {
+      .features-grid-wrapper {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ==========================================================================
+       Transition Title (Más que una librería)
+       ========================================================================== */
+    .transition-block {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      border-top: 1px solid var(--vxr-border);
+      padding-top: 48px;
+      margin-top: 10px;
+    }
+
+    .trans-tag {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #818cf8;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .trans-title {
+      font-size: clamp(26px, 3.8vw, 42px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #ffffff;
+      line-height: 1.15;
+    }
+
+    .trans-title span {
+      background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
-    .hero-subtitle {
-      font-size: clamp(17px, 2.8vw, 24px);
-      font-weight: 500;
-      color: #94a3b8;
-      margin-bottom: 20px;
-      letter-spacing: -0.01em;
-      max-width: 780px;
-    }
-
-    .hero-desc {
-      max-width: 720px;
-      margin: 0 auto 32px;
-      font-size: 15px;
-      line-height: 1.65;
-      color: #64748b;
-    }
-
-    .hero-actions {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 16px;
-      margin-bottom: 48px;
-    }
-
-    .btn-hero-primary {
-      background: linear-gradient(135deg, #0284c7, #0369a1);
-      color: #ffffff;
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 700;
-      padding: 14px 28px;
-      border-radius: 12px;
-      transition: all 0.2s ease;
-      box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4);
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .btn-hero-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 26px rgba(2, 132, 199, 0.6);
-      background: linear-gradient(135deg, #0369a1, #0284c7);
-    }
-
-    .btn-hero-secondary {
-      background: rgba(30, 41, 59, 0.8);
-      color: #cbd5e1;
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 600;
-      padding: 14px 26px;
-      border-radius: 12px;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      transition: all 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .btn-hero-secondary:hover {
-      background: rgba(51, 65, 85, 0.9);
-      color: #ffffff;
-      border-color: rgba(148, 163, 184, 0.4);
-    }
-
-    /* Key Value Grid (Pillars) */
-    .hero-highlights {
-      width: 100%;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px;
-    }
-
-    .highlight-card {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid rgba(148, 163, 184, 0.12);
-      border-radius: 12px;
-      padding: 18px 20px;
-      text-align: left;
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-    }
-
-    .highlight-icon {
-      font-size: 24px;
-      line-height: 1;
-      flex-shrink: 0;
-      margin-top: 2px;
-    }
-
-    .highlight-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: #ffffff;
-      margin-bottom: 4px;
-    }
-
-    .highlight-text {
-      font-size: 12px;
-      color: #94a3b8;
-      line-height: 1.45;
-    }
-
-    /* Section Styles */
-    .section-block {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 28px;
-    }
-
-    .section-header {
-      text-align: left;
-      border-bottom: 1px solid var(--section-border);
-      padding-bottom: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .section-tag {
+    .trans-side {
       font-size: 11px;
       font-weight: 700;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #38bdf8;
+      color: #475569;
     }
 
-    .section-title {
-      font-size: clamp(24px, 3.5vw, 36px);
-      font-weight: 800;
-      color: #ffffff;
-      letter-spacing: -0.02em;
-    }
-
-    .section-desc {
-      font-size: 15px;
-      color: #94a3b8;
-      max-width: 800px;
-      line-height: 1.6;
-    }
-
-    /* What is VXR Code Comparison */
-    .what-is-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 24px;
-    }
-
-    .info-box {
-      background: var(--vxr-card-bg);
-      border: 1px solid rgba(148, 163, 184, 0.14);
-      border-radius: 14px;
-      padding: 28px;
+    /* ==========================================================================
+       Catalog Section & Filter Tabs
+       ========================================================================== */
+    .catalog-section {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 32px;
     }
 
-    .info-box h3 {
-      font-size: 18px;
-      font-weight: 700;
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .info-box p {
-      font-size: 14px;
-      color: #94a3b8;
-      line-height: 1.6;
-    }
-
-    .code-comparison {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
-      background: rgba(2, 6, 23, 0.9);
-      border: 1px solid rgba(56, 189, 248, 0.25);
-      border-radius: 14px;
-      padding: 24px;
-    }
-
-    .code-header {
+    .catalog-toolbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.15);
-      padding-bottom: 12px;
-      margin-bottom: 8px;
+      flex-wrap: wrap;
+      gap: 16px;
+      border-bottom: 1px solid var(--vxr-border);
+      padding-bottom: 18px;
     }
 
-    .code-tag {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #38bdf8;
-    }
-
-    pre.code-snippet {
-      font-family: var(--vxr-font-mono, monospace);
-      font-size: 13px;
-      color: #cbd5e1;
-      line-height: 1.6;
-      overflow-x: auto;
-    }
-
-    .kw { color: #f43f5e; font-weight: 600; }
-    .str { color: #34d399; }
-    .fn { color: #38bdf8; }
-    .cm { color: #64748b; font-style: italic; }
-
-    /* Objectives Grid */
-    .objectives-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 20px;
-    }
-
-    .obj-card {
-      background: rgba(15, 23, 42, 0.65);
-      border: 1px solid rgba(148, 163, 184, 0.12);
-      border-radius: 14px;
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      transition: all 0.25s ease;
-    }
-
-    .obj-card:hover {
-      border-color: rgba(56, 189, 248, 0.4);
-      transform: translateY(-3px);
-      background: rgba(30, 41, 59, 0.7);
-    }
-
-    .obj-badge {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-      background: rgba(14, 165, 233, 0.15);
-      color: #38bdf8;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      font-weight: 800;
-    }
-
-    .obj-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: #ffffff;
-    }
-
-    .obj-text {
-      font-size: 13px;
-      color: #94a3b8;
-      line-height: 1.55;
-    }
-
-    /* Use Cases Grid */
-    .use-cases-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 24px;
-    }
-
-    .use-card {
-      background: var(--vxr-card-bg);
-      border: 1px solid rgba(148, 163, 184, 0.14);
-      border-radius: 16px;
-      padding: 26px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      position: relative;
-      overflow: hidden;
-      transition: all 0.25s ease;
-    }
-
-    .use-card:hover {
-      border-color: var(--card-hover-border);
-      transform: translateY(-4px);
-      background: rgba(30, 41, 59, 0.85);
-    }
-
-    .use-icon {
-      font-size: 32px;
-      line-height: 1;
-    }
-
-    .use-title {
-      font-size: 17px;
-      font-weight: 700;
-      color: #ffffff;
-    }
-
-    .use-desc {
-      font-size: 13px;
-      color: #94a3b8;
-      line-height: 1.5;
-    }
-
-    .use-features {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-top: 6px;
-      padding-top: 12px;
-      border-top: 1px solid rgba(148, 163, 184, 0.1);
-      font-size: 12px;
-      color: #cbd5e1;
-    }
-
-    .use-features li::before {
-      content: '✓ ';
-      color: #38bdf8;
-      font-weight: bold;
-    }
-
-    /* Catalog Filter Tabs */
     .filter-tabs {
       display: flex;
       align-items: center;
-      justify-content: flex-start;
-      flex-wrap: wrap;
-      gap: 10px;
-      background: rgba(15, 23, 42, 0.6);
-      padding: 6px;
-      border-radius: 12px;
-      border: 1px solid rgba(148, 163, 184, 0.15);
-      width: fit-content;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.7);
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--vxr-border);
     }
 
-    .tab-btn {
-      background: transparent;
+    .tab-filter-btn {
+      background: none;
       border: none;
-      color: #94a3b8;
-      padding: 8px 18px;
-      border-radius: 8px;
-      font-size: 13px;
+      color: var(--vxr-text-dim);
+      font-size: 12.5px;
       font-weight: 600;
+      padding: 7px 16px;
+      border-radius: 8px;
       cursor: pointer;
-      transition: all 0.2s ease;
+      font-family: inherit;
       display: flex;
       align-items: center;
       gap: 8px;
+      transition: all 0.2s ease;
     }
 
-    .tab-btn:hover {
+    .tab-filter-btn.active {
+      background: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 2px 10px rgba(2, 132, 199, 0.4);
+    }
+
+    .tab-filter-btn:hover:not(.active) {
       color: #ffffff;
       background: rgba(255, 255, 255, 0.05);
     }
 
-    .tab-btn.active {
-      background: #0284c7;
-      color: #ffffff;
-      box-shadow: 0 2px 12px rgba(2, 132, 199, 0.35);
-    }
-
-    .tab-count {
+    .tab-counter {
       font-size: 11px;
-      padding: 2px 7px;
+      padding: 1px 6px;
       border-radius: 9999px;
-      background: rgba(0, 0, 0, 0.25);
-      font-family: monospace;
+      background: rgba(0, 0, 0, 0.3);
+      font-family: var(--font-mono);
     }
 
-    /* Catalog Grid */
     .catalog-grid {
-      width: 100%;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
       gap: 24px;
     }
 
     .exp-card {
-      background: var(--vxr-card-bg);
-      border: 1px solid rgba(148, 163, 184, 0.14);
+      background: var(--vxr-bg-card);
+      border: 1px solid var(--vxr-border);
       border-radius: 16px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-      position: relative;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
     }
 
     .exp-card:hover {
       transform: translateY(-5px);
-      border-color: var(--card-hover-border);
-      background: rgba(30, 41, 59, 0.85);
+      border-color: var(--vxr-border-hover);
       box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.7), 0 0 30px -6px rgba(56, 189, 248, 0.25);
+      background: rgba(22, 32, 58, 0.85);
     }
 
     .card-banner {
-      height: 110px;
-      position: relative;
+      height: 100px;
+      padding: 18px 22px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 20px 24px;
-      background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(99, 102, 241, 0.15));
-      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      position: relative;
     }
 
-    .card-banner-purple {
-      background: linear-gradient(135deg, rgba(168, 85, 247, 0.18), rgba(236, 72, 153, 0.18));
+    .card-banner-blue {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.2) 0%, rgba(99, 102, 241, 0.15) 100%);
     }
 
     .card-banner-emerald {
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(14, 165, 233, 0.18));
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(14, 165, 233, 0.15) 100%);
     }
 
     .card-banner-amber {
-      background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(239, 68, 68, 0.18));
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(239, 68, 68, 0.15) 100%);
+    }
+
+    .card-banner-purple {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(236, 72, 153, 0.15) 100%);
     }
 
     .card-icon {
-      font-size: 38px;
+      font-size: 34px;
       line-height: 1;
-      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
     }
 
     .card-badge-group {
       display: flex;
       flex-direction: column;
       align-items: flex-end;
-      gap: 6px;
+      gap: 5px;
     }
 
     .tech-badge {
-      font-size: 10px;
+      font-size: 10.5px;
       font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
       padding: 3px 8px;
       border-radius: 6px;
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: #e2e8f0;
+      letter-spacing: 0.04em;
+      border: 1px solid var(--vxr-border);
+      background: rgba(15, 23, 42, 0.6);
+      color: #94a3b8;
     }
 
-    .badge-vxr {
-      background: rgba(14, 165, 233, 0.25);
-      border-color: rgba(56, 189, 248, 0.4);
+    .badge-core {
+      background: rgba(14, 165, 233, 0.2);
       color: #38bdf8;
+      border-color: rgba(56, 189, 248, 0.4);
     }
 
-    .badge-ref {
-      background: rgba(168, 85, 247, 0.25);
-      border-color: rgba(192, 132, 252, 0.4);
-      color: #c084fc;
+    .badge-case {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border-color: rgba(52, 211, 153, 0.4);
     }
 
     .card-body {
-      padding: 24px;
+      padding: 22px;
       display: flex;
       flex-direction: column;
-      flex-grow: 1;
+      flex: 1;
     }
 
     .card-tagline {
       font-size: 11px;
       font-weight: 700;
-      text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #38bdf8;
+      text-transform: uppercase;
       margin-bottom: 6px;
     }
 
-    .card-tagline-purple { color: #c084fc; }
-    .card-tagline-emerald { color: #34d399; }
-    .card-tagline-amber { color: #fbbf24; }
-
     .card-title {
-      font-size: 19px;
+      font-size: 17px;
       font-weight: 700;
       color: #ffffff;
       margin-bottom: 10px;
@@ -661,20 +924,18 @@
 
     .card-desc {
       font-size: 13px;
-      color: #94a3b8;
-      line-height: 1.5;
+      color: var(--vxr-text-sub);
+      line-height: 1.55;
       margin-bottom: 18px;
-      flex-grow: 1;
+      flex: 1;
     }
 
     .feature-list {
       list-style: none;
-      padding-top: 14px;
-      border-top: 1px solid rgba(148, 163, 184, 0.1);
-      margin-bottom: 22px;
       display: flex;
       flex-direction: column;
       gap: 7px;
+      margin-bottom: 22px;
     }
 
     .feature-item {
@@ -686,77 +947,113 @@
     }
 
     .feature-dot {
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 5px;
       border-radius: 50%;
       background: #38bdf8;
       flex-shrink: 0;
     }
 
     .card-actions {
-      display: grid;
-      grid-template-columns: 1fr auto;
+      display: flex;
+      align-items: center;
       gap: 10px;
-      margin-top: auto;
     }
 
     .btn-test {
-      background: linear-gradient(135deg, #0284c7, #0369a1);
+      flex: 1;
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
       color: #ffffff;
-      border: none;
-      border-radius: 10px;
-      padding: 11px 16px;
+      border: 1px solid rgba(56, 189, 248, 0.35);
       font-size: 13px;
       font-weight: 700;
+      padding: 10px 16px;
+      border-radius: 10px;
       cursor: pointer;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 6px;
       transition: all 0.2s ease;
-      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
-      text-decoration: none;
+      font-family: inherit;
     }
 
     .btn-test:hover {
-      background: linear-gradient(135deg, #0369a1, #075985);
+      background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
+      box-shadow: 0 4px 16px rgba(2, 132, 199, 0.5);
       transform: translateY(-1px);
-      box-shadow: 0 6px 18px rgba(2, 132, 199, 0.5);
     }
 
     .btn-open-tab {
-      background: rgba(30, 41, 59, 0.8);
-      color: #94a3b8;
-      border: 1px solid rgba(148, 163, 184, 0.2);
+      width: 40px;
+      height: 40px;
       border-radius: 10px;
-      padding: 11px 14px;
-      font-size: 13px;
-      cursor: pointer;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--vxr-border);
+      color: var(--vxr-text-sub);
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.2s ease;
       text-decoration: none;
+      font-size: 15px;
+      transition: all 0.2s ease;
     }
 
     .btn-open-tab:hover {
-      background: rgba(51, 65, 85, 0.9);
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(56, 189, 248, 0.4);
       color: #ffffff;
-      border-color: rgba(148, 163, 184, 0.4);
     }
 
-    /* Documentation Section */
+    /* ==========================================================================
+       Documentation Section
+       ========================================================================== */
+    .docs-section {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      border-top: 1px solid var(--vxr-border);
+      padding-top: 60px;
+    }
+
+    .section-header {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .section-tag {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #38bdf8;
+    }
+
+    .section-title {
+      font-size: clamp(24px, 3.2vw, 36px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+    }
+
+    .section-desc {
+      font-size: 14.5px;
+      color: var(--vxr-text-sub);
+      max-width: 680px;
+    }
+
     .docs-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 20px;
     }
 
     .doc-category-card {
-      background: var(--vxr-card-bg);
-      border: 1px solid rgba(148, 163, 184, 0.14);
+      background: var(--vxr-bg-card);
+      border: 1px solid var(--vxr-border);
       border-radius: 14px;
-      padding: 24px;
+      padding: 22px;
       display: flex;
       flex-direction: column;
       gap: 16px;
@@ -766,16 +1063,12 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       padding-bottom: 12px;
     }
 
-    .doc-category-icon {
-      font-size: 20px;
-    }
-
     .doc-category-title {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
       color: #ffffff;
     }
@@ -787,22 +1080,18 @@
       gap: 10px;
     }
 
-    .doc-item-link {
+    .doc-link-item {
+      text-decoration: none;
       display: flex;
       flex-direction: column;
       gap: 2px;
-      text-decoration: none;
       padding: 8px 10px;
       border-radius: 8px;
-      transition: all 0.2s ease;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid transparent;
+      transition: background 0.2s ease;
     }
 
-    .doc-item-link:hover {
-      background: rgba(14, 165, 233, 0.12);
-      border-color: rgba(56, 189, 248, 0.3);
-      transform: translateX(3px);
+    .doc-link-item:hover {
+      background: rgba(255, 255, 255, 0.05);
     }
 
     .doc-item-name {
@@ -815,488 +1104,453 @@
     }
 
     .doc-item-desc {
-      font-size: 11px;
-      color: #94a3b8;
+      font-size: 11.5px;
+      color: var(--vxr-text-dim);
       line-height: 1.4;
     }
 
-    /* Interactive Experience Runner / Fullscreen Modal */
-    #experience-runner {
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      background: #020617;
-      display: flex;
-      flex-direction: column;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    #experience-runner.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    /* Runner Top Control Bar */
-    .runner-header {
-      height: 60px;
-      background: rgba(15, 23, 42, 0.96);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(56, 189, 248, 0.25);
-      padding: 0 20px;
+    /* ==========================================================================
+       Footer
+       ========================================================================== */
+    .site-footer {
+      border-top: 1px solid var(--vxr-border);
+      padding: 36px 28px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-      flex-shrink: 0;
+      max-width: 1320px;
+      margin: 0 auto;
+      width: 100%;
+      font-size: 12.5px;
+      color: var(--vxr-text-dim);
+      flex-wrap: wrap;
+      gap: 16px;
     }
 
-    .runner-left {
+    .footer-links {
       display: flex;
       align-items: center;
       gap: 16px;
     }
 
+    .footer-link {
+      color: var(--vxr-text-sub);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-link:hover {
+      color: #38bdf8;
+    }
+
+    /* ==========================================================================
+       Interactive Runner Modal (For Testing Experiences)
+       ========================================================================== */
+    #experience-runner {
+      position: fixed;
+      inset: 0;
+      background: #030712;
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+    }
+
+    #experience-runner.active {
+      display: flex;
+    }
+
+    .runner-header {
+      background: #080d1a;
+      border-bottom: 1px solid rgba(56, 189, 248, 0.25);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .runner-left, .runner-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
     .btn-back-catalog {
-      background: linear-gradient(135deg, #0284c7, #0369a1);
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
       color: #ffffff;
-      border: none;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      padding: 8px 16px;
       border-radius: 8px;
-      padding: 8px 18px;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 700;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      font-family: inherit;
       transition: all 0.2s ease;
-      box-shadow: 0 0 16px rgba(2, 132, 199, 0.4);
     }
 
     .btn-back-catalog:hover {
-      background: linear-gradient(135deg, #0369a1, #0284c7);
-      transform: scale(1.02);
-      box-shadow: 0 0 22px rgba(56, 189, 248, 0.6);
+      background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
+      transform: translateY(-1px);
     }
 
     .runner-title-group {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .runner-title {
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 700;
       color: #ffffff;
-      letter-spacing: -0.01em;
     }
 
-    .runner-status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #10b981;
-      animation: pulseGreen 2s infinite;
-    }
-
-    @keyframes pulseGreen {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.85); }
-    }
-
-    .runner-status-tag {
+    .runner-tag {
       font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #34d399;
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      padding: 2px 8px;
-      border-radius: 9999px;
-    }
-
-    .runner-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      color: #4ade80;
+      border-radius: 4px;
     }
 
     .runner-action-btn {
-      background: rgba(30, 41, 59, 0.8);
-      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--vxr-border);
       color: #cbd5e1;
-      border-radius: 8px;
-      padding: 7px 12px;
+      padding: 6px 12px;
+      border-radius: 6px;
       font-size: 12px;
-      font-weight: 600;
       cursor: pointer;
+      text-decoration: none;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      transition: all 0.2s ease;
-      text-decoration: none;
+      font-family: inherit;
     }
 
     .runner-action-btn:hover {
-      background: rgba(51, 65, 85, 0.9);
+      background: rgba(255, 255, 255, 0.1);
       color: #ffffff;
-      border-color: rgba(148, 163, 184, 0.4);
     }
 
-    /* Runner iframe */
     .runner-frame-container {
+      flex: 1;
       width: 100%;
-      height: calc(100vh - 60px);
       position: relative;
-      background: #000000;
     }
 
     #experience-frame {
       width: 100%;
       height: 100%;
       border: none;
-      display: block;
-    }
-
-    /* Footer */
-    .site-footer {
-      width: 100%;
-      border-top: 1px solid rgba(148, 163, 184, 0.12);
-      padding: 32px 24px;
-      text-align: center;
-      color: #64748b;
-      font-size: 13px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .footer-pills {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .pill {
-      font-family: monospace;
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 6px;
-      background: rgba(30, 41, 59, 0.5);
-      border: 1px solid rgba(148, 163, 184, 0.15);
-      color: #94a3b8;
-    }
-
-    .pill-vxr {
-      background: rgba(14, 165, 233, 0.15);
-      border-color: rgba(56, 189, 248, 0.35);
-      color: #38bdf8;
-      font-weight: 600;
     }
   </style>
 </head>
 <body>
 
-  <!-- Fixed Top Navigation Bar -->
-  <header class="top-nav">
+  <!-- ==================== TOP NAVIGATION ==================== -->
+  <header class="site-nav">
     <div class="nav-container">
       <a href="#" class="nav-brand">
-        <span class="nav-logo-badge">VXR</span>
-        <span>Framework</span>
+        <span class="brand-logo-text">VXR</span>
+        <div class="brand-meta">
+          <span class="brand-name">Framework-XVR</span>
+          <span class="brand-tagline">BUILD IMMERSIVE WORLDS</span>
+        </div>
       </a>
-      <ul class="nav-links">
-        <li><a href="#que-es" class="nav-link">¿Qué es?</a></li>
-        <li><a href="#objetivo" class="nav-link">Objetivo</a></li>
-        <li><a href="#enfoques-usos" class="nav-link">Enfoques & Usos</a></li>
-        <li><a href="#catalogo" class="nav-link">Catálogo Interactivo</a></li>
-        <li><a href="#documentacion" class="nav-link">Documentación</a></li>
+
+      <ul class="nav-menu">
+        <li><a href="#" class="nav-item-link active">Inicio</a></li>
+        <li><a href="#caracteristicas" class="nav-item-link">Características</a></li>
+        <li><a href="#catalogo" class="nav-item-link">Demos</a></li>
+        <li><a href="#documentacion" class="nav-item-link">Documentación</a></li>
+        <li><a href="#codigo" class="nav-item-link">Ejemplos</a></li>
+        <li><a href="https://github.com/Vickman123/Framework-XVR" target="_blank" class="nav-item-link">Comunidad</a></li>
       </ul>
-      <a href="#catalogo" class="nav-cta">🚀 Probar Catálogo</a>
+
+      <div class="nav-actions">
+        <a href="https://github.com/Vickman123/Framework-XVR" target="_blank" class="btn-github-icon" title="Ver en GitHub">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"></path>
+          </svg>
+        </a>
+        <a href="#codigo" class="btn-get-vxr">
+          Obtener VXR →
+        </a>
+      </div>
     </div>
   </header>
 
-  <!-- Page Content -->
-  <div class="page-wrapper">
+  <!-- ==================== MAIN WRAPPER ==================== -->
+  <main class="main-wrapper">
 
     <!-- ==================== HERO SECTION ==================== -->
-    <section class="hero-section">
-      <div class="brand-pill">
-        <span class="vxr-dot"></span>
-        VXR Core v0.1.0 • High-Level WebXR Framework for Three.js
-      </div>
-      <h1 class="hero-title">
-        Desarrolla el Futuro Espacial<br />
-        <span>Sin la Fontanería de Three.js</span>
-      </h1>
-      <p class="hero-subtitle">
-        Capa de abstracción de alto nivel construida sobre Three.js y WebXR para crear experiencias 3D interactivas, visualizadores profesionales y simuladores inmersivos.
-      </p>
-      <p class="hero-desc">
-        VXR reduce más del 70% del código repetitivo de configuración gráfica, auto-grounding geométrico y raycasting de controladores en visores standalone como Meta Quest y navegadores de escritorio.
-      </p>
-      <div class="hero-actions">
-        <a href="#catalogo" class="btn-hero-primary">
-          <span>⚡ Explorar Catálogo de Experiencias</span>
-          <span>↓</span>
-        </a>
-        <a href="#documentacion" class="btn-hero-secondary">
-          <span>📖 Centro de Documentación & ADRs</span>
-        </a>
-      </div>
+    <section class="hero-grid">
+      <div class="hero-content">
+        <div class="version-pill">
+          <span class="pill-glow-dot"></span>
+          <span>v0.1.0 • High-Level WebXR & 3D Framework</span>
+        </div>
 
-      <!-- Quick Highlights Grid -->
-      <div class="hero-highlights">
-        <div class="highlight-card">
-          <span class="highlight-icon">⚡</span>
-          <div>
-            <div class="highlight-title">4 Líneas de Código</div>
-            <div class="highlight-text">Carga GLTF/GLB, ilumina, apoya al suelo y arranca WebXR en un abrir y cerrar de ojos.</div>
-          </div>
+        <h1 class="hero-heading">
+          Crea experiencias<br>
+          3D y WebXR<br>
+          <span class="hero-gradient-text">en minutos</span>
+        </h1>
+
+        <p class="hero-lead">
+          VXR es una capa de abstracción de alto nivel en TypeScript sobre Three.js y la WebXR Device API. Diseñada para visualizadores arquitectónicos, simuladores técnicos y videojuegos inmersivos, eliminando más del 70% del código repetitivo.
+        </p>
+
+        <div class="hero-cta-group">
+          <a href="#catalogo" class="btn-cta-primary">
+            ▶ Explorar Demos →
+          </a>
+          <a href="#codigo" class="btn-cta-secondary">
+            &lt;/&gt; Comenzar Ahora
+          </a>
         </div>
-        <div class="highlight-card">
-          <span class="highlight-icon">🔓</span>
-          <div>
-            <div class="highlight-title">Patrón Fachada Abierta</div>
-            <div class="highlight-text">Acceso directo a THREE.Scene y THREE.WebGLRenderer sin cajas negras restrictivas.</div>
+
+        <div class="tech-pill-row">
+          <div class="tech-pill">
+            <span class="tech-pill-icon" style="color: #38bdf8;">TS</span>
+            <span>TypeScript 5.8</span>
           </div>
-        </div>
-        <div class="highlight-card">
-          <span class="highlight-icon">🥽</span>
-          <div>
-            <div class="highlight-title">Optimizado para Quest</div>
-            <div class="highlight-text">PixelRatio inteligente (1.5x cap) y frustum culling de fábrica para evitar sobrecalentamiento.</div>
+          <div class="tech-pill">
+            <span class="tech-pill-icon" style="color: #94a3b8;">🔺</span>
+            <span>Three.js r174</span>
           </div>
-        </div>
-        <div class="highlight-card">
-          <span class="highlight-icon">🎯</span>
-          <div>
-            <div class="highlight-title">Raycasting Unificado</div>
-            <div class="highlight-text">El mismo código de interacción funciona con mouse en PC y láser en mandos VR.</div>
+          <div class="tech-pill">
+            <span class="tech-pill-icon" style="color: #38bdf8;">🥽</span>
+            <span>WebXR</span>
+          </div>
+          <div class="tech-pill">
+            <span class="tech-pill-icon" style="color: #60a5fa;">♾️</span>
+            <span>Meta Quest</span>
+          </div>
+          <div class="tech-pill">
+            <span class="tech-pill-icon" style="color: #a78bfa;">⚖️</span>
+            <span>MIT License</span>
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- ==================== 1. ¿QUÉ ES VXR? ==================== -->
-    <section id="que-es" class="section-block">
-      <div class="section-header">
-        <span class="section-tag">Definición y Filosofía</span>
-        <h2 class="section-title">¿Qué es VXR?</h2>
-        <p class="section-desc">
-          VXR (Virtual & Extended Reality Framework) es una biblioteca en TypeScript diseñada como una capa ergonómica sobre Three.js y la WebXR Device API.
-        </p>
-      </div>
-
-      <div class="what-is-grid">
-        <div class="info-box">
-          <h3><span>🛡️</span> Lo que VXR ES</h3>
-          <p>
-            VXR es un <strong>orquestador de alto nivel</strong>. Automatiza la creación del renderizador, la escena, el control de cámara, la iluminación con sombras suaves, la normalización de modelos 3D y la vinculación de controladores WebXR.
-          </p>
-          <p>
-            Permite a los desarrolladores escribir código limpio, modular y centrado en la experiencia de usuario, delegando toda la complejidad de WebGL y cálculo de matrices en VXR.
-          </p>
-        </div>
-
-        <div class="info-box">
-          <h3><span>🚫</span> Lo que VXR NO ES</h3>
-          <p>
-            VXR <strong>NO pretende reemplazar a Three.js ni a WebXR</strong>. Three.js es el motor gráfico de referencia y permanece intacto en el núcleo.
-          </p>
-          <p>
-            VXR <strong>NO es un motor cerrado ni un editor visual web</strong>. No impone frameworks de UI rígidos ni te aísla de los shaders, materiales o extensiones nativas de Three.js.
-          </p>
-        </div>
-      </div>
-
-      <!-- Code Comparison Box -->
-      <div class="code-comparison">
-        <div class="code-header">
-          <span class="code-tag">Comparación: Three.js Vanilla vs VXR Core</span>
-          <span style="font-size: 11px; color: #94a3b8;">TypeScript</span>
-        </div>
-        <pre class="code-snippet"><code><span class="cm">// Con VXR Core: Experiencia 3D + WebXR completa en 4 líneas de código</span>
-<span class="kw">import</span> { XRApp } <span class="kw">from</span> <span class="str">'@vxr/core'</span>;
-
-<span class="kw">const</span> app = <span class="kw">new</span> <span class="fn">XRApp</span>({ autoVRButton: <span class="kw">true</span>, enableShadows: <span class="kw">true</span> });
-<span class="kw">await</span> app.<span class="fn">loadModel</span>(<span class="str">'./models/edificio.glb'</span>, { autoGround: <span class="kw">true</span> });
-app.<span class="fn">start</span>();
-
-<span class="cm">// ¡Listo! Renderer WebGL2, OrbitControls, iluminación calibrada,</span>
-<span class="cm">// auto-grounding a Y=0, soporte Meta Quest VR y animation loop configurados.</span></code></pre>
-      </div>
-    </section>
-
-    <!-- ==================== 2. OBJETIVO DE VXR ==================== -->
-    <section id="objetivo" class="section-block">
-      <div class="section-header">
-        <span class="section-tag">Misión y Propósito</span>
-        <h2 class="section-title">¿Cuál es su Objetivo?</h2>
-        <p class="section-desc">
-          El propósito fundamental de VXR es acelerar el ciclo de vida del desarrollo WebXR profesional sin inflar el runtime ni comprometer el rendimiento en visores móviles independientes.
-        </p>
-      </div>
-
-      <div class="objectives-grid">
-        <div class="obj-card">
-          <div class="obj-badge">1</div>
-          <h3 class="obj-title">Eliminar el 70%+ de Boilerplate</h3>
-          <p class="obj-text">
-            Evitar escribir cientos de líneas repetitivas de setup de WebGL, decodificadores DRACO, redimensionamiento de ventana y cálculo de matrices de mundo.
-          </p>
-        </div>
-
-        <div class="obj-card">
-          <div class="obj-badge">2</div>
-          <h3 class="obj-title">Unificar la Interacción Espacial</h3>
-          <p class="obj-text">
-            Proveer una abstracción común donde la misma lógica responda a clics de ratón en escritorio y a rayos láser de controladores en cascos de realidad virtual.
-          </p>
-        </div>
-
-        <div class="obj-card">
-          <div class="obj-badge">3</div>
-          <h3 class="obj-title">Garantizar Estabilidad en Quest</h3>
-          <p class="obj-text">
-            Prevenir caídas de fotogramas, congelamientos por fuga de memoria GPU y sobrecalentamiento del procesador Snapdragon XR2 aplicando límites óptimos de pixel ratio.
-          </p>
-        </div>
-
-        <div class="obj-card">
-          <div class="obj-badge">4</div>
-          <h3 class="obj-title">Normalización Geométrica Automática</h3>
-          <p class="obj-text">
-            Resolver el eterno problema de modelos enterrados bajo el suelo o desalineados mediante cálculo instantáneo de cajas envolventes (AABB) y auto-grounding.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ==================== 3. ENFOQUES Y USOS ==================== -->
-    <section id="enfoques-usos" class="section-block">
-      <div class="section-header">
-        <span class="section-tag">Arquitectura y Aplicaciones Reales</span>
-        <h2 class="section-title">Enfoques de Diseño & Casos de Uso</h2>
-        <p class="section-desc">
-          VXR está diseñado con principios arquitectónicos sólidos orientados a cuatro industrias clave de la computación espacial.
-        </p>
-      </div>
-
-      <div class="use-cases-grid">
-        <!-- Use Case 1 -->
-        <div class="use-card">
-          <div class="use-icon">🏛️</div>
-          <h3 class="use-title">Visualización Arquitectónica & BIM</h3>
-          <p class="use-desc">
-            Inspección de proyectos CAD/BIM a escala real 1:1 o en modo maqueta diorama sobre pedestal con telemetría de componentes y materiales.
-          </p>
-          <ul class="use-features">
-            <li>Inspección interactiva de mallas con raycast</li>
-            <li>Presets de iluminación Studio, Daylight y Dark</li>
-            <li>Métricas de polígonos, volumen y cotas</li>
-          </ul>
-        </div>
-
-        <!-- Use Case 2 -->
-        <div class="use-card">
-          <div class="use-icon">🎓</div>
-          <h3 class="use-title">Simuladores Educativos & Técnicos</h3>
-          <p class="use-desc">
-            Entornos inmersivos de entrenamiento para procedimientos médicos, ensamble de computadoras, operación de maquinaria y mantenimiento guiado.
-          </p>
-          <ul class="use-features">
-            <li>Secuencias de tareas guiadas y evaluación</li>
-            <li>Interacción con piezas y herramientas 3D</li>
-            <li>Teletransporte y locomoción espacial</li>
-          </ul>
-        </div>
-
-        <!-- Use Case 3 -->
-        <div class="use-card">
-          <div class="use-icon">👾</div>
-          <h3 class="use-title">Videojuegos & Experiencias Arcade</h3>
-          <p class="use-desc">
-            Juegos inmersivos en WebXR con detección balística de colisiones, enemigos dinámicos, audio posicional 3D y sistemas de puntuación en tiempo real.
-          </p>
-          <ul class="use-features">
-            <li>Raycasting de alta frecuencia para armas</li>
-            <li>Soporte de doble mando y gatillos WebXR</li>
-            <li>Optimización a 72 / 90 FPS estables</li>
-          </ul>
-        </div>
-
-        <!-- Use Case 4 -->
-        <div class="use-card">
-          <div class="use-icon">🔬</div>
-          <h3 class="use-title">Laboratorios de I+D & Prototipado</h3>
-          <p class="use-desc">
-            Validación acelerada de nuevas mecánicas espaciales, pruebas de ergonomía de interfaz y demostraciones interactivas para clientes corporativos.
-          </p>
-          <ul class="use-features">
-            <li>Prototipos funcionales en minutos</li>
-            <li>Multiplataforma Web, Desktop y VR</li>
-            <li>Monitoreo en vivo de FPS y llamadas de dibujado</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- ==================== 4. CATÁLOGO INTERACTIVO DE EXPERIENCIAS ==================== -->
-    <section id="catalogo" class="section-block">
-      <div class="section-header">
-        <span class="section-tag">Ecosistema en Vivo</span>
-        <h2 class="section-title">Catálogo Interactivo de Experiencias</h2>
-        <p class="section-desc">
-          Prueba en vivo cualquiera de las 6 experiencias inmersivas disponibles. Haz clic en <strong>"Probar en Catálogo"</strong> para abrirla de inmediato y regresar al menú en cualquier momento con un clic.
-        </p>
-      </div>
-
-      <!-- Navigation Filter Tabs -->
-      <nav class="filter-tabs" aria-label="Filtros del catálogo">
-        <button class="tab-btn active" data-filter="all">
-          🌟 Todas las Experiencias <span class="tab-count">7</span>
+      <!-- Hero Visual (Exact Mockup Representation) -->
+      <div class="hero-visual-card">
+        <img src="./hero-visual.jpg" alt="VXR Del Código a la Realidad en Desktop y Meta Quest" class="hero-visual-img" />
+        <div class="hero-visual-overlay"></div>
+        <button class="hero-visual-play-btn btn-test" data-launch="./scenario-builder/" data-title="Museo Virtual & Práctica 3D (VXR Core)">
+          <div class="play-icon-circle">▶</div>
+          <span>Ver Demo</span>
         </button>
-        <button class="tab-btn" data-filter="vxr-core">
-          🔬 Demos VXR Core <span class="tab-count">4</span>
-        </button>
-        <button class="tab-btn" data-filter="reference">
-          🏢 Proyectos de Referencia <span class="tab-count">3</span>
-        </button>
-      </nav>
+      </div>
+    </section>
 
-      <!-- Catalog Cards Grid -->
-      <div class="catalog-grid" id="catalog-grid">
+    <!-- ==================== METRICS STRIP ==================== -->
+    <section class="metrics-bar">
+      <div class="metric-items-group">
+        <div class="metric-col">
+          <span class="metric-icon-box" style="color: #38bdf8;">⚡</span>
+          <div>
+            <span class="metric-num">70%</span>
+            <span class="metric-desc">menos código repetitivo</span>
+          </div>
+        </div>
 
-        <!-- 1. Basic Viewer -->
+        <div class="metric-col">
+          <span class="metric-icon-box" style="color: #818cf8;">📦</span>
+          <div>
+            <span class="metric-num">3D + XR</span>
+            <span class="metric-desc">en una sola API</span>
+          </div>
+        </div>
+
+        <div class="metric-col">
+          <span class="metric-icon-box" style="color: #38bdf8;">📱</span>
+          <div>
+            <span class="metric-num">Multi-Plataforma</span>
+            <span class="metric-desc">PC, Móvil y Meta Quest</span>
+          </div>
+        </div>
+
+        <div class="metric-col">
+          <span class="metric-icon-box" style="color: #c084fc;">🚀</span>
+          <div>
+            <span class="metric-num">Experiencias Reales</span>
+            <span class="metric-desc">7 demos interactivas</span>
+          </div>
+        </div>
+
+        <div class="metric-col">
+          <span class="metric-icon-box" style="color: #38bdf8;">👥</span>
+          <div>
+            <span class="metric-num">Open Source</span>
+            <span class="metric-desc">Comunidad global</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="metric-quote">
+        "La forma más rápida de pasar de una idea a una experiencia 3D inmersiva."<br>
+        <b>— VXR Framework</b>
+      </div>
+    </section>
+
+    <!-- ==================== SECTORS & CODE PREVIEW ==================== -->
+    <section id="caracteristicas" class="features-section">
+      <div class="features-grid-wrapper">
+
+        <!-- 4 Sector Cards -->
+        <div class="sector-cards-grid">
+          <!-- Card 1: Architecture -->
+          <div class="sector-card btn-test" data-launch="./architecture-viewer/" data-title="Visualizadores Arquitectónicos (VXR Core)">
+            <div class="sector-img-wrap">
+              <img src="./thumb-arch.jpg" alt="Visualizadores Arquitectónicos" class="sector-img" />
+            </div>
+            <div class="sector-footer">
+              <span class="sector-title">Visualizadores<br>Arquitectónicos</span>
+              <span class="sector-arrow">→</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Technical Simulators -->
+          <div class="sector-card btn-test" data-launch="./projects/tech-simulator/" data-title="Simuladores Técnicos & Hardware">
+            <div class="sector-img-wrap">
+              <img src="./thumb-sim.jpg" alt="Simuladores Técnicos" class="sector-img" />
+            </div>
+            <div class="sector-footer">
+              <span class="sector-title">Simuladores<br>Técnicos</span>
+              <span class="sector-arrow">→</span>
+            </div>
+          </div>
+
+          <!-- Card 3: Videojuegos Inmersivos -->
+          <div class="sector-card btn-test" data-launch="./projects/cyber-arcade/" data-title="Videojuegos & Simulación 90 FPS">
+            <div class="sector-img-wrap">
+              <img src="./thumb-game.jpg" alt="Videojuegos Inmersivos" class="sector-img" />
+            </div>
+            <div class="sector-footer">
+              <span class="sector-title">Videojuegos<br>Inmersivos</span>
+              <span class="sector-arrow">→</span>
+            </div>
+          </div>
+
+          <!-- Card 4: Unified Interaction -->
+          <div class="sector-card btn-test" data-launch="./interaction-lab/" data-title="Interacción Unificada PC + Meta Quest (VXR Core)">
+            <div class="sector-img-wrap">
+              <img src="./thumb-vr.jpg" alt="Interacción Unificada PC + Meta Quest" class="sector-img" />
+            </div>
+            <div class="sector-footer">
+              <span class="sector-title">Interacción Unificada<br>PC + Meta Quest</span>
+              <span class="sector-arrow">→</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Code Preview Box with Tabs -->
+        <div id="codigo" class="code-preview-card">
+          <div class="code-header">
+            <div class="code-tabs">
+              <button class="code-tab-btn active" data-tab="ts">TypeScript</button>
+              <button class="code-tab-btn" data-tab="install">Instalación</button>
+              <button class="code-tab-btn" data-tab="basic">Uso básico</button>
+            </div>
+            <button id="btn-copy-snippet" class="btn-copy-code" title="Copiar código">
+              📋
+            </button>
+          </div>
+
+          <div class="code-body" id="code-snippet-box">
+            <pre><code><span class="kw">import</span> { <span class="fn">XRApp</span> } <span class="kw">from</span> <span class="str">'vxr'</span>;
+
+<span class="kw">const</span> app = <span class="kw">new</span> <span class="fn">XRApp</span>({
+  <span class="prop">container</span>: <span class="str">"#app"</span>,
+  <span class="prop">autoVRButton</span>: <span class="num">true</span>,
+  <span class="prop">enableShadows</span>: <span class="num">true</span>,
+  <span class="prop">enableGrid</span>: <span class="num">true</span>,
+  <span class="prop">pixelRatioCap</span>: <span class="num">1.5</span>
+});
+
+<span class="kw">await</span> app.<span class="fn">loadModel</span>(<span class="str">'./models/edificio.glb'</span>, {
+  <span class="prop">autoGround</span>: <span class="num">true</span>,
+  <span class="prop">autoCenter</span>: <span class="num">true</span>
+});
+
+app.<span class="fn">start</span>();</code></pre>
+          </div>
+
+          <div class="code-annotation">
+            Una experiencia 3D completa en 4 líneas ↗
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==================== TRANSITION HEADER ==================== -->
+    <section class="transition-block">
+      <div>
+        <span class="trans-tag">MÁS QUE UNA LIBRERÍA</span>
+        <h2 class="trans-title">
+          Un framework para construir<br>
+          <span>el futuro inmersivo</span>
+        </h2>
+      </div>
+      <div class="trans-side">
+        SAME CODE. MORE WORLDS.
+      </div>
+    </section>
+
+    <!-- ==================== CATALOG SECTION ==================== -->
+    <section id="catalogo" class="catalog-section">
+      <div class="catalog-toolbar">
+        <div class="filter-tabs">
+          <button class="tab-filter-btn active" data-filter="all">
+            <span>Todos</span>
+            <span class="tab-counter">7</span>
+          </button>
+          <button class="tab-filter-btn" data-filter="vxr-core">
+            <span>Demos Core</span>
+            <span class="tab-counter">4</span>
+          </button>
+          <button class="tab-filter-btn" data-filter="reference">
+            <span>Casos de Estudio</span>
+            <span class="tab-counter">3</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="catalog-grid">
+
+        <!-- 1. Scenario & Room Builder -->
         <article class="exp-card" data-category="vxr-core">
-          <div class="card-banner">
-            <div class="card-icon">📐</div>
+          <div class="card-banner card-banner-blue">
+            <div class="card-icon">🏛️</div>
             <div class="card-badge-group">
-              <span class="tech-badge badge-vxr">@vxr/core v0.1.0</span>
-              <span class="tech-badge">WebXR VR</span>
+              <span class="tech-badge badge-core">@vxr/core v0.3.0</span>
+              <span class="tech-badge">Salas & Museos 3D</span>
             </div>
           </div>
           <div class="card-body">
-            <div class="card-tagline">Fundamentos VXR</div>
-            <h3 class="card-title">Basic Viewer</h3>
+            <div class="card-tagline" style="color: #38bdf8;">Módulos Interdisciplinarios & Escenarios</div>
+            <h3 class="card-title">Museo Virtual & Práctica 3D</h3>
             <p class="card-desc">
-              Carga de modelos GLTF/GLB en 3 líneas de código con auto-grounding a Y=0, centrado geométrico, métricas HUD y controles de órbita desktop con botón WebXR.
+              Crea salas 3D interconectadas, pedestales interactivos con pantallas de datos en canvas procedimental, audio nativo Web Audio (0 MB), misiones guiadas y Drag & Drop sin servidor.
             </p>
             <ul class="feature-list">
-              <li class="feature-item"><span class="feature-dot"></span>Carga de modelo GLTF en 3 líneas</li>
-              <li class="feature-item"><span class="feature-dot"></span>Auto-grounding y centrado automático</li>
-              <li class="feature-item"><span class="feature-dot"></span>Telemetría de polígonos y mallas</li>
+              <li class="feature-item"><span class="feature-dot"></span>Pedestales interactivos con fichas técnicas automáticas</li>
+              <li class="feature-item"><span class="feature-dot"></span>Audio procedural nativo (pasos, clics, fanfarrias sin MP3s)</li>
+              <li class="feature-item"><span class="feature-dot"></span>Misiones y evaluación guiada + Suelta de modelos 3D (.glb)</li>
             </ul>
             <div class="card-actions">
-              <button class="btn-test" data-launch="./basic-viewer/" data-title="Basic Viewer (VXR Core)">
+              <button class="btn-test" data-launch="./scenario-builder/" data-title="Museo Virtual & Práctica 3D (VXR Core)">
                 ⚡ Probar en Catálogo
               </button>
-              <a href="./basic-viewer/" target="_blank" class="btn-open-tab" title="Abrir en pestaña independiente">
+              <a href="./scenario-builder/" target="_blank" class="btn-open-tab" title="Abrir en pestaña independiente">
                 ↗
               </a>
             </div>
@@ -1305,23 +1559,23 @@ app.<span class="fn">start</span>();
 
         <!-- 2. Architecture Viewer -->
         <article class="exp-card" data-category="vxr-core">
-          <div class="card-banner card-banner-emerald">
-            <div class="card-icon">🏛️</div>
+          <div class="card-banner card-banner-blue">
+            <div class="card-icon">📐</div>
             <div class="card-badge-group">
-              <span class="tech-badge badge-vxr">@vxr/core v0.1.0</span>
+              <span class="tech-badge badge-core">@vxr/core v0.1.0</span>
               <span class="tech-badge">CAD / BIM</span>
             </div>
           </div>
           <div class="card-body">
-            <div class="card-tagline card-tagline-emerald">Visualización Técnica</div>
+            <div class="card-tagline" style="color: #38bdf8;">Visualización Arquitectónica</div>
             <h3 class="card-title">Architecture Viewer</h3>
             <p class="card-desc">
-              Visualizador arquitectónico profesional. Raycasting para selección interactiva de piezas, highlight emisivo dinámico, panel inspector de componentes y presets de luz.
+              Inspección de geometrías arquitectónicas complejas. Raycasting de precisión sobre componentes estructurales, resaltado dinámico, presets de iluminación fotométricos y telemetría de polígonos.
             </p>
             <ul class="feature-list">
-              <li class="feature-item"><span class="feature-dot" style="background: #34d399;"></span>Selección interactiva con raycast</li>
-              <li class="feature-item"><span class="feature-dot" style="background: #34d399;"></span>Highlight emisivo y panel inspector</li>
-              <li class="feature-item"><span class="feature-dot" style="background: #34d399;"></span>Presets de iluminación Studio, Daylight y Dark</li>
+              <li class="feature-item"><span class="feature-dot"></span>Inspección interactiva por clic y hover</li>
+              <li class="feature-item"><span class="feature-dot"></span>Presets de iluminación (Estudio, Exterior, Atardecer)</li>
+              <li class="feature-item"><span class="feature-dot"></span>Medición métrica automática y telemetría</li>
             </ul>
             <div class="card-actions">
               <button class="btn-test" data-launch="./architecture-viewer/" data-title="Architecture Viewer (VXR Core)">
@@ -1339,12 +1593,12 @@ app.<span class="fn">start</span>();
           <div class="card-banner card-banner-purple">
             <div class="card-icon">⚡</div>
             <div class="card-badge-group">
-              <span class="tech-badge badge-vxr">@vxr/core v0.1.0</span>
-              <span class="tech-badge">Spatial UX</span>
+              <span class="tech-badge badge-core">@vxr/core v0.1.0</span>
+              <span class="tech-badge">Interacción WebXR</span>
             </div>
           </div>
           <div class="card-body">
-            <div class="card-tagline card-tagline-purple">Interacción Espacial</div>
+            <div class="card-tagline" style="color: #c084fc;">Física & Dispositivos</div>
             <h3 class="card-title">XR Interaction Lab</h3>
             <p class="card-desc">
               Laboratorio de interacción física unificada. Detección continua de hover, activación por clic y punteros láser interactivos proyectados desde los mandos WebXR.
@@ -1365,51 +1619,51 @@ app.<span class="fn">start</span>();
           </div>
         </article>
 
-        <!-- 4. Scenario & Room Builder -->
+        <!-- 4. Basic 3D Viewer -->
         <article class="exp-card" data-category="vxr-core">
-          <div class="card-banner" style="background: linear-gradient(135deg, rgba(14, 165, 233, 0.25) 0%, rgba(99, 102, 241, 0.2) 100%);">
-            <div class="card-icon">🏛️</div>
+          <div class="card-banner card-banner-blue">
+            <div class="card-icon">📦</div>
             <div class="card-badge-group">
-              <span class="tech-badge badge-vxr">@vxr/core v0.3.0</span>
-              <span class="tech-badge" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border-color: rgba(56, 189, 248, 0.4);">Salas & Museos 3D</span>
+              <span class="tech-badge badge-core">@vxr/core v0.1.0</span>
+              <span class="tech-badge">Fundación 3D</span>
             </div>
           </div>
           <div class="card-body">
-            <div class="card-tagline" style="color: #38bdf8;">Módulos Interdisciplinarios & Escenarios</div>
-            <h3 class="card-title">Museo Virtual & Práctica 3D</h3>
+            <div class="card-tagline" style="color: #38bdf8;">Visualización Básica</div>
+            <h3 class="card-title">Basic 3D Viewer</h3>
             <p class="card-desc">
-              Crea salas 3D interconectadas, pedestales interactivos con pantallas informativas procedimentales, audio nativo por síntesis Web Audio (0 MB), checklist de misiones guiadas y Drag & Drop sin servidor.
+              Carga y visualización limpia de modelos GLTF/GLB con auto-grounding al nivel del suelo (Y=0), sombras suaves y controles orbitales automáticos.
             </p>
             <ul class="feature-list">
-              <li class="feature-item"><span class="feature-dot" style="background: #38bdf8;"></span>Pedestales interactivos con fichas técnicas automáticas</li>
-              <li class="feature-item"><span class="feature-dot" style="background: #38bdf8;"></span>Audio procedural nativo (pasos, clics, fanfarrias sin MP3s)</li>
-              <li class="feature-item"><span class="feature-dot" style="background: #38bdf8;"></span>Misiones y evaluación guiada + Suelta de modelos 3D (.glb)</li>
+              <li class="feature-item"><span class="feature-dot"></span>Carga asíncrona optimizada de archivos GLTF/GLB</li>
+              <li class="feature-item"><span class="feature-dot"></span>Alineación automática con Y = 0 (Auto-grounding)</li>
+              <li class="feature-item"><span class="feature-dot"></span>Botón 'Enter VR' para Meta Quest automático</li>
             </ul>
             <div class="card-actions">
-              <button class="btn-test" data-launch="./scenario-builder/" data-title="Museo Virtual & Práctica 3D (VXR Core)">
+              <button class="btn-test" data-launch="./basic-viewer/" data-title="Basic 3D Viewer (VXR Core)">
                 ⚡ Probar en Catálogo
               </button>
-              <a href="./scenario-builder/" target="_blank" class="btn-open-tab" title="Abrir en pestaña independiente">
+              <a href="./basic-viewer/" target="_blank" class="btn-open-tab" title="Abrir en pestaña independiente">
                 ↗
               </a>
             </div>
           </div>
         </article>
 
-        <!-- 5. Visor XR (Proyecto de Referencia) -->
+        <!-- 5. Case Study 1: Spatial BIM & Architectural Viewer -->
         <article class="exp-card" data-category="reference">
           <div class="card-banner card-banner-emerald">
             <div class="card-icon">🏢</div>
             <div class="card-badge-group">
-              <span class="tech-badge badge-ref">Visor XR Original</span>
-              <span class="tech-badge">React 19 • Quest AR</span>
+              <span class="tech-badge badge-case">Caso de Estudio</span>
+              <span class="tech-badge">Arquitectura BIM • Quest AR</span>
             </div>
           </div>
           <div class="card-body">
-            <div class="card-tagline card-tagline-emerald">Proyecto de Referencia 1</div>
-            <h3 class="card-title">PCPuma Visor XR</h3>
+            <div class="card-tagline" style="color: #34d399;">Visualización Espacial BIM</div>
+            <h3 class="card-title">Spatial BIM & Architectural Viewer</h3>
             <p class="card-desc">
-              Visor arquitectónico avanzado con catálogo de proyectos, soporte de carga de archivos locales (.glb), modo maqueta sobre pedestal, manipulación bimanual y passthrough AR.
+              Visualizador arquitectónico avanzado con catálogo espacial, soporte de carga de archivos locales (.glb), modo maqueta sobre pedestal, manipulación bimanual en 6DoF y passthrough AR.
             </p>
             <ul class="feature-list">
               <li class="feature-item"><span class="feature-dot" style="background: #34d399;"></span>Manipulación bimanual (escala/rotación con mandos)</li>
@@ -1417,30 +1671,30 @@ app.<span class="fn">start</span>();
               <li class="feature-item"><span class="feature-dot" style="background: #34d399;"></span>Teletransporte y locomoción suave en Escala 1:1</li>
             </ul>
             <div class="card-actions">
-              <button class="btn-test" data-launch="./projects/visor-xr/" data-title="PCPuma Visor XR (Proyecto de Referencia)">
+              <button class="btn-test" data-launch="./projects/cad-viewer/" data-title="Spatial BIM & Architectural Viewer">
                 ⚡ Probar en Catálogo
               </button>
-              <a href="./projects/visor-xr/" target="_blank" class="btn-open-tab" title="Abrir en pestaña independiente">
+              <a href="./projects/cad-viewer/" target="_blank" class="btn-open-tab" title="Abrir en pestaña independiente">
                 ↗
               </a>
             </div>
           </div>
         </article>
 
-        <!-- 5. Virus Purge (Proyecto de Referencia) -->
+        <!-- 6. Case Study 2: CyberStrike Arcade XR -->
         <article class="exp-card" data-category="reference">
           <div class="card-banner card-banner-amber">
             <div class="card-icon">👾</div>
             <div class="card-badge-group">
-              <span class="tech-badge badge-ref">Virus Purge</span>
-              <span class="tech-badge">WebXR FPS Arcade</span>
+              <span class="tech-badge badge-case">Caso de Estudio</span>
+              <span class="tech-badge">WebXR 90 FPS Arcade</span>
             </div>
           </div>
           <div class="card-body">
-            <div class="card-tagline card-tagline-amber">Proyecto de Referencia 2</div>
-            <h3 class="card-title">Virus Purge (Shooter)</h3>
+            <div class="card-tagline" style="color: #fbbf24;">Videojuegos & Simulación 90 FPS</div>
+            <h3 class="card-title">CyberStrike Arcade XR</h3>
             <p class="card-desc">
-              Videojuego FPS arcade de ciberseguridad en WebXR. Combate contra oleadas de malware (Troyanos, Gusanos, Ransomware), recolección de bits, armas láser y tienda en el kernel.
+              Videojuego FPS arcade inmersivo en WebXR. Combate balístico contra oleadas dinámicas de objetivos autónomos, recolección de energía, audio espacial 3D y optimización para 90 FPS estables.
             </p>
             <ul class="feature-list">
               <li class="feature-item"><span class="feature-dot" style="background: #fbbf24;"></span>Raycasting balístico de alta velocidad</li>
@@ -1448,41 +1702,41 @@ app.<span class="fn">start</span>();
               <li class="feature-item"><span class="feature-dot" style="background: #fbbf24;"></span>Optimizado para Meta Quest y PC con mouse</li>
             </ul>
             <div class="card-actions">
-              <button class="btn-test" data-launch="./projects/virus-purge/" data-title="Virus Purge (Shooter WebXR)">
+              <button class="btn-test" data-launch="./projects/cyber-arcade/" data-title="CyberStrike Arcade XR">
                 ⚡ Probar en Catálogo
               </button>
-              <a href="./projects/virus-purge/" target="_blank" class="btn-open-tab" title="Abrir en pestaña independiente">
+              <a href="./projects/cyber-arcade/" target="_blank" class="btn-open-tab" title="Abrir en pestaña independiente">
                 ↗
               </a>
             </div>
           </div>
         </article>
 
-        <!-- 6. Simulador PC PUMA (Proyecto de Referencia) -->
+        <!-- 7. Case Study 3: Simulador de Ensamble Técnico -->
         <article class="exp-card" data-category="reference">
           <div class="card-banner card-banner-purple">
             <div class="card-icon">💻</div>
             <div class="card-badge-group">
-              <span class="tech-badge badge-ref">PC PUMA</span>
-              <span class="tech-badge">Simulador Guiado</span>
+              <span class="tech-badge badge-case">Caso de Estudio</span>
+              <span class="tech-badge">Capacitación Guiada</span>
             </div>
           </div>
           <div class="card-body">
-            <div class="card-tagline card-tagline-purple">Proyecto de Referencia 3</div>
-            <h3 class="card-title">Simulador PC PUMA</h3>
+            <div class="card-tagline" style="color: #c084fc;">Entrenamiento & Mantenimiento</div>
+            <h3 class="card-title">Simulador de Ensamble Técnico</h3>
             <p class="card-desc">
-              Simulador inmersivo de operación y préstamo de computadoras. Entorno virtual interactivo, sistema de tareas guiadas con puntuación, avatar NPC con animaciones y teletransporte.
+              Simulador interactivo de procedimientos técnicos, operación de estaciones de trabajo y ensamblado de hardware paso a paso con checklist evaluable, audio feedback y teletransporte.
             </p>
             <ul class="feature-list">
               <li class="feature-item"><span class="feature-dot" style="background: #c084fc;"></span>Motor de tareas y checklist con evaluación</li>
-              <li class="feature-item"><span class="feature-dot" style="background: #c084fc;"></span>Modelos FBX animados e interacción por retículo</li>
-              <li class="feature-item"><span class="feature-dot" style="background: #c084fc;"></span>Audio feedback y teletransporte en aula virtual</li>
+              <li class="feature-item"><span class="feature-dot" style="background: #c084fc;"></span>Modelos interactivos y retículo de selección</li>
+              <li class="feature-item"><span class="feature-dot" style="background: #c084fc;"></span>Audio feedback y teletransporte en taller virtual</li>
             </ul>
             <div class="card-actions">
-              <button class="btn-test" data-launch="./projects/simulador-pcpuma/" data-title="Simulador PC PUMA (Proyecto de Referencia)">
+              <button class="btn-test" data-launch="./projects/tech-simulator/" data-title="Simulador de Ensamble Técnico">
                 ⚡ Probar en Catálogo
               </button>
-              <a href="./projects/simulador-pcpuma/" target="_blank" class="btn-open-tab" title="Abrir en pestaña independiente">
+              <a href="./projects/tech-simulator/" target="_blank" class="btn-open-tab" title="Abrir en pestaña independiente">
                 ↗
               </a>
             </div>
@@ -1492,57 +1746,113 @@ app.<span class="fn">start</span>();
       </div>
     </section>
 
-    <!-- ==================== 5. ZONA DE DOCUMENTACIÓN ==================== -->
-    <section id="documentacion" class="section-block">
+    <!-- ==================== DOCUMENTATION SECTION ==================== -->
+    <section id="documentacion" class="docs-section">
       <div class="section-header">
         <span class="section-tag">Recursos Técnicos & Learning Mode</span>
         <h2 class="section-title">Zona de Documentación</h2>
         <p class="section-desc">
-          Accede al repositorio completo de especificaciones técnicas, decisiones de arquitectura (ADRs), desgloses pedagógicos clase por clase y auditorías del framework.
+          Accede al repositorio completo de especificaciones técnicas, decisiones de arquitectura (ADRs), desgloses pedagógicos clase por clase y guías de inicio rápido.
         </p>
       </div>
 
       <div class="docs-grid">
 
-        <!-- Doc Col 1: Core Guides -->
+        <!-- Doc Col 1: Guías Core -->
         <div class="doc-category-card">
           <div class="doc-category-header">
-            <span class="doc-category-icon">📖</span>
-            <h3 class="doc-category-title">Guías & Referencia API</h3>
+            <span>📖</span>
+            <h3 class="doc-category-title">Guías de Inicio & Escenarios</h3>
           </div>
           <ul class="doc-links-list">
             <li>
-              <a href="./docs/getting-started.md" target="_blank" class="doc-item-link">
-                <span class="doc-item-name">Getting Started <span>↗</span></span>
-                <span class="doc-item-desc">Guía de inicio rápido para crear tu primera escena en 5 minutos.</span>
-              </a>
-            </li>
-            <li>
-              <a href="./docs/guides/scenario-and-rooms.md" target="_blank" class="doc-item-link">
-                <span class="doc-item-name">Escenarios & Salas 3D <span>↗</span></span>
-                <span class="doc-item-desc">Crea salas, puertas, pasillos y mapas completos con colisiones automáticas.</span>
-              </a>
-            </li>
-            <li>
-              <a href="./docs/guides/crear-proyecto-interdisciplinario.md" target="_blank" class="doc-item-link">
+              <a href="./docs/guides/crear-proyecto-interdisciplinario.md" target="_blank" class="doc-link-item">
                 <span class="doc-item-name">Proyectos Interdisciplinarios (15 min) <span>↗</span></span>
                 <span class="doc-item-desc">Guía para museos virtuales, prácticas de laboratorio y educación interactiva.</span>
               </a>
             </li>
             <li>
-              <a href="./docs/api-reference.md" target="_blank" class="doc-item-link">
+              <a href="./docs/guides/scenario-and-rooms.md" target="_blank" class="doc-link-item">
+                <span class="doc-item-name">Escenarios & Salas 3D <span>↗</span></span>
+                <span class="doc-item-desc">Crea salas, puertas, pasillos y mapas completos con colisiones automáticas.</span>
+              </a>
+            </li>
+            <li>
+              <a href="./docs/getting-started.md" target="_blank" class="doc-link-item">
+                <span class="doc-item-name">Getting Started <span>↗</span></span>
+                <span class="doc-item-desc">Guía de inicio rápido para crear tu primera escena en 5 minutos.</span>
+              </a>
+            </li>
+            <li>
+              <a href="./docs/api-reference.md" target="_blank" class="doc-link-item">
                 <span class="doc-item-name">API Reference v0.1.0 <span>↗</span></span>
                 <span class="doc-item-desc">Referencia completa de clases, métodos, propiedades y firmas de tipo.</span>
               </a>
             </li>
+          </ul>
+        </div>
+
+        <!-- Doc Col 2: Modo Aprendizaje -->
+        <div class="doc-category-card">
+          <div class="doc-category-header">
+            <span>🧠</span>
+            <h3 class="doc-category-title">Modo Aprendizaje (Clases)</h3>
+          </div>
+          <ul class="doc-links-list">
             <li>
-              <a href="./docs/architecture.md" target="_blank" class="doc-item-link">
+              <a href="./docs/learning/xrapp-explained.md" target="_blank" class="doc-link-item">
+                <span class="doc-item-name">XRApp Explicado <span>↗</span></span>
+                <span class="doc-item-desc">Patrón Fachada Abierta y orquestación del ciclo de vida.</span>
+              </a>
+            </li>
+            <li>
+              <a href="./docs/learning/xrscene-explained.md" target="_blank" class="doc-link-item">
+                <span class="doc-item-name">XRScene Explicado <span>↗</span></span>
+                <span class="doc-item-desc">Iluminación equilibrada, sombras suaves y presets.</span>
+              </a>
+            </li>
+            <li>
+              <a href="./docs/learning/xrrenderer-explained.md" target="_blank" class="doc-link-item">
+                <span class="doc-item-name">XRRenderer Explicado <span>↗</span></span>
+                <span class="doc-item-desc">WebGL2, pixelRatioCap (1.5x) y loop compatible WebXR.</span>
+              </a>
+            </li>
+            <li>
+              <a href="./docs/learning/xrsession-explained.md" target="_blank" class="doc-link-item">
+                <span class="doc-item-name">XRSession Explicado <span>↗</span></span>
+                <span class="doc-item-desc">Ciclo de vida inmersivo, mandos VR y rayos de selección.</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Doc Col 3: Arquitectura y ADRs -->
+        <div class="doc-category-card">
+          <div class="doc-category-header">
+            <span>🏗️</span>
+            <h3 class="doc-category-title">Arquitectura & Decisiones (ADRs)</h3>
+          </div>
+          <ul class="doc-links-list">
+            <li>
+              <a href="./docs/architecture.md" target="_blank" class="doc-link-item">
                 <span class="doc-item-name">Arquitectura de VXR <span>↗</span></span>
                 <span class="doc-item-desc">Capas del sistema, flujo de ejecución y responsabilidades.</span>
               </a>
             </li>
             <li>
-              <a href="./docs/README.md" target="_blank" class="doc-item-link">
+              <a href="./docs/decisions/001-framework-scope.md" target="_blank" class="doc-link-item">
+                <span class="doc-item-name">ADR-001: Alcance del Framework <span>↗</span></span>
+                <span class="doc-item-desc">Decisión de desacoplamiento de React hacia Three.js nativo.</span>
+              </a>
+            </li>
+            <li>
+              <a href="./docs/decisions/002-why-threejs-foundation.md" target="_blank" class="doc-link-item">
+                <span class="doc-item-name">ADR-002: Por qué Three.js <span>↗</span></span>
+                <span class="doc-item-desc">Justificación técnica de soporte cross-platform.</span>
+              </a>
+            </li>
+            <li>
+              <a href="./docs/README.md" target="_blank" class="doc-link-item">
                 <span class="doc-item-name">Índice Central de Docs <span>↗</span></span>
                 <span class="doc-item-desc">Mapa de navegación de toda la suite de documentación.</span>
               </a>
@@ -1550,133 +1860,20 @@ app.<span class="fn">start</span>();
           </ul>
         </div>
 
-        <!-- Doc Col 2: Learning Mode -->
-        <div class="doc-category-card">
-          <div class="doc-category-header">
-            <span class="doc-category-icon">🧠</span>
-            <h3 class="doc-category-title">Modo Aprendizaje (Clases)</h3>
-          </div>
-          <ul class="doc-links-list">
-            <li>
-              <a href="./docs/learning/xrapp-explained.md" target="_blank" class="doc-item-link">
-                <span class="doc-item-name">XRApp Explicado <span>↗</span></span>
-                <span class="doc-item-desc">Patrón Fachada Abierta y orquestación del ciclo de vida.</span>
-              </a>
-            </li>
-            <li>
-              <a href="./docs/learning/xrscene-explained.md" target="_blank" class="doc-item-link">
-                <span class="doc-item-name">XRScene Explicado <span>↗</span></span>
-                <span class="doc-item-desc">Iluminación equilibrada, sombras suaves y presets.</span>
-              </a>
-            </li>
-            <li>
-              <a href="./docs/learning/xrrenderer-explained.md" target="_blank" class="doc-item-link">
-                <span class="doc-item-name">XRRenderer Explicado <span>↗</span></span>
-                <span class="doc-item-desc">WebGL2, pixelRatioCap (1.5x) y loop compatible WebXR.</span>
-              </a>
-            </li>
-            <li>
-              <a href="./docs/learning/xrsession-explained.md" target="_blank" class="doc-item-link">
-                <span class="doc-item-name">XRSession Explicado <span>↗</span></span>
-                <span class="doc-item-desc">Sesiones inmersivas, mandos 3D y punteros láser.</span>
-              </a>
-            </li>
-            <li>
-              <a href="./docs/learning/xrassetmanager-explained.md" target="_blank" class="doc-item-link">
-                <span class="doc-item-name">XRAssetManager Explicado <span>↗</span></span>
-                <span class="doc-item-desc">Pipeline GLTF, decodificación DRACO y auto-grounding.</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Doc Col 3: ADRs & Decisiones -->
-        <div class="doc-category-card">
-          <div class="doc-category-header">
-            <span class="doc-category-icon">⚖️</span>
-            <h3 class="doc-category-title">Decisiones Técnicas (ADRs)</h3>
-          </div>
-          <ul class="doc-links-list">
-            <li>
-              <a href="./docs/decisions/001-framework-scope.md" target="_blank" class="doc-item-link">
-                <span class="doc-item-name">ADR 001: Alcance del Core <span>↗</span></span>
-                <span class="doc-item-desc">Por qué el core se enfoca en visualización e interacción.</span>
-              </a>
-            </li>
-            <li>
-              <a href="./docs/decisions/002-why-threejs-foundation.md" target="_blank" class="doc-item-link">
-                <span class="doc-item-name">ADR 002: Base Three.js <span>↗</span></span>
-                <span class="doc-item-desc">Ventajas frente a Babylon.js o WebGPU crudo.</span>
-              </a>
-            </li>
-            <li>
-              <a href="./docs/decisions/004-facade-pattern-xrapp.md" target="_blank" class="doc-item-link">
-                <span class="doc-item-name">ADR 004: Fachada Abierta <span>↗</span></span>
-                <span class="doc-item-desc">Acceso transparente a las propiedades nativas Three.js.</span>
-              </a>
-            </li>
-            <li>
-              <a href="./docs/decisions/005-asset-pipeline-grounding.md" target="_blank" class="doc-item-link">
-                <span class="doc-item-name">ADR 005: Auto-Grounding <span>↗</span></span>
-                <span class="doc-item-desc">Normalización de modelos a nivel de piso Y=0.</span>
-              </a>
-            </li>
-            <li>
-              <a href="./docs/decisions/006-webxr-session-abstraction.md" target="_blank" class="doc-item-link">
-                <span class="doc-item-name">ADR 006: Sesión WebXR <span>↗</span></span>
-                <span class="doc-item-desc">Láser y raycasting espacial unificado.</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Doc Col 4: Auditoría & Evolución -->
-        <div class="doc-category-card">
-          <div class="doc-category-header">
-            <span class="doc-category-icon">🔍</span>
-            <h3 class="doc-category-title">Auditoría & Hoja de Ruta</h3>
-          </div>
-          <ul class="doc-links-list">
-            <li>
-              <a href="./docs/audit/v0.1.0-audit.md" target="_blank" class="doc-item-link">
-                <span class="doc-item-name">Auditoría Técnica v0.1.0 <span>↗</span></span>
-                <span class="doc-item-desc">Diagnóstico exhaustivo de 8 fases, riesgos y scorecards.</span>
-              </a>
-            </li>
-            <li>
-              <a href="./docs/roadmap-v0.2.md" target="_blank" class="doc-item-link">
-                <span class="doc-item-name">Roadmap Técnico v0.2.0 <span>↗</span></span>
-                <span class="doc-item-desc">Planificación MUST HAVE, SHOULD HAVE y Anti-goals.</span>
-              </a>
-            </li>
-            <li>
-              <a href="./docs/changelog-learning.md" target="_blank" class="doc-item-link">
-                <span class="doc-item-name">Learning Changelog <span>↗</span></span>
-                <span class="doc-item-desc">Bitácora de evolución pedagógica y hallazgos técnicos.</span>
-              </a>
-            </li>
-            <li>
-              <a href="./docs/learning/learning-challenges.md" target="_blank" class="doc-item-link">
-                <span class="doc-item-name">5 Retos Prácticos <span>↗</span></span>
-                <span class="doc-item-desc">Ejercicios de código comparando Three.js vs VXR.</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-
       </div>
     </section>
 
-  </div>
+  </main>
 
-  <!-- Footer -->
+  <!-- ==================== FOOTER ==================== -->
   <footer class="site-footer">
-    <div><strong>VXR (Virtual & Extended Reality Framework)</strong> • Desarrollado sobre Three.js & WebXR Device API</div>
-    <div class="footer-pills">
-      <span class="pill">TypeScript 5.8</span>
-      <span class="pill">Three.js r174</span>
-      <span class="pill pill-vxr">@vxr/core v0.1.0</span>
-      <span class="pill">Meta Quest Ready</span>
+    <div>
+      <strong>VXR (Virtual & Extended Reality Framework)</strong> • Desarrollado sobre Three.js & WebXR Device API • Licencia MIT
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/Vickman123/Framework-XVR" target="_blank" class="footer-link">GitHub</a>
+      <a href="./docs/README.md" target="_blank" class="footer-link">Documentación</a>
+      <a href="#catalogo" class="footer-link">Demos</a>
     </div>
   </footer>
 
@@ -1684,16 +1881,14 @@ app.<span class="fn">start</span>();
   <div id="experience-runner" aria-hidden="true">
     <header class="runner-header">
       <div class="runner-left">
-        <!-- Prominent Return Button -->
         <button id="btn-close-runner" class="btn-back-catalog" title="Cerrar experiencia y volver al catálogo (ESC)">
           <span>🏠</span>
           <span>← Volver al Catálogo</span>
         </button>
 
         <div class="runner-title-group">
-          <span class="runner-status-dot"></span>
+          <span class="runner-tag">EN EJECUCIÓN</span>
           <span id="runner-exp-title" class="runner-title">Experiencia Activa</span>
-          <span class="runner-status-tag">EN EJECUCIÓN</span>
         </div>
       </div>
 
@@ -1720,8 +1915,9 @@ app.<span class="fn">start</span>();
     </div>
   </div>
 
-  <!-- Runner & Filter Logic Script -->
+  <!-- ==================== LOGIC SCRIPTS ==================== -->
   <script>
+    // 1. Interactive Runner Logic
     const runner = document.getElementById('experience-runner');
     const iframe = document.getElementById('experience-frame');
     const runnerTitle = document.getElementById('runner-exp-title');
@@ -1732,7 +1928,6 @@ app.<span class="fn">start</span>();
 
     let currentUrl = '';
 
-    // Launch Experience in Runner
     function launchExperience(url, title) {
       currentUrl = url;
       runnerTitle.textContent = title;
@@ -1743,41 +1938,34 @@ app.<span class="fn">start</span>();
       document.body.style.overflow = 'hidden';
     }
 
-    // Close Runner & Return to Catalog (Free GPU memory)
     function closeExperience() {
       runner.classList.remove('active');
       runner.setAttribute('aria-hidden', 'true');
-      iframe.src = 'about:blank'; // Destroy WebGL context in frame to prevent memory leaks
+      iframe.src = 'about:blank'; // Destroy WebGL context to free GPU memory
       document.body.style.overflow = 'auto';
     }
 
-    // Attach click listeners to all "Probar en Catálogo" buttons
     document.querySelectorAll('.btn-test').forEach((btn) => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
         const url = btn.getAttribute('data-launch');
         const title = btn.getAttribute('data-title');
-        launchExperience(url, title);
+        if (url) launchExperience(url, title || 'Experiencia VXR');
       });
     });
 
-    // Close on Return button click
     btnClose.addEventListener('click', closeExperience);
 
-    // Close on Escape key
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && runner.classList.contains('active')) {
         closeExperience();
       }
     });
 
-    // Reload active frame
     btnReload.addEventListener('click', () => {
-      if (currentUrl) {
-        iframe.src = currentUrl;
-      }
+      if (currentUrl) iframe.src = currentUrl;
     });
 
-    // Toggle Fullscreen
     btnFullscreen.addEventListener('click', () => {
       if (!document.fullscreenElement) {
         runner.requestFullscreen().catch(err => console.warn(err));
@@ -1786,8 +1974,8 @@ app.<span class="fn">start</span>();
       }
     });
 
-    // Tab Filter Logic
-    const filterButtons = document.querySelectorAll('.tab-btn');
+    // 2. Catalog Filter Tabs Logic
+    const filterButtons = document.querySelectorAll('.tab-filter-btn');
     const cards = document.querySelectorAll('.exp-card');
 
     filterButtons.forEach((btn) => {
@@ -1805,6 +1993,67 @@ app.<span class="fn">start</span>();
         });
       });
     });
+
+    // 3. Code Tabs Snippet Switching Logic
+    const codeSnippetBox = document.getElementById('code-snippet-box');
+    const codeTabBtns = document.querySelectorAll('.code-tab-btn');
+
+    const snippets = {
+      ts: `<span class="kw">import</span> { <span class="fn">XRApp</span> } <span class="kw">from</span> <span class="str">'vxr'</span>;
+
+<span class="kw">const</span> app = <span class="kw">new</span> <span class="fn">XRApp</span>({
+  <span class="prop">container</span>: <span class="str">"#app"</span>,
+  <span class="prop">autoVRButton</span>: <span class="num">true</span>,
+  <span class="prop">enableShadows</span>: <span class="num">true</span>,
+  <span class="prop">enableGrid</span>: <span class="num">true</span>,
+  <span class="prop">pixelRatioCap</span>: <span class="num">1.5</span>
+});
+
+<span class="kw">await</span> app.<span class="fn">loadModel</span>(<span class="str">'./models/edificio.glb'</span>, {
+  <span class="prop">autoGround</span>: <span class="num">true</span>,
+  <span class="prop">autoCenter</span>: <span class="num">true</span>
+});
+
+app.<span class="fn">start</span>();`,
+
+      install: `<span class="cmt"># 1. Instalar VXR en tu proyecto</span>
+npm install github:Vickman123/Framework-XVR
+
+<span class="cmt"># 2. Instalar Three.js</span>
+npm install three @types/three
+
+<span class="cmt"># ¡Listo! Ya puedes importar { XRApp } en cualquier archivo .ts</span>`,
+
+      basic: `<span class="kw">import</span> { <span class="fn">XRApp</span> } <span class="kw">from</span> <span class="str">'vxr'</span>;
+
+<span class="cmt">// Crea una escena 3D WebXR completa en 2 líneas:</span>
+<span class="kw">const</span> app = <span class="kw">new</span> <span class="fn">XRApp</span>({ <span class="prop">enableVR</span>: <span class="num">true</span> });
+<span class="kw">await</span> app.<span class="fn">loadModel</span>(<span class="str">'./modelo.glb'</span>);
+app.<span class="fn">start</span>();`
+    };
+
+    codeTabBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        codeTabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.getAttribute('data-tab');
+        if (tab && snippets[tab]) {
+          codeSnippetBox.innerHTML = `<pre><code>${snippets[tab]}</code></pre>`;
+        }
+      });
+    });
+
+    // 4. Copy snippet button
+    const btnCopy = document.getElementById('btn-copy-snippet');
+    if (btnCopy) {
+      btnCopy.addEventListener('click', () => {
+        const text = codeSnippetBox.textContent || '';
+        navigator.clipboard.writeText(text).then(() => {
+          btnCopy.textContent = '✓';
+          setTimeout(() => { btnCopy.textContent = '📋'; }, 2000);
+        });
+      });
+    }
   </script>
 </body>
 </html>

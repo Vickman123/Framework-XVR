@@ -62,6 +62,17 @@ function resolveFolder(relativePath: string): string {
 const serveReferenceProjectsPlugin: Plugin = {
   name: 'serve-reference-projects',
   configureServer(server) {
+    // Clean sanitized routes for case studies
+    server.middlewares.use(
+      serveStaticFolder('/projects/cad-viewer', resolveFolder('PCPuma Visor arquitectonico/dist'))
+    );
+    server.middlewares.use(
+      serveStaticFolder('/projects/cyber-arcade', resolveFolder('shooter simulator/docs'))
+    );
+    server.middlewares.use(
+      serveStaticFolder('/projects/tech-simulator', resolveFolder('pcpum<a simulador/docs'))
+    );
+    // Backward compatibility aliases
     server.middlewares.use(
       serveStaticFolder('/projects/visor-xr', resolveFolder('PCPuma Visor arquitectonico/dist'))
     );

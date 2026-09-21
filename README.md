@@ -216,9 +216,9 @@ El repositorio incluye un catálogo interactivo con **7 experiencias en vivo** l
 | **🏛️ Architecture Viewer** | Demo Core | `@vxr/core`, Three.js | Inspección de mallas CAD/BIM con raycast, highlight y presets de luz. |
 | **⚡ XR Interaction Lab** | Demo Core | `@vxr/core`, WebXR | Interacción física dual: hover/clic en PC y mandos con láser en VR. |
 | **🏛️ Scenario & Room Builder** | Demo Core v0.3 | `@vxr/core`, WebXR | Creación de salas, pedestales de museo, audio procedural y checklist de misiones. |
-| **🏢 PCPuma Visor XR** | Referencia | React 19, R3F, Quest AR | Visor arquitectónico con manipulación bimanual y passthrough AR. |
-| **👾 Virus Purge** | Referencia | Three.js, WebXR | Videojuego arcade shooter FPS inmersivo en el ciberespacio. |
-| **💻 Simulador PC PUMA** | Referencia | Three.js, WebXR | Simulador interactivo de ensamble, mantenimiento y tareas guiadas. |
+| **🏢 Spatial BIM & Architectural Viewer** | Caso de Estudio | React 19, R3F, Quest AR | Visor arquitectónico con manipulación bimanual y passthrough AR. |
+| **👾 CyberStrike Arcade XR** | Caso de Estudio | Three.js, WebXR | Videojuego arcade 3D FPS de 90 FPS optimizado para Meta Quest. |
+| **💻 Simulador de Ensamble Técnico** | Caso de Estudio | Three.js, WebXR | Simulador interactivo de ensamble, mantenimiento y tareas guiadas. |
 
 🌐 **Prueba el catálogo en vivo**: [https://vickman123.github.io/Framework-XVR/](https://vickman123.github.io/Framework-XVR/)
 
