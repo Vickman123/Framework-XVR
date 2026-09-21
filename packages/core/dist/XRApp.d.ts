@@ -14,6 +14,7 @@ import type { XRExhibitOptions } from './exhibit/types.js';
 import { XRTutorial } from './tutorial/XRTutorial.js';
 import type { XRTutorialOptions } from './tutorial/types.js';
 import { type LocalDropOptions } from './utils/localDrop.js';
+import { XRRuntime } from './runtime/XRRuntime.js';
 /**
  * XRApp is the high-level entry point for VXR applications.
  *
@@ -38,6 +39,8 @@ export declare class XRApp {
     readonly assets: XRAssetManager;
     /** Desktop orbit controls active when not in WebXR */
     readonly controls: OrbitControls | null;
+    /** Active runtime strategy (DesktopRuntime or WebXRRuntime) */
+    readonly runtime: XRRuntime;
     /** Initial camera position for reset */
     private initialCameraPosition;
     /** Initial look-at target for reset */

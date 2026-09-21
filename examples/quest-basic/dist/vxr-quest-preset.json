@@ -1,0 +1,12 @@
+{
+  "target": "quest",
+  "optimize": true,
+  "runtime": "webxr",
+  "recommendedXRAppOptions": {
+    "pixelRatioCap": 1.25,
+    "enableShadows": true,
+    "targetFrameRate": 90,
+    "questOptimization": true,
+    "fov": 60
+  }
+}

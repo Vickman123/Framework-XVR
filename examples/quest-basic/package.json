@@ -1,0 +1,20 @@
+{
+  "name": "vxr-quest-basic",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vxr build --target quest",
+    "doctor": "vxr doctor"
+  },
+  "dependencies": {
+    "three": ">=0.170.0",
+    "vxr": "*"
+  },
+  "devDependencies": {
+    "@types/three": "^0.174.0",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.0"
+  }
+}

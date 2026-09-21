@@ -6,6 +6,9 @@
   "main": "./VXR/dist/index.js",
   "module": "./VXR/dist/index.js",
   "types": "./VXR/dist/index.d.ts",
+  "bin": {
+    "vxr": "./bin/vxr.js"
+  },
   "exports": {
     ".": {
       "types": "./VXR/dist/index.d.ts",
@@ -20,9 +23,12 @@
   "scripts": {
     "dev": "npm run dev --workspace=vxr-playground",
     "build:core": "npm run build --workspace=@vxr/core",
+    "build:cli": "tsc -p tsconfig.cli.json",
     "build:playground": "npm run build --workspace=vxr-playground",
     "build:vxr": "cd VXR && npm run build && npm pack",
-    "build": "npm run build:core && npm run build:vxr && npm run build:playground",
+    "build": "npm run build:core && npm run build:cli && npm run build:vxr && npm run build:playground",
+    "vxr": "./bin/vxr.js",
+    "test": "node --test tests/cli.test.mjs",
     "build:pages": "npm run build && mkdir -p examples/dist/projects/cad-viewer examples/dist/projects/cyber-arcade examples/dist/projects/tech-simulator examples/dist/projects/visor-xr examples/dist/projects/virus-purge examples/dist/projects/simulador-pcpuma examples/dist/docs && cp -R \"Proyectos/PCPuma Visor arquitectonico/dist/\"* examples/dist/projects/cad-viewer/ 2>/dev/null || true && cp -R \"Proyectos/shooter simulator/docs/\"* examples/dist/projects/cyber-arcade/ 2>/dev/null || true && cp -R \"Proyectos/pcpum<a simulador/docs/\"* examples/dist/projects/tech-simulator/ 2>/dev/null || true && cp -R \"Proyectos/PCPuma Visor arquitectonico/dist/\"* examples/dist/projects/visor-xr/ 2>/dev/null || true && cp -R \"Proyectos/shooter simulator/docs/\"* examples/dist/projects/virus-purge/ 2>/dev/null || true && cp -R \"Proyectos/pcpum<a simulador/docs/\"* examples/dist/projects/simulador-pcpuma/ 2>/dev/null || true && cp -R docs/* examples/dist/docs/ 2>/dev/null || true && cp examples/dist/index.html ./index.html && touch ./.nojekyll && cp -R examples/dist/assets ./ && cp examples/dist/*.jpg ./ 2>/dev/null || true && cp examples/dist/*.glb ./ 2>/dev/null || true && cp -R examples/dist/basic-viewer ./ 2>/dev/null || true && cp -R examples/dist/interaction-lab ./ 2>/dev/null || true && cp -R examples/dist/architecture-viewer ./ 2>/dev/null || true && cp -R examples/dist/scenario-builder ./ 2>/dev/null || true && cp -R examples/dist/projects ./ 2>/dev/null || true"
   },
   "dependencies": {
@@ -43,5 +49,8 @@
     "typescript"
   ],
   "author": "VXR Framework",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^26.6.2"
+  }
 }

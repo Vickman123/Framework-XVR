@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-09-21T22:15:07.937Z",
+  "projectRoot": "/Users/vickcarg/Desktop/Framework  VCXR/examples/quest-basic/dist",
+  "totalFiles": 2,
+  "totalSizeBytes": 653874,
+  "totalSizeFormatted": "638.5 KB",
+  "assets": [
+    {
+      "path": "/Users/vickcarg/Desktop/Framework  VCXR/examples/quest-basic/dist/assets/index-kw5-2JDA.js",
+      "relativePath": "assets/index-kw5-2JDA.js",
+      "sizeBytes": 650829,
+      "sizeFormatted": "635.6 KB",
+      "type": "other",
+      "warnings": []
+    },
+    {
+      "path": "/Users/vickcarg/Desktop/Framework  VCXR/examples/quest-basic/dist/index.html",
+      "relativePath": "index.html",
+      "sizeBytes": 3045,
+      "sizeFormatted": "3.0 KB",
+      "type": "other",
+      "warnings": []
+    }
+  ],
+  "warnings": [],
+  "recommendations": [
+    "Configura pixelRatioCap <= 1.25 en XRAppOptions para asegurar 90 FPS estables sin sobrecalentamiento del visor.",
+    "Limita mapas de sombras a máximo 1024x1024 y usa 1 sola luz direccional con castShadow activo."
+  ],
+  "questBudgetScore": "Optimal",
+  "summary": {
+    "glbCount": 0,
+    "glbTotalSizeFormatted": "0 B",
+    "textureCount": 0,
+    "textureTotalSizeFormatted": "0 B",
+    "largeFilesCount": 0
+  }
+}

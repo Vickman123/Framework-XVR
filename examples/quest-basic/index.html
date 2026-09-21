@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>VXR — Quest Basic WebXR Experience</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #070b14;
+      font-family: system-ui, -apple-system, sans-serif;
+      color: #f8fafc;
+      user-select: none;
+    }
+    #app {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      inset: 0;
+    }
+    .hud-panel {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      z-index: 10;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 12px;
+      padding: 16px 20px;
+      max-width: 380px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+    }
+    .hud-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .hud-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+    }
+    .hud-desc {
+      font-size: 12px;
+      color: #94a3b8;
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+    .hud-stats {
+      font-size: 11px;
+      color: #64748b;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 8px;
+    }
+    .hud-status-active {
+      color: #10b981;
+      font-weight: 600;
+    }
+    .interact-hint {
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
+      z-index: 10;
+      background: rgba(15, 23, 42, 0.7);
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 11px;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <div class="hud-panel">
+    <div class="hud-title">
+      <span>VXR Quest Basic</span>
+      <span class="hud-badge">WebXR Ready</span>
+    </div>
+    <p class="hud-desc">
+      Experiencia universal 3D interactiva construida con <strong>VXR Framework</strong>.
+      Funciona en escritorio (mouse/touch) y en <strong>Meta Quest Browser</strong> con mandos 6DoF sin cambiar código.
+    </p>
+    <div class="hud-stats">
+      <p>🎯 Modo: <span id="runtime-mode" class="hud-status-active">Desktop (Auto)</span></p>
+      <p>📦 Interacción: <span id="interact-status">Apunta o haz clic en los objetos</span></p>
+    </div>
+  </div>
+
+  <div class="interact-hint">
+    🖥️ <strong>Desktop:</strong> Clic / Arrastrar | 🥽 <strong>Quest:</strong> Botón ENTER VR + Gatillo
+  </div>
+
+  <script type="module" src="./main.ts"></script>
+</body>
+</html>

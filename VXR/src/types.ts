@@ -124,6 +124,26 @@ export interface XRAppOptions {
    * Defaults to true.
    */
   autoVRButton?: boolean;
+
+  /**
+   * Runtime strategy mode or custom XRRuntime instance.
+   * - 'auto': Determines runtime environment automatically (Default).
+   * - 'desktop': Forces desktop mouse/touch OrbitControls runtime.
+   * - 'webxr': Prepares WebXR immersive runtime with Quest optimizations.
+   */
+  runtime?: 'auto' | 'desktop' | 'webxr' | import('./runtime/XRRuntime.js').XRRuntime;
+
+  /**
+   * Target frame rate in Hz to request in Meta Quest Browser (e.g. 72, 90, 120).
+   * Defaults to 90.
+   */
+  targetFrameRate?: number;
+
+  /**
+   * Enable Meta Quest rendering optimizations (adaptive pixel ratio clamping, thermal protection).
+   * Defaults to true.
+   */
+  questOptimization?: boolean;
 }
 
 /**

@@ -12,4 +12,7 @@ export { XRAudio } from './audio/XRAudio.js';
 export { XRExhibit } from './exhibit/XRExhibit.js';
 export { XRTutorial } from './tutorial/XRTutorial.js';
 export { enableLocalFileDrop } from './utils/localDrop.js';
+export { DesktopRuntime } from './runtime/DesktopRuntime.js';
+export { WebXRRuntime } from './runtime/WebXRRuntime.js';
+export { detectQuestCapabilities, negotiateFrameRate } from './runtime/questDetection.js';
 //# sourceMappingURL=index.js.map

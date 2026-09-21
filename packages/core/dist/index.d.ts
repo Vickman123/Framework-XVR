@@ -17,6 +17,12 @@ export { XRTutorial } from './tutorial/XRTutorial.js';
 export type { TutorialTask, XRTutorialOptions } from './tutorial/types.js';
 export { enableLocalFileDrop } from './utils/localDrop.js';
 export type { LocalDropOptions } from './utils/localDrop.js';
+export { DesktopRuntime } from './runtime/DesktopRuntime.js';
+export { WebXRRuntime } from './runtime/WebXRRuntime.js';
+export type { WebXRRuntimeOptions } from './runtime/WebXRRuntime.js';
+export type { XRRuntime, XRRuntimeMode } from './runtime/XRRuntime.js';
+export { detectQuestCapabilities, negotiateFrameRate } from './runtime/questDetection.js';
+export type { QuestRuntimeCapabilities } from './runtime/questDetection.js';
 export type { XRAppOptions, LoadedModel, LoadModelOptions, ModelMetrics, UpdatableCallback, } from './types.js';
 export type { RoomTheme, WallDirection, DoorConfig, XRRoomDimensions, RoomFloorOptions, RoomWallsOptions, RoomCeilingOptions, RoomLightingOptions, XRRoomOptions, WalkableAABB, DoorAperture, CorridorOptions, ScenarioRoomJSON, ScenarioConnectionJSON, ScenarioJSON, } from './scenario/types.js';
 //# sourceMappingURL=index.d.ts.map

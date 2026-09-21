@@ -1,0 +1,31 @@
+{
+  "name": "VXR Quest Experience",
+  "short_name": "VXR Quest Experi",
+  "description": "Interactive 3D WebXR Experience optimized for Meta Quest Browser and desktop.",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#070b14",
+  "theme_color": "#0284c7",
+  "categories": [
+    "games",
+    "productivity",
+    "utilities"
+  ],
+  "icons": [
+    {
+      "src": "./icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "meta_quest": {
+    "mode": "webxr",
+    "recommended_fps": 90,
+    "supported_controllers": [
+      "oculus-touch-v3",
+      "meta-quest-touch-plus"
+    ]
+  }
+}

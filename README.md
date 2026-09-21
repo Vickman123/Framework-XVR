@@ -74,6 +74,46 @@ app.start();
 
 ---
 
+## 🥽 VXR CLI & Compilación para Meta Quest Browser
+
+VXR incluye una herramienta CLI moderna para diagnosticar tu proyecto y generar compilaciones WebXR optimizadas para la familia de visores **Meta Quest 2, 3, 3S y Pro**:
+
+### Comandos Principales:
+
+```bash
+# Diagnóstico integral del proyecto, dependencias y assets para Quest
+npx vxr doctor
+
+# Compilar para la web estándar (HTML5 + WebGL2)
+npx vxr build --target web
+
+# Compilar optimizado para Meta Quest Browser (PWA fullscreen, WebXR meta tags y auditoría)
+npx vxr build --target quest
+
+# Compilar para Meta Quest con presets de rendimiento activos (pixelRatioCap: 1.25, 90Hz)
+npx vxr build --target quest --optimize
+```
+
+### Flujo de Desarrollo Recomendado:
+
+```bash
+# 1. Instalar dependencias
+npm install
+
+# 2. Servidor de desarrollo local
+npm run dev
+
+# 3. Diagnosticar con VXR Doctor
+npx vxr doctor
+
+# 4. Generar build lista para Meta Quest
+npx vxr build --target quest
+```
+
+> 📖 Consulta la guía completa de optimización y despliegue HTTPS en [docs/quest.md](./docs/quest.md) y la especificación técnica en [docs/quest-build-architecture.md](./docs/quest-build-architecture.md).
+
+---
+
 ## 🎯 Interacción Unificada: Desktop + Meta Quest VR
 
 En VXR, el mismo código de interacción funciona tanto con el ratón en escritorio como con los punteros láser en los mandos de realidad virtual:

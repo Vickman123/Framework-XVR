@@ -24,6 +24,9 @@ import type { XRExhibitOptions } from './exhibit/types.js';
 import { XRTutorial } from './tutorial/XRTutorial.js';
 import type { XRTutorialOptions } from './tutorial/types.js';
 import { enableLocalFileDrop, type LocalDropOptions } from './utils/localDrop.js';
+import { XRRuntime } from './runtime/XRRuntime.js';
+import { DesktopRuntime } from './runtime/DesktopRuntime.js';
+import { WebXRRuntime } from './runtime/WebXRRuntime.js';
 
 /**
  * XRApp is the high-level entry point for VXR applications.
@@ -53,6 +56,9 @@ export class XRApp {
 
   /** Desktop orbit controls active when not in WebXR */
   public readonly controls: OrbitControls | null = null;
+
+  /** Active runtime strategy (DesktopRuntime or WebXRRuntime) */
+  public readonly runtime: XRRuntime;
 
   /** Initial camera position for reset */
   private initialCameraPosition: [number, number, number];
@@ -91,13 +97,26 @@ export class XRApp {
 
     this.assets = new XRAssetManager();
 
-    // 2. Attach WebXR controllers to scene so laser rays render automatically
+    // 2. Resolve runtime strategy
+    if (options.runtime && typeof options.runtime === 'object') {
+      this.runtime = options.runtime;
+    } else if (options.runtime === 'desktop') {
+      this.runtime = new DesktopRuntime();
+    } else {
+      // 'auto' or 'webxr': WebXRRuntime seamlessly supports both desktop & VR mode
+      this.runtime = new WebXRRuntime({
+        targetFrameRate: options.targetFrameRate,
+        questOptimization: options.questOptimization,
+      });
+    }
+
+    // 3. Attach WebXR controllers to scene so laser rays render automatically
     this.scene.nativeScene.add(this.session.controllerGroup);
 
-    // 3. Store initial camera transforms
+    // 4. Store initial camera transforms
     this.initialCameraPosition = options.cameraPosition ?? [0, 1.6, 3.5];
 
-    // 4. Setup desktop OrbitControls if enabled
+    // 5. Setup desktop OrbitControls if enabled
     if (options.autoOrbitControls !== false) {
       this.controls = new OrbitControls(
         this.renderer.camera,
@@ -114,16 +133,21 @@ export class XRApp {
       );
     }
 
-    // 5. Mount floating VR Button if enabled
+    // 6. Mount floating VR Button if enabled
     if (options.autoVRButton !== false) {
       this.session.createVRButton(this.renderer.container);
     }
 
-    // 6. Disable orbit controls during active VR sessions to avoid conflicts
+    // 7. Disable orbit controls during active VR sessions to avoid conflicts
     this.session.onStateChange((isVR) => {
       if (this.controls) {
         this.controls.enabled = !isVR;
       }
+    });
+
+    // 8. Initialize runtime lifecycle
+    this.runtime.init(this).catch((err) => {
+      console.warn('[VXR] Runtime initialization warning:', err);
     });
   }
 
@@ -284,7 +308,10 @@ export class XRApp {
    * Starts the animation loop and rendering.
    */
   public start(): this {
-    this.renderer.start((_delta, _elapsed) => {
+    this.renderer.start((delta, elapsed) => {
+      // Delegate frame update to runtime
+      this.runtime.update(delta, elapsed);
+
       // Update OrbitControls on desktop
       if (this.controls && this.controls.enabled) {
         this.controls.update();
@@ -476,6 +503,7 @@ export class XRApp {
       this.activeScenario = null;
     }
     this.session.dispose();
+    this.runtime.dispose();
     this.assets.dispose();
     this.scene.dispose();
     this.renderer.dispose();

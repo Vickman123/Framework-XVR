@@ -6,6 +6,9 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "vxr": "./bin/vxr.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -16,6 +19,7 @@
   "files": [
     "dist",
     "src",
+    "bin",
     "README.md"
   ],
   "scripts": {
