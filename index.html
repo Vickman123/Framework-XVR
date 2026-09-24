@@ -389,12 +389,55 @@
       box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px -10px rgba(56, 189, 248, 0.25);
       border: 1px solid rgba(56, 189, 248, 0.3);
       background: #090e1c;
-      transition: transform 0.3s ease, border-color 0.3s ease;
+      transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
     }
 
     .hero-visual-card:hover {
-      border-color: rgba(56, 189, 248, 0.6);
+      border-color: rgba(56, 189, 248, 0.7);
       transform: translateY(-3px);
+      box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.9), 0 0 50px -5px rgba(56, 189, 248, 0.4);
+    }
+
+    .hero-visual-card:hover .hero-visual-play-btn {
+      background: rgba(2, 132, 199, 0.95);
+      border-color: #38bdf8;
+      box-shadow: 0 14px 40px rgba(2, 132, 199, 0.7);
+      transform: translateY(-50%) scale(1.06);
+    }
+
+    .hero-video-badge {
+      position: absolute;
+      bottom: 14px;
+      right: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 12px;
+      background: rgba(5, 8, 17, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #e2e8f0;
+      pointer-events: none;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    }
+
+    .video-pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #ef4444;
+      box-shadow: 0 0 8px #ef4444;
+      animation: pulse-red 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse-red {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(0.85); }
     }
 
     .hero-visual-img {
@@ -1564,6 +1607,200 @@
       gap: 10px;
       z-index: 10000;
       transition: all 0.3s ease;
+    /* ==========================================================================
+       Video Showcase Modal (Popup de pantalla completa)
+       ========================================================================== */
+    #video-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: rgba(3, 7, 18, 0.94);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #video-modal.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .video-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      cursor: pointer;
+    }
+
+    .video-modal-dialog {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 1080px;
+      background: #090e1c;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 20px;
+      box-shadow: 0 25px 70px -15px rgba(0, 0, 0, 0.95), 0 0 50px -10px rgba(56, 189, 248, 0.3);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transform: scale(0.96);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #video-modal.active .video-modal-dialog {
+      transform: scale(1);
+    }
+
+    .video-modal-header {
+      background: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .video-modal-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    .video-modal-badge {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+      white-space: nowrap;
+    }
+
+    .video-modal-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .video-modal-close-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #94a3b8;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 700;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .video-modal-close-btn:hover {
+      background: rgba(244, 63, 94, 0.2);
+      border-color: rgba(244, 63, 94, 0.5);
+      color: #ffffff;
+      transform: scale(1.08);
+    }
+
+    .video-player-frame {
+      width: 100%;
+      background: #000000;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      aspect-ratio: 16 / 9;
+      max-height: calc(85vh - 120px);
+    }
+
+    .video-player-element {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000000;
+      outline: none;
+    }
+
+    .video-modal-footer {
+      background: rgba(15, 23, 42, 0.95);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .video-shortcuts-guide {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--vxr-text-dim);
+      font-family: var(--font-mono);
+      flex-wrap: wrap;
+    }
+
+    .video-shortcuts-guide kbd {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+      padding: 2px 6px;
+      color: #e2e8f0;
+      font-size: 10px;
+    }
+
+    .video-explore-link {
+      color: #38bdf8;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+
+    .video-explore-link:hover {
+      color: #ffffff;
+    }
+
+    @media (max-width: 640px) {
+      #video-modal {
+        padding: 10px;
+      }
+      .video-modal-dialog {
+        border-radius: 14px;
+      }
+      .video-modal-header {
+        padding: 10px 14px;
+      }
+      .video-modal-title {
+        font-size: 12px;
+      }
+      .video-modal-footer {
+        padding: 10px 14px;
+      }
+      .video-shortcuts-guide {
+        display: none;
+      }
     }
   </style>
 </head>
@@ -1669,14 +1906,18 @@
         </div>
       </div>
 
-      <!-- Hero Visual (Interactive Showcase) -->
-      <div class="hero-visual-card">
+      <!-- Hero Visual (Video Showcase) -->
+      <div class="hero-visual-card" id="hero-visual-trigger" role="button" tabindex="0" title="Ver Video Demostración de VXR">
         <img src="./hero-visual.jpg" alt="VXR Del Código a la Realidad en Desktop y Meta Quest" class="hero-visual-img" />
         <div class="hero-visual-overlay"></div>
-        <button class="hero-visual-play-btn btn-test" data-launch="./scenario-builder/" data-title="Museo Virtual & Práctica 3D (VXR Core)">
+        <button id="btn-hero-video" class="hero-visual-play-btn" title="Ver Video Demostración">
           <div class="play-icon-circle">▶</div>
-          <span>Ver Demo</span>
+          <span>Ver Video</span>
         </button>
+        <div class="hero-video-badge">
+          <span class="video-pulse-dot"></span>
+          <span>Demostración en Video</span>
+        </div>
       </div>
     </section>
 
@@ -2467,6 +2708,42 @@ app.<span class="fn">start</span>();</code></pre>
     </div>
   </div>
 
+  <!-- ==================== VIDEO LIGHTBOX MODAL ==================== -->
+  <div id="video-modal" class="video-modal-overlay" aria-hidden="true" role="dialog" aria-label="Video Demostración VXR">
+    <div class="video-modal-backdrop"></div>
+    <div class="video-modal-dialog">
+      <header class="video-modal-header">
+        <div class="video-modal-title-group">
+          <span class="video-modal-badge">🎬 DEMOSTRACIÓN</span>
+          <span class="video-modal-title">VXR — Del Código a la Realidad en WebXR</span>
+        </div>
+        <button id="btn-close-video" class="video-modal-close-btn" title="Cerrar video (ESC)">
+          ✕
+        </button>
+      </header>
+
+      <div class="video-player-frame">
+        <video id="hero-video-player" class="video-player-element" controls playsinline preload="metadata">
+          <source src="./vxr-demo.mp4" type="video/mp4" />
+          Tu navegador no soporta la reproducción de video HTML5.
+        </video>
+      </div>
+
+      <footer class="video-modal-footer">
+        <div class="video-shortcuts-guide">
+          <span><kbd>Espacio</kbd> Pausar / Reanudar</span>
+          <span>•</span>
+          <span><kbd>↑</kbd> <kbd>↓</kbd> Subir / Bajar Volumen</span>
+          <span>•</span>
+          <span><kbd>ESC</kbd> Cerrar</span>
+        </div>
+        <a href="#catalogo" id="btn-video-to-catalog" class="video-explore-link">
+          Ver Demos Interactivas 3D en Vivo →
+        </a>
+      </footer>
+    </div>
+  </div>
+
   <!-- ==================== LOGIC SCRIPTS ==================== -->
   <script>
     // 0. Toast Notification
@@ -2547,6 +2824,101 @@ app.<span class="fn">start</span>();</code></pre>
       iframe.src = 'about:blank'; // Destroy WebGL context to free GPU memory
       document.body.style.overflow = 'visible';
     }
+
+    // 3.1. Video Showcase Modal Logic
+    const videoModal = document.getElementById('video-modal');
+    const heroVideoPlayer = document.getElementById('hero-video-player');
+    const btnHeroVideo = document.getElementById('btn-hero-video');
+    const heroVisualTrigger = document.getElementById('hero-visual-trigger');
+    const btnCloseVideo = document.getElementById('btn-close-video');
+    const btnVideoToCatalog = document.getElementById('btn-video-to-catalog');
+
+    function openVideoModal() {
+      if (!videoModal || !heroVideoPlayer) return;
+      videoModal.classList.add('active');
+      videoModal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      heroVideoPlayer.currentTime = 0;
+      const playPromise = heroVideoPlayer.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.warn('[VXR] Reproducción automática prevenida por el navegador:', err);
+        });
+      }
+    }
+
+    function closeVideoModal() {
+      if (!videoModal || !heroVideoPlayer) return;
+      heroVideoPlayer.pause();
+      videoModal.classList.remove('active');
+      videoModal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = 'visible';
+    }
+
+    if (btnHeroVideo) {
+      btnHeroVideo.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openVideoModal();
+      });
+    }
+
+    if (heroVisualTrigger) {
+      heroVisualTrigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        openVideoModal();
+      });
+      heroVisualTrigger.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openVideoModal();
+        }
+      });
+    }
+
+    if (btnCloseVideo) {
+      btnCloseVideo.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeVideoModal();
+      });
+    }
+
+    if (videoModal) {
+      videoModal.addEventListener('click', (e) => {
+        if (e.target === videoModal || e.target.classList.contains('video-modal-backdrop')) {
+          closeVideoModal();
+        }
+      });
+    }
+
+    if (btnVideoToCatalog) {
+      btnVideoToCatalog.addEventListener('click', () => {
+        closeVideoModal();
+      });
+    }
+
+    // Keyboard shortcuts for video modal (ESC to close, Space to pause/play, Up/Down for volume)
+    window.addEventListener('keydown', (e) => {
+      if (!videoModal || !videoModal.classList.contains('active')) return;
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeVideoModal();
+      } else if (e.key === ' ' && document.activeElement !== heroVideoPlayer) {
+        e.preventDefault();
+        if (heroVideoPlayer.paused) {
+          heroVideoPlayer.play();
+        } else {
+          heroVideoPlayer.pause();
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        heroVideoPlayer.volume = Math.min(1, Math.round((heroVideoPlayer.volume + 0.1) * 10) / 10);
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        heroVideoPlayer.volume = Math.max(0, Math.round((heroVideoPlayer.volume - 0.1) * 10) / 10);
+      }
+    });
 
     document.querySelectorAll('.btn-test').forEach((btn) => {
       btn.addEventListener('click', (e) => {
