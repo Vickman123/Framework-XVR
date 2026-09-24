@@ -1590,6 +1590,7 @@
         <li><a href="#top" class="nav-item-link active">Inicio</a></li>
         <li><a href="#viaje" class="nav-item-link">El Viaje XR</a></li>
         <li><a href="#caracteristicas" class="nav-item-link">Aprende & Crea</a></li>
+        <li><a href="./level-builder/" target="_blank" class="nav-item-link" style="color: #38bdf8; font-weight: 700;">🛠️ Workshop Studio</a></li>
         <li><a href="#catalogo" class="nav-item-link">Demos en Vivo</a></li>
         <li><a href="#comunidad" class="nav-item-link">Ecosistema LatAm</a></li>
         <li><a href="#documentacion" class="nav-item-link">Docs</a></li>
@@ -1631,6 +1632,9 @@
         <div class="hero-cta-group">
           <a href="#viaje" class="btn-cta-primary">
             ✨ El Viaje en 5 Pasos →
+          </a>
+          <a href="./level-builder/" target="_blank" class="btn-cta-secondary" style="border-color: rgba(56, 189, 248, 0.45); color: #38bdf8; background: rgba(14, 165, 233, 0.12);">
+            🛠️ Creador Visual (Workshop) ↗
           </a>
           <a href="#catalogo" class="btn-cta-secondary">
             🥽 Explorar Demos en Vivo
@@ -1762,14 +1766,14 @@
           <h3 class="journey-step-title">2. Crea</h3>
           <span class="journey-step-subtitle">Plantillas modulares y salas 3D</span>
           <p class="journey-step-desc">
-            Construye salas procedimentales con XRRoom, suelta modelos 3D con auto-grounding automático (Y=0), añade pedestales de exposición y sonido procedural nativo con Web Audio sin archivos pesados.
+            Construye salas procedimentales con XRRoom o utiliza nuestro <b style="color: #38bdf8;">Creador Visual para Talleres</b>. Ajusta tamaños, conecta pasillos, suelta modelos 3D y genera código listo para correr.
           </p>
           <ul class="journey-highlights">
+            <li class="journey-hl-item"><span class="feature-dot" style="background: #818cf8;"></span>Creador Visual con exportación a TS y HTML</li>
             <li class="journey-hl-item"><span class="feature-dot" style="background: #818cf8;"></span>XRRoom con paredes y puertas</li>
-            <li class="journey-hl-item"><span class="feature-dot" style="background: #818cf8;"></span>Auto-grounding de modelos .glb</li>
             <li class="journey-hl-item"><span class="feature-dot" style="background: #818cf8;"></span>Audio procedural Web Audio (0 MB)</li>
           </ul>
-          <a href="#codigo" class="journey-link">Ver Código y Plantillas →</a>
+          <a href="./level-builder/" target="_blank" class="journey-link" style="color: #38bdf8; font-weight: 700;">Abrir Creador de Niveles (Visual) ↗</a>
         </div>
 
         <!-- Paso 3: Prueba -->
@@ -1939,11 +1943,11 @@ app.<span class="fn">start</span>();</code></pre>
         <div class="filter-tabs">
           <button class="tab-filter-btn active" data-filter="all">
             <span>Todos</span>
-            <span class="tab-counter">7</span>
+            <span class="tab-counter">8</span>
           </button>
           <button class="tab-filter-btn" data-filter="vxr-core">
             <span>Demos Core</span>
-            <span class="tab-counter">4</span>
+            <span class="tab-counter">5</span>
           </button>
           <button class="tab-filter-btn" data-filter="reference">
             <span>Casos de Estudio</span>
@@ -1953,6 +1957,37 @@ app.<span class="fn">start</span>();</code></pre>
       </div>
 
       <div class="catalog-grid">
+
+        <!-- 0. Level & Experience Builder (Workshop Studio) -->
+        <article class="exp-card" data-category="vxr-core" style="border-color: rgba(56, 189, 248, 0.4); box-shadow: 0 10px 30px -10px rgba(56, 189, 248, 0.25);">
+          <div class="card-banner" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(168, 85, 247, 0.25) 100%);">
+            <div class="card-icon">🛠️</div>
+            <div class="card-badge-group">
+              <span class="tech-badge badge-core">Workshop Studio</span>
+              <span class="tech-badge" style="background: rgba(168, 85, 247, 0.25); color: #d8b4fe; border-color: rgba(168, 85, 247, 0.4);">Exportador 1-Clic</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-tagline" style="color: #38bdf8;">Herramienta Visual para Talleres & Educación</div>
+            <h3 class="card-title">Creador de Niveles & Experiencias</h3>
+            <p class="card-desc">
+              Diseña escenarios espaciales conectando salas interactivas, ajustando medidas en tiempo real, vinculando pasillos y colocando pedestales con fichas técnicas. Exporta tu código en TypeScript, JSON o un HTML standalone listo para ejecutar.
+            </p>
+            <ul class="feature-list">
+              <li class="feature-item"><span class="feature-dot"></span>Editor visual con vista orbital y caminata en 1ª persona</li>
+              <li class="feature-item"><span class="feature-dot"></span>Conector de salas y pasillos con colisión continua sin muros invisibles</li>
+              <li class="feature-item"><span class="feature-dot"></span>Exportador 1-clic a TypeScript, HTML (1 archivo) y JSON</li>
+            </ul>
+            <div class="card-actions">
+              <button class="btn-test" data-launch="./level-builder/" data-title="Creador de Niveles & Experiencias (Workshop Studio)">
+                ⚡ Probar en Catálogo
+              </button>
+              <a href="./level-builder/" target="_blank" class="btn-open-tab" title="Abrir en pestaña independiente">
+                ↗
+              </a>
+            </div>
+          </div>
+        </article>
 
         <!-- 1. Scenario & Room Builder -->
         <article class="exp-card" data-category="vxr-core">

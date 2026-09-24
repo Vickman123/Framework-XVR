@@ -162,11 +162,13 @@ export class XRScenario {
                 light.position.set(midX, corridorH - 0.3, midZ);
                 group.add(light);
             }
+            // Generous overlap reaching 2.0m into both connected rooms to guarantee seamless passage
+            const corridorReach = 2.0;
             aabb = {
-                minX: midX - corridorW / 2 + t,
-                maxX: midX + corridorW / 2 - t,
-                minZ: minZ - 0.2,
-                maxZ: maxZ + 0.2,
+                minX: midX - corridorW / 2 + 0.15,
+                maxX: midX + corridorW / 2 - 0.15,
+                minZ: minZ - corridorReach,
+                maxZ: maxZ + corridorReach,
             };
         }
         else {
@@ -211,11 +213,13 @@ export class XRScenario {
                 light.position.set(midX, corridorH - 0.3, midZ);
                 group.add(light);
             }
+            // Generous overlap reaching 2.0m into both connected rooms to guarantee seamless passage
+            const corridorReach = 2.0;
             aabb = {
-                minX: minX - 0.2,
-                maxX: maxX + 0.2,
-                minZ: midZ - corridorW / 2 + t,
-                maxZ: midZ + corridorW / 2 - t,
+                minX: minX - corridorReach,
+                maxX: maxX + corridorReach,
+                minZ: midZ - corridorW / 2 + 0.15,
+                maxZ: midZ + corridorW / 2 - 0.15,
             };
         }
         this.corridorsGroup.add(group);

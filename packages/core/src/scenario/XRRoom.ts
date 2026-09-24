@@ -357,16 +357,20 @@ export class XRRoom {
       leftJamb.position.set(offset - dw / 2 + 0.04, dh / 2, zPos);
       const rightJamb = new THREE.Mesh(jambGeo, trimMat);
       rightJamb.position.set(offset + dw / 2 - 0.04, dh / 2, zPos);
-      this.nativeGroup.add(leftJamb, rightJamb);
-
-      // Register doorway aperture in world coordinates
+      // Register doorway aperture in world coordinates.
+      // Must extend generously into the room (to overlap with main walkable bounds)
+      // and into the corridor/exterior so player never hits an invisible boundary.
       const worldCenterZ = this.center.z + zPos;
+      const doorClearanceMargin = 0.15;
+      const halfPassageWidth = Math.max(0.4, dw / 2 - doorClearanceMargin);
+      const reach = Math.max(2.0, t + 1.5);
+
       this.doorApertures.push({
         wall: direction,
-        minX: this.center.x + offset - dw / 2,
-        maxX: this.center.x + offset + dw / 2,
-        minZ: worldCenterZ - t * 2,
-        maxZ: worldCenterZ + t * 2,
+        minX: this.center.x + offset - halfPassageWidth,
+        maxX: this.center.x + offset + halfPassageWidth,
+        minZ: worldCenterZ - reach,
+        maxZ: worldCenterZ + reach,
       });
     } else {
       // East or West wall
@@ -417,14 +421,18 @@ export class XRRoom {
       btmJamb.position.set(xPos, dh / 2, offset + dw / 2 - 0.04);
       this.nativeGroup.add(topJamb, btmJamb);
 
-      // Register doorway aperture
+      // Register doorway aperture in world coordinates.
       const worldCenterX = this.center.x + xPos;
+      const doorClearanceMargin = 0.15;
+      const halfPassageWidth = Math.max(0.4, dw / 2 - doorClearanceMargin);
+      const reach = Math.max(2.0, t + 1.5);
+
       this.doorApertures.push({
         wall: direction,
-        minX: worldCenterX - t * 2,
-        maxX: worldCenterX + t * 2,
-        minZ: this.center.z + offset - dw / 2,
-        maxZ: this.center.z + offset + dw / 2,
+        minX: worldCenterX - reach,
+        maxX: worldCenterX + reach,
+        minZ: this.center.z + offset - halfPassageWidth,
+        maxZ: this.center.z + offset + halfPassageWidth,
       });
     }
   }

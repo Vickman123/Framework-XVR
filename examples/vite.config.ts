@@ -104,6 +104,7 @@ export default defineConfig({
         architectureViewer: path.resolve(__dirname, 'architecture-viewer/index.html'),
         interactionLab: path.resolve(__dirname, 'interaction-lab/index.html'),
         scenarioBuilder: path.resolve(__dirname, 'scenario-builder/index.html'),
+        levelBuilder: path.resolve(__dirname, 'level-builder/index.html'),
       },
     },
   },

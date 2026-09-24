@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>VXR — Creador de Niveles & Experiencias (Workshop Studio)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  
+  <style>
+    :root {
+      --vxr-bg-dark: #050811;
+      --vxr-bg-surface: rgba(13, 19, 36, 0.85);
+      --vxr-bg-card: rgba(15, 23, 42, 0.75);
+      --vxr-border: rgba(255, 255, 255, 0.08);
+      --vxr-border-accent: rgba(56, 189, 248, 0.35);
+      --vxr-cyan: #38bdf8;
+      --vxr-blue: #0284c7;
+      --vxr-indigo: #6366f1;
+      --vxr-purple: #a855f7;
+      --vxr-text-main: #f8fafc;
+      --vxr-text-sub: #94a3b8;
+      --vxr-text-dim: #64748b;
+      --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: var(--font-display); color: var(--vxr-text-main); user-select: none; }
+
+    #app { width: 100%; height: 100%; position: absolute; inset: 0; }
+
+    /* Top Bar */
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      background: rgba(5, 8, 17, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--vxr-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 100;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-link {
+      color: #38bdf8;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      transition: all 0.2s;
+    }
+    .brand-link:hover {
+      background: rgba(56, 189, 248, 0.2);
+      color: #fff;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+    .brand-badge {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .top-btn {
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--vxr-border);
+      background: rgba(15, 23, 42, 0.8);
+      color: #cbd5e1;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .top-btn:hover {
+      background: rgba(30, 41, 59, 0.9);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: #fff;
+    }
+
+    .top-btn-primary {
+      background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%);
+      color: #fff;
+      border-color: rgba(56, 189, 248, 0.4);
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+    }
+    .top-btn-primary:hover {
+      background: linear-gradient(135deg, #0369a1 0%, #4338ca 100%);
+      transform: translateY(-1px);
+    }
+
+    /* Left Drawer / Studio Sidebar */
+    .studio-sidebar {
+      position: fixed;
+      top: 68px;
+      left: 16px;
+      bottom: 20px;
+      width: 360px;
+      background: var(--vxr-bg-surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--vxr-border);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      z-index: 90;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+      transition: transform 0.3s ease;
+      overflow: hidden;
+    }
+
+    .studio-sidebar.collapsed {
+      transform: translateX(-390px);
+    }
+
+    .sidebar-tabs {
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid var(--vxr-border);
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: var(--vxr-text-dim);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      transition: all 0.2s;
+      border-bottom: 2px solid transparent;
+    }
+    .tab-btn:hover {
+      color: #cbd5e1;
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .tab-btn.active {
+      color: #38bdf8;
+      border-bottom-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.08);
+    }
+    .tab-icon { font-size: 15px; }
+
+    .sidebar-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .form-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #94a3b8;
+      display: flex;
+      justify-content: space-between;
+    }
+    .form-label span.val {
+      color: #38bdf8;
+      font-family: var(--font-mono);
+      font-weight: 700;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: #fff;
+      font-size: 12px;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: #38bdf8;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+      background: rgba(30, 41, 59, 0.9);
+    }
+
+    .form-range {
+      width: 100%;
+      accent-color: #38bdf8;
+      cursor: pointer;
+    }
+
+    .btn-action {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: inherit;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+    }
+    .btn-action:hover {
+      background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--vxr-border);
+      color: #cbd5e1;
+      box-shadow: none;
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: #fff;
+    }
+
+    .items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    .item-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--vxr-border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s;
+    }
+    .item-card:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+      background: rgba(30, 41, 59, 0.7);
+    }
+    .item-card.active {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+    }
+
+    .item-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .item-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .item-meta {
+      font-size: 10px;
+      color: var(--vxr-text-dim);
+      font-family: var(--font-mono);
+    }
+
+    .item-del-btn {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 13px;
+      padding: 4px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .item-del-btn:hover {
+      color: #f87171;
+      background: rgba(248, 113, 113, 0.15);
+    }
+
+    .placement-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .placement-btn {
+      padding: 6px 4px;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--vxr-border);
+      border-radius: 6px;
+      color: #cbd5e1;
+      font-size: 10.5px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .placement-btn:hover {
+      border-color: #38bdf8;
+      color: #fff;
+      background: rgba(56, 189, 248, 0.15);
+    }
+
+    /* Toggle Drawer Button */
+    .toggle-drawer-btn {
+      position: fixed;
+      top: 68px;
+      left: 386px;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--vxr-border);
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 95;
+      transition: all 0.25s;
+    }
+    .toggle-drawer-btn:hover {
+      background: rgba(30, 41, 59, 1);
+      border-color: #38bdf8;
+      transform: scale(1.05);
+    }
+    .studio-sidebar.collapsed + .toggle-drawer-btn {
+      left: 16px;
+    }
+
+    /* Floating Stats Bar */
+    .stats-bar {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--vxr-border);
+      border-radius: 12px;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      z-index: 50;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .stat-val {
+      font-size: 14px;
+      font-weight: 800;
+      color: #38bdf8;
+      font-family: var(--font-mono);
+    }
+    .stat-lbl {
+      font-size: 10px;
+      color: var(--vxr-text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* Floating Controls Hint */
+    .controls-hint {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 9999px;
+      padding: 8px 18px;
+      font-size: 11.5px;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      pointer-events: none;
+      z-index: 50;
+    }
+    .controls-hint kbd {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: #38bdf8;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 24px;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-box {
+      width: 100%;
+      max-width: 760px;
+      max-height: 85vh;
+      background: #090e1c;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 18px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+    }
+    .modal-header {
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--vxr-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(15, 23, 42, 0.9);
+    }
+    .modal-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--vxr-text-dim);
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .modal-close:hover { color: #fff; }
+
+    .modal-tabs {
+      display: flex;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.6);
+      border-bottom: 1px solid var(--vxr-border);
+      padding: 0 16px;
+    }
+    .modal-tab-btn {
+      padding: 10px 16px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--vxr-text-dim);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .modal-tab-btn.active {
+      color: #38bdf8;
+      border-bottom-color: #38bdf8;
+    }
+
+    .modal-body {
+      padding: 16px 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .code-box {
+      background: #040711;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 10px;
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: #a5f3fc;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      max-height: 380px;
+      overflow-y: auto;
+    }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--vxr-border);
+      background: rgba(15, 23, 42, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Mobile Joystick */
+    #mobile-joystick {
+      position: fixed;
+      bottom: 30px;
+      left: 30px;
+      width: 110px;
+      height: 110px;
+      background: rgba(15, 23, 42, 0.5);
+      border: 2px solid rgba(56, 189, 248, 0.3);
+      border-radius: 50%;
+      touch-action: none;
+      z-index: 40;
+      display: none;
+    }
+    #joystick-knob {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 44px;
+      height: 44px;
+      background: radial-gradient(circle, #38bdf8 0%, #0284c7 100%);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+      pointer-events: none;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0f172a;
+      border: 1px solid #38bdf8;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 600;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      gap: 8px;
+      z-index: 10000;
+    }
+
+    @media (max-width: 900px) {
+      .studio-sidebar { width: calc(100vw - 32px); max-height: 48vh; bottom: 80px; }
+      .controls-hint { display: none; }
+      .stats-bar { bottom: 10px; right: 10px; padding: 6px 12px; }
+    }
+  </style>
+  <script type="module" crossorigin src="../assets/levelBuilder-D4OljM-u.js"></script>
+  <link rel="modulepreload" crossorigin href="../assets/XRApp-BU1YL40D.js">
+</head>
+<body>
+
+  <!-- Toast -->
+  <div id="toast">
+    <span>✓</span>
+    <span id="toast-msg">Mensaje</span>
+  </div>
+
+  <!-- Top Bar -->
+  <header class="top-bar">
+    <div class="brand-group">
+      <a href="../" class="brand-link">🏠 Inicio</a>
+      <span class="brand-title">VXR Level Builder</span>
+      <span class="brand-badge">Workshop Tool</span>
+    </div>
+
+    <div class="top-actions">
+      <!-- Camera Toggle -->
+      <button id="btn-camera-mode" class="top-btn" title="Alternar entre modo Editor y Primera Persona">
+        <span>🚶</span>
+        <span id="cam-mode-text">Modo Paseo (FPS)</span>
+      </button>
+
+      <!-- Preset Templates -->
+      <select id="select-preset" class="form-select" style="width: auto; padding: 6px 10px;" title="Cargar plantilla de ejemplo">
+        <option value="museum">🏛️ Plantilla: Museo Interdisciplinario</option>
+        <option value="scifi">🔬 Plantilla: Laboratorio de Ciencias</option>
+        <option value="bim">🏢 Plantilla: Showroom Arquitectónico</option>
+        <option value="empty">➕ Plantilla: Lienzo en Blanco</option>
+      </select>
+
+      <!-- Sound Toggle -->
+      <button id="btn-sound-toggle" class="top-btn" title="Alternar audio procedural">
+        🔊 Sonido: ON
+      </button>
+
+      <!-- Export Project Button -->
+      <button id="btn-export-project" class="top-btn top-btn-primary" title="Exportar código y proyecto">
+        <span>🚀 Exportar Código</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 3D Canvas -->
+  <div id="app"></div>
+
+  <!-- Studio Sidebar -->
+  <aside id="sidebar" class="studio-sidebar">
+    <div class="sidebar-tabs">
+      <button class="tab-btn active" data-tab="rooms">
+        <span class="tab-icon">🏛️</span>
+        <span>Salas</span>
+      </button>
+      <button class="tab-btn" data-tab="doors">
+        <span class="tab-icon">🚪</span>
+        <span>Pasillos</span>
+      </button>
+      <button class="tab-btn" data-tab="exhibits">
+        <span class="tab-icon">📦</span>
+        <span>Exhibidores</span>
+      </button>
+      <button class="tab-btn" data-tab="audio">
+        <span class="tab-icon">🎵</span>
+        <span>Audio</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: SALAS -->
+    <div id="tab-content-rooms" class="sidebar-body">
+      <div class="section-title">
+        <span>Salas del Escenario</span>
+        <span id="rooms-counter-badge" style="color: #38bdf8; font-family: var(--font-mono);">3</span>
+      </div>
+
+      <div id="rooms-list" class="items-list">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div style="border-top: 1px solid var(--vxr-border); padding-top: 10px; display: flex; flex-direction: column; gap: 10px;">
+        <div class="section-title">
+          <span id="room-editor-title">Añadir Nueva Sala</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="room-name">Nombre de la Sala</label>
+          <input id="room-name" type="text" class="form-input" value="Nueva Sala" placeholder="Ej. Sala Arqueología" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="room-theme">Estilo & Materiales</label>
+          <select id="room-theme" class="form-select">
+            <option value="gallery">🏛️ Gallery (Blanco, Madera & Mármol)</option>
+            <option value="scifi">🔬 Sci-Fi (Cyberpunk Neón Azul)</option>
+            <option value="office">🏢 Office (Gris Corporativo & Roble)</option>
+            <option value="cozy">🛋️ Cozy (Madera Cálida & Ámbar)</option>
+            <option value="minimal">⬛ Minimal (Grafito & Alto Contraste)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="room-width">Ancho (X): <span id="lbl-width" class="val">12m</span></label>
+          <input id="room-width" type="range" class="form-range" min="6" max="28" step="1" value="12" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="room-depth">Profundidad (Z): <span id="lbl-depth" class="val">10m</span></label>
+          <input id="room-depth" type="range" class="form-range" min="6" max="28" step="1" value="10" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="room-height">Altura (Y): <span id="lbl-height" class="val">3.8m</span></label>
+          <input id="room-height" type="range" class="form-range" min="2.4" max="7.0" step="0.2" value="3.8" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Ubicación respecto a Sala Seleccionada:</label>
+          <div class="placement-grid">
+            <button class="placement-btn" data-dir="north">↑ Norte</button>
+            <button class="placement-btn" data-dir="south">↓ Sur</button>
+            <button class="placement-btn" data-dir="east">→ Este</button>
+            <button class="placement-btn" data-dir="west">← Oeste</button>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 4px;">
+          <button id="btn-save-room" class="btn-action" style="flex: 1;">
+            ➕ Añadir Sala al Nivel
+          </button>
+          <button id="btn-delete-room" class="btn-action btn-secondary" style="display: none; color: #f87171;" title="Eliminar sala seleccionada">
+            🗑️
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: PASILLOS & CONEXIONES -->
+    <div id="tab-content-doors" class="sidebar-body" style="display: none;">
+      <div class="section-title">
+        <span>Conexiones & Pasillos</span>
+      </div>
+
+      <div id="corridors-list" class="items-list">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div style="border-top: 1px solid var(--vxr-border); padding-top: 10px; display: flex; flex-direction: column; gap: 10px;">
+        <div class="section-title">
+          <span>Crear Conexión entre Salas</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="conn-from-room">Sala Origen</label>
+          <select id="conn-from-room" class="form-select"></select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="conn-from-wall">Muro de Salida</label>
+          <select id="conn-from-wall" class="form-select">
+            <option value="north">Norte (Frontal)</option>
+            <option value="south">Sur (Trasero)</option>
+            <option value="east">Este (Derecha)</option>
+            <option value="west">Oeste (Izquierda)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="conn-to-room">Sala Destino</label>
+          <select id="conn-to-room" class="form-select"></select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="conn-to-wall">Muro de Entrada</label>
+          <select id="conn-to-wall" class="form-select">
+            <option value="south">Sur (Trasero)</option>
+            <option value="north">Norte (Frontal)</option>
+            <option value="west">Oeste (Izquierda)</option>
+            <option value="east">Este (Derecha)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="conn-width">Ancho de Pasillo: <span id="lbl-conn-width" class="val">2.4m</span></label>
+          <input id="conn-width" type="range" class="form-range" min="1.8" max="4.0" step="0.2" value="2.4" />
+        </div>
+
+        <button id="btn-add-connection" class="btn-action">
+          🔗 Conectar Salas con Pasillo
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB 3: EXHIBIDORES & ELEMENTOS -->
+    <div id="tab-content-exhibits" class="sidebar-body" style="display: none;">
+      <div class="section-title">
+        <span>Exhibidores Interactivos</span>
+        <span id="exhibits-counter-badge" style="color: #38bdf8; font-family: var(--font-mono);">3</span>
+      </div>
+
+      <div id="exhibits-list" class="items-list">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div style="border-top: 1px solid var(--vxr-border); padding-top: 10px; display: flex; flex-direction: column; gap: 10px;">
+        <div class="section-title">
+          <span>Nuevo Pedestal Interactivo</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="exhibit-room">Sala Anfitriona</label>
+          <select id="exhibit-room" class="form-select"></select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="exhibit-title">Título del Elemento</label>
+          <input id="exhibit-title" type="text" class="form-input" value="Artefacto Histórico 3D" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="exhibit-category">Categoría Temática</label>
+          <input id="exhibit-category" type="text" class="form-input" value="ARQUEOLOGÍA DIGITAL" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="exhibit-desc">Descripción Pedagógica</label>
+          <textarea id="exhibit-desc" class="form-textarea" rows="2">Digitalizado mediante fotogrametría de alta resolución para inspección inmersiva.</textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="exhibit-color">Color de Pantalla & HUD</label>
+          <select id="exhibit-color" class="form-select">
+            <option value="#38bdf8">Cian Láser (#38bdf8)</option>
+            <option value="#f59e0b">Dorado Ancestral (#f59e0b)</option>
+            <option value="#10b981">Esmeralda Sostenible (#10b981)</option>
+            <option value="#a855f7">Púrpura Cuántico (#a855f7)</option>
+            <option value="#ec4899">Rosa Magenta (#ec4899)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="exhibit-model-type">Tipo de Modelo 3D</label>
+          <select id="exhibit-model-type" class="form-select">
+            <option value="gem">Gema Holográfica Octaédrica</option>
+            <option value="rings">Anillos de Reactor Giratorio</option>
+            <option value="monolith">Monolito Grabado</option>
+            <option value="custom">Suelta tu archivo .glb</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="exhibit-pos-x">Desplazamiento X: <span id="lbl-ex-x" class="val">0.0m</span></label>
+          <input id="exhibit-pos-x" type="range" class="form-range" min="-6" max="6" step="0.5" value="0" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="exhibit-pos-z">Desplazamiento Z: <span id="lbl-ex-z" class="val">0.0m</span></label>
+          <input id="exhibit-pos-z" type="range" class="form-range" min="-6" max="6" step="0.5" value="0" />
+        </div>
+
+        <button id="btn-add-exhibit" class="btn-action">
+          ➕ Colocar Exhibidor en Sala
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB 4: AUDIO & EFECTOS -->
+    <div id="tab-content-audio" class="sidebar-body" style="display: none;">
+      <div class="section-title">
+        <span>Audio Procedural Web Audio (0 MB)</span>
+      </div>
+
+      <p style="font-size: 12px; color: var(--vxr-text-sub); line-height: 1.5;">
+        VXR sintetiza ondas sonoras directamente en el chip de audio de tu dispositivo sin descargar archivos MP3 pesados.
+      </p>
+
+      <div class="form-group" style="margin-top: 8px;">
+        <label class="form-label">Probar Efectos Procedurales:</label>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+          <button class="top-btn" id="btn-sound-step">👟 Paso de Caminata</button>
+          <button class="top-btn" id="btn-sound-click">🔘 Clic Háptico</button>
+          <button class="top-btn" id="btn-sound-teleport">⚡ Teletransporte</button>
+          <button class="top-btn" id="btn-sound-fanfare">🎺 Fanfarria Éxito</button>
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid var(--vxr-border); padding-top: 12px; margin-top: 10px;">
+        <div class="section-title">
+          <span>Modo Aprendizaje en el Taller</span>
+        </div>
+        <p style="font-size: 11.5px; color: #cbd5e1; line-height: 1.55;">
+          ¡Invita a tus alumnos a pulsar <b>"Exportar Código"</b> para ver cómo se compone su escena en TypeScript y llevarse un archivo HTML listo para abrir en su navegador personal!
+        </p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Toggle Drawer Button -->
+  <button id="btn-toggle-drawer" class="toggle-drawer-btn" title="Mostrar/Ocultar herramientas">
+    ◀
+  </button>
+
+  <!-- Floating Stats Bar -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <span id="stat-rooms" class="stat-val">3</span>
+      <span class="stat-lbl">Salas</span>
+    </div>
+    <div class="stat-item">
+      <span id="stat-area" class="stat-val">368 m²</span>
+      <span class="stat-lbl">Área</span>
+    </div>
+    <div class="stat-item">
+      <span id="stat-exhibits" class="stat-val">3</span>
+      <span class="stat-lbl">Exhibidores</span>
+    </div>
+    <div class="stat-item">
+      <span id="stat-connections" class="stat-val">2</span>
+      <span class="stat-lbl">Pasillos</span>
+    </div>
+  </div>
+
+  <!-- Floating Controls Hint -->
+  <div class="controls-hint">
+    <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Moverse</span>
+    <span>•</span>
+    <span><kbd>Ratón</kbd> Mirar</span>
+    <span>•</span>
+    <span><kbd>Clic</kbd> Inspeccionar</span>
+    <span>•</span>
+    <span><kbd>ESC</kbd> Liberar Cursor</span>
+  </div>
+
+  <!-- Mobile Joystick -->
+  <div id="mobile-joystick">
+    <div id="joystick-knob"></div>
+  </div>
+
+  <!-- Export Project Modal -->
+  <div id="export-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>🚀</span>
+          <span>Exportar Proyecto VXR (Listo para Producción)</span>
+        </div>
+        <button id="btn-close-modal" class="modal-close">✕</button>
+      </div>
+
+      <div class="modal-tabs">
+        <button class="modal-tab-btn active" data-export-tab="ts">TypeScript / VXR</button>
+        <button class="modal-tab-btn" data-export-tab="html">HTML Standalone (1 archivo)</button>
+        <button class="modal-tab-btn" data-export-tab="json">JSON (escenario.json)</button>
+      </div>
+
+      <div class="modal-body">
+        <pre id="export-code-display" class="code-box"></pre>
+      </div>
+
+      <div class="modal-footer">
+        <div style="font-size: 11.5px; color: var(--vxr-text-dim);">
+          Ideal para que los asistentes al taller se lleven su mundo 3D listo para correr.
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button id="btn-copy-code" class="top-btn" style="border-color: #38bdf8; color: #38bdf8;">
+            📋 Copiar Código
+          </button>
+          <button id="btn-download-file" class="top-btn top-btn-primary">
+            💾 Descargar Archivo
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
