@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./vxr-logo.png" alt="VXR Framework" width="560" />
+</p>
+
 # 🌌 VXR — High-Level WebXR & 3D Interactive Framework for Three.js
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg?logo=typescript)](https://www.typescriptlang.org/)

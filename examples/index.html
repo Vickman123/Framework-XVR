@@ -4,6 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>VXR — Tu Puerta de Entrada al Desarrollo 3D y WebXR</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./favicon-180x180.png" />
+  <link rel="shortcut icon" href="./favicon.ico" />
+  <meta property="og:title" content="VXR — Framework 3D & WebXR de Alto Nivel" />
+  <meta property="og:description" content="Democratizando el mundo 3D & XR. De una idea a tu primera experiencia en minutos." />
+  <meta property="og:image" content="./vxr-logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Caveat:wght@600&display=swap" rel="stylesheet" />
@@ -90,41 +97,22 @@
       gap: 12px;
       text-decoration: none;
       cursor: pointer;
+      padding: 2px 0;
     }
 
-    .brand-logo-text {
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: -0.04em;
-      background: linear-gradient(135deg, #ffffff 30%, #38bdf8 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-shadow: 0 0 25px rgba(56, 189, 248, 0.3);
-      display: flex;
-      align-items: center;
+    .brand-logo-img {
+      height: 42px;
+      width: auto;
+      max-width: 170px;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(0 0 14px rgba(56, 189, 248, 0.45));
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .brand-meta {
-      display: flex;
-      flex-direction: column;
-      border-left: 1px solid rgba(255, 255, 255, 0.12);
-      padding-left: 10px;
-    }
-
-    .brand-name {
-      font-size: 13px;
-      font-weight: 700;
-      color: #ffffff;
-      letter-spacing: -0.01em;
-      line-height: 1.15;
-    }
-
-    .brand-tagline {
-      font-size: 8.5px;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: #38bdf8;
+    .nav-brand:hover .brand-logo-img {
+      transform: scale(1.04);
+      filter: drop-shadow(0 0 24px rgba(56, 189, 248, 0.8));
     }
 
     .nav-menu {
@@ -1818,12 +1806,8 @@
   <!-- ==================== TOP NAVIGATION ==================== -->
   <header class="site-nav">
     <div class="nav-container">
-      <a href="#top" class="nav-brand" id="brand-link">
-        <span class="brand-logo-text">VXR</span>
-        <div class="brand-meta">
-          <span class="brand-name">Framework-XVR</span>
-          <span class="brand-tagline">DEMOCRATIZANDO EL MUNDO 3D & XR</span>
-        </div>
+      <a href="#top" class="nav-brand" id="brand-link" title="VXR Framework-XVR — Democratizando el mundo 3D & XR">
+        <img src="./vxr-logo.png" alt="VXR Framework-XVR" class="brand-logo-img" />
       </a>
 
       <ul class="nav-menu">
@@ -2661,6 +2645,11 @@ app.<span class="fn">start</span>();</code></pre>
 
   <!-- ==================== FOOTER ==================== -->
   <footer class="site-footer">
+    <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 14px;">
+      <a href="#top" title="Volver al inicio" style="display: inline-block;">
+        <img src="./vxr-logo.png" alt="VXR Framework-XVR" style="height: 38px; width: auto; object-fit: contain; filter: drop-shadow(0 0 14px rgba(56, 189, 248, 0.45));" />
+      </a>
+    </div>
     <div>
       <strong>VXR (Virtual & Extended Reality Framework)</strong> • Democratizando la creación 3D & WebXR • Desarrollado sobre Three.js & WebXR • Licencia MIT
     </div>
