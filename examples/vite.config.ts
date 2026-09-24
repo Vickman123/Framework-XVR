@@ -41,6 +41,8 @@ function serveStaticFolder(prefix: string, folderPath: string) {
         '.mp3': 'audio/mpeg',
         '.ogg': 'audio/ogg',
         '.wav': 'audio/wav',
+        '.mp4': 'video/mp4',
+        '.webm': 'video/webm',
         '.bin': 'application/octet-stream',
       };
       res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');

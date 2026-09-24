@@ -1607,6 +1607,8 @@
       gap: 10px;
       z-index: 10000;
       transition: all 0.3s ease;
+    }
+
     /* ==========================================================================
        Video Showcase Modal (Popup de pantalla completa)
        ========================================================================== */
@@ -1626,8 +1628,9 @@
     }
 
     #video-modal.active {
-      display: flex;
-      opacity: 1;
+      display: flex !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
     }
 
     .video-modal-backdrop {
@@ -2834,24 +2837,40 @@ app.<span class="fn">start</span>();</code></pre>
     const btnVideoToCatalog = document.getElementById('btn-video-to-catalog');
 
     function openVideoModal() {
-      if (!videoModal || !heroVideoPlayer) return;
+      if (!videoModal || !heroVideoPlayer) {
+        console.warn('[VXR] Video modal o reproductor no encontrado');
+        return;
+      }
+      videoModal.style.display = 'flex';
+      void videoModal.offsetWidth; // Force browser layout recalculation
       videoModal.classList.add('active');
       videoModal.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
-      heroVideoPlayer.currentTime = 0;
+
+      try {
+        if (!isNaN(heroVideoPlayer.duration) && heroVideoPlayer.duration > 0) {
+          heroVideoPlayer.currentTime = 0;
+        }
+      } catch (err) {
+        console.warn('[VXR] Error al reiniciar currentTime:', err);
+      }
+
       const playPromise = heroVideoPlayer.play();
       if (playPromise !== undefined) {
         playPromise.catch((err) => {
-          console.warn('[VXR] Reproducción automática prevenida por el navegador:', err);
+          console.warn('[VXR] Autoplay bloqueado por políticas de audio del navegador:', err);
         });
       }
     }
 
     function closeVideoModal() {
       if (!videoModal || !heroVideoPlayer) return;
-      heroVideoPlayer.pause();
+      try {
+        heroVideoPlayer.pause();
+      } catch (err) {}
       videoModal.classList.remove('active');
       videoModal.setAttribute('aria-hidden', 'true');
+      videoModal.style.display = 'none';
       document.body.style.overflow = 'visible';
     }
 
