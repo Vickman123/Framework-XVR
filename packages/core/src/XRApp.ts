@@ -27,6 +27,7 @@ import { enableLocalFileDrop, type LocalDropOptions } from './utils/localDrop.js
 import { XRRuntime } from './runtime/XRRuntime.js';
 import { DesktopRuntime } from './runtime/DesktopRuntime.js';
 import { WebXRRuntime } from './runtime/WebXRRuntime.js';
+import { XRInput } from './input/XRInput.js';
 
 /**
  * XRApp is the high-level entry point for VXR applications.
@@ -56,6 +57,9 @@ export class XRApp {
 
   /** Desktop orbit controls active when not in WebXR */
   public readonly controls: OrbitControls | null = null;
+
+  /** Cross-platform input & semantic action manager (PC, WebXR, Mobile) */
+  public readonly input: XRInput;
 
   /** Active runtime strategy (DesktopRuntime or WebXRRuntime) */
   public readonly runtime: XRRuntime;
@@ -94,6 +98,12 @@ export class XRApp {
     this.renderer = new XRRenderer(options);
 
     this.session = new XRSession(this.renderer.nativeRenderer);
+
+    this.input = new XRInput(
+      this.renderer.domElement,
+      this.session,
+      options.input
+    );
 
     this.assets = new XRAssetManager();
 
@@ -309,7 +319,10 @@ export class XRApp {
    */
   public start(): this {
     this.renderer.start((delta, elapsed) => {
-      // Delegate frame update to runtime
+      // 1. Process unified hardware input and semantic actions
+      this.input.update(delta);
+
+      // 2. Delegate frame update to runtime
       this.runtime.update(delta, elapsed);
 
       // Update OrbitControls on desktop
@@ -502,6 +515,7 @@ export class XRApp {
       this.activeScenario.dispose();
       this.activeScenario = null;
     }
+    this.input.dispose();
     this.session.dispose();
     this.runtime.dispose();
     this.assets.dispose();

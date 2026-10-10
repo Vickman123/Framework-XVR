@@ -15,4 +15,5 @@ export { enableLocalFileDrop } from './utils/localDrop.js';
 export { DesktopRuntime } from './runtime/DesktopRuntime.js';
 export { WebXRRuntime } from './runtime/WebXRRuntime.js';
 export { detectQuestCapabilities, negotiateFrameRate } from './runtime/questDetection.js';
+export { XRInput } from './input/XRInput.js';
 //# sourceMappingURL=index.js.map

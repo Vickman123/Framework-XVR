@@ -1,15 +1,15 @@
 {
-  "timestamp": "2026-09-24T22:11:22.802Z",
+  "timestamp": "2026-10-10T09:44:55.409Z",
   "projectRoot": "/Users/vickcarg/Desktop/Framework  VCXR/examples/quest-basic/dist",
   "totalFiles": 2,
-  "totalSizeBytes": 653928,
-  "totalSizeFormatted": "638.6 KB",
+  "totalSizeBytes": 663535,
+  "totalSizeFormatted": "648.0 KB",
   "assets": [
     {
-      "path": "/Users/vickcarg/Desktop/Framework  VCXR/examples/quest-basic/dist/assets/index-D7L5A6dn.js",
-      "relativePath": "assets/index-D7L5A6dn.js",
-      "sizeBytes": 650883,
-      "sizeFormatted": "635.6 KB",
+      "path": "/Users/vickcarg/Desktop/Framework  VCXR/examples/quest-basic/dist/assets/index-CudaWnbg.js",
+      "relativePath": "assets/index-CudaWnbg.js",
+      "sizeBytes": 660490,
+      "sizeFormatted": "645.0 KB",
       "type": "other",
       "warnings": []
     },

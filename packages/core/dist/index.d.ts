@@ -23,6 +23,8 @@ export type { WebXRRuntimeOptions } from './runtime/WebXRRuntime.js';
 export type { XRRuntime, XRRuntimeMode } from './runtime/XRRuntime.js';
 export { detectQuestCapabilities, negotiateFrameRate } from './runtime/questDetection.js';
 export type { QuestRuntimeCapabilities } from './runtime/questDetection.js';
+export { XRInput } from './input/XRInput.js';
+export type { StandardAction, InputDevice, Vector2D, ButtonState, ActionEvent, ActionCallback, XRButtonBindings, XRInputOptions, } from './input/types.js';
 export type { XRAppOptions, LoadedModel, LoadModelOptions, ModelMetrics, UpdatableCallback, } from './types.js';
 export type { RoomTheme, WallDirection, DoorConfig, XRRoomDimensions, RoomFloorOptions, RoomWallsOptions, RoomCeilingOptions, RoomLightingOptions, XRRoomOptions, WalkableAABB, DoorAperture, CorridorOptions, ScenarioRoomJSON, ScenarioConnectionJSON, ScenarioJSON, } from './scenario/types.js';
 //# sourceMappingURL=index.d.ts.map

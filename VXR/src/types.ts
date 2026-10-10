@@ -1,5 +1,6 @@
 import type * as THREE from 'three';
 import type { GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import type { XRInputOptions } from './input/types.js';
 
 /**
  * Geometric and complexity metrics computed from a loaded 3D model.
@@ -144,6 +145,11 @@ export interface XRAppOptions {
    * Defaults to true.
    */
   questOptimization?: boolean;
+
+  /**
+   * Configuration options for the cross-platform XRInput action mapping subsystem.
+   */
+  input?: XRInputOptions;
 }
 
 /**
