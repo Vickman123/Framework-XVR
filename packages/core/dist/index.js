@@ -16,4 +16,10 @@ export { DesktopRuntime } from './runtime/DesktopRuntime.js';
 export { WebXRRuntime } from './runtime/WebXRRuntime.js';
 export { detectQuestCapabilities, negotiateFrameRate } from './runtime/questDetection.js';
 export { XRInput } from './input/XRInput.js';
+// UI & 3D Interactive Screens
+export { XRDisplayScreen } from './ui/XRDisplayScreen.js';
+// Portals & Hub Navigation
+export { XRPortal } from './portal/XRPortal.js';
+// Dynamics & Gamification Loops
+export { XRDynamicsEngine } from './dynamics/XRDynamicsEngine.js';
 //# sourceMappingURL=index.js.map

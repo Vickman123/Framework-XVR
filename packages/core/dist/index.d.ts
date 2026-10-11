@@ -26,5 +26,11 @@ export type { QuestRuntimeCapabilities } from './runtime/questDetection.js';
 export { XRInput } from './input/XRInput.js';
 export type { StandardAction, InputDevice, Vector2D, ButtonState, ActionEvent, ActionCallback, XRButtonBindings, XRInputOptions, } from './input/types.js';
 export type { XRAppOptions, LoadedModel, LoadModelOptions, ModelMetrics, UpdatableCallback, } from './types.js';
+export { XRDisplayScreen } from './ui/XRDisplayScreen.js';
+export type { XRDisplayScreenOptions, XRMediaItem, XRCanvasHotspot, } from './ui/types.js';
+export { XRPortal } from './portal/XRPortal.js';
+export type { XRPortalOptions } from './portal/XRPortal.js';
+export { XRDynamicsEngine } from './dynamics/XRDynamicsEngine.js';
+export type { XRDynamicsOptions, XRDynamicNode, } from './dynamics/XRDynamicsEngine.js';
 export type { RoomTheme, WallDirection, DoorConfig, XRRoomDimensions, RoomFloorOptions, RoomWallsOptions, RoomCeilingOptions, RoomLightingOptions, XRRoomOptions, WalkableAABB, DoorAperture, CorridorOptions, ScenarioRoomJSON, ScenarioConnectionJSON, ScenarioJSON, } from './scenario/types.js';
 //# sourceMappingURL=index.d.ts.map

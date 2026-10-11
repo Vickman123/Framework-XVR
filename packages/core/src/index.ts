@@ -44,6 +44,25 @@ export type {
   UpdatableCallback,
 } from './types.js';
 
+// UI & 3D Interactive Screens
+export { XRDisplayScreen } from './ui/XRDisplayScreen.js';
+export type {
+  XRDisplayScreenOptions,
+  XRMediaItem,
+  XRCanvasHotspot,
+} from './ui/types.js';
+
+// Portals & Hub Navigation
+export { XRPortal } from './portal/XRPortal.js';
+export type { XRPortalOptions } from './portal/XRPortal.js';
+
+// Dynamics & Gamification Loops
+export { XRDynamicsEngine } from './dynamics/XRDynamicsEngine.js';
+export type {
+  XRDynamicsOptions,
+  XRDynamicNode,
+} from './dynamics/XRDynamicsEngine.js';
+
 export type {
   RoomTheme,
   WallDirection,
