@@ -61,13 +61,6 @@ export interface StudioPropDef {
 }
 
 // =============================================================================
-// Default Scenario Templates (Empty by default for a clean creative canvas)
-// =============================================================================
-const DEFAULT_ROOMS: RoomDef[] = [];
-const DEFAULT_CONNECTIONS: ConnectionDef[] = [];
-const DEFAULT_PROPS: StudioPropDef[] = [];
-
-// =============================================================================
 // Application State
 // =============================================================================
 let rooms: RoomDef[] = [];
@@ -77,9 +70,34 @@ let props: StudioPropDef[] = [];
 let selectedRoomId: string | null = null;
 let selectedPropId: string | null = null;
 let activeTool: 'select' | 'translate' | 'rotate' | 'scale' = 'select';
-let activeCategory: StudioPropCategory = 'basic';
-let isFirstPerson = false;
+let activeCategory: string = 'basic';
 let autoSaveTimer: any = null;
+
+// Navigation Modes: 'edit' | 'explore' | 'fly' | 'walk'
+type NavMode = 'edit' | 'explore' | 'fly' | 'walk';
+let activeNavMode: NavMode = 'edit';
+let isPointerLocked = false;
+let isNightTheme = true;
+let snapEnabled = false;
+let flySpeed = 8.0;
+
+// Fly Controls State (Minecraft Creative Style)
+const flyKeys: Record<string, boolean> = {
+  KeyW: false, KeyA: false, KeyS: false, KeyD: false,
+  KeyQ: false, KeyE: false, Space: false,
+  ShiftLeft: false, ShiftRight: false,
+};
+const flyVelocity = new THREE.Vector3();
+let flyPitch = 0;
+let flyYaw = 0;
+
+// Walk Mode (First Person FPS) State
+let isFirstPerson = false;
+const playerPos = new THREE.Vector3(0, 1.6, 2);
+let playerYaw = 0;
+let playerPitch = 0;
+const keys: Record<string, boolean> = {};
+let stepTimer = 0;
 
 // Registry of Three.js objects
 const propMeshMap = new Map<string, THREE.Object3D>();
@@ -103,7 +121,7 @@ app.scene.setEnvironmentPreset('studio');
 app.scene.setBackground(0x060912);
 
 // Add architectural grid floor
-const gridFloor = new THREE.GridHelper(60, 60, 0x1e293b, 0x0f172a);
+const gridFloor = new THREE.GridHelper(70, 70, 0x1e293b, 0x0f172a);
 gridFloor.position.y = -0.01;
 app.scene.nativeScene.add(gridFloor);
 
@@ -112,7 +130,7 @@ if (app.controls) {
   app.controls.enableDamping = true;
   app.controls.dampingFactor = 0.08;
   app.controls.minDistance = 1.0;
-  app.controls.maxDistance = 90.0;
+  app.controls.maxDistance = 120.0;
   app.controls.screenSpacePanning = true;
   app.controls.mouseButtons = {
     LEFT: THREE.MOUSE.ROTATE,
@@ -135,7 +153,7 @@ transformControls.size = 0.85;
 app.scene.nativeScene.add(transformControls.getHelper());
 
 transformControls.addEventListener('dragging-changed', (event) => {
-  if (app.controls) {
+  if (app.controls && activeNavMode !== 'fly' && activeNavMode !== 'walk') {
     app.controls.enabled = !event.value;
   }
 });
@@ -169,7 +187,7 @@ transformControls.addEventListener('change', () => {
 });
 
 // =============================================================================
-// Procedural Mesh Factories (Básicos, Mobiliario, Arquitectura, Rótulos, Luces)
+// Procedural Mesh Factories
 // =============================================================================
 
 function createBasicMesh(prop: StudioPropDef): THREE.Object3D {
@@ -187,6 +205,14 @@ function createBasicMesh(prop: StudioPropDef): THREE.Object3D {
     geo = new THREE.CylinderGeometry(0.6, 0.6, 1.4, 32);
   } else if (prop.subtype === 'plane') {
     geo = new THREE.BoxGeometry(2.0, 0.04, 2.0);
+  } else if (prop.subtype === 'tube') {
+    geo = new THREE.TorusGeometry(0.7, 0.2, 16, 32);
+  } else if (prop.subtype === 'cone') {
+    geo = new THREE.ConeGeometry(0.7, 1.4, 32);
+  } else if (prop.subtype === 'torus') {
+    geo = new THREE.TorusGeometry(0.7, 0.25, 16, 32);
+  } else if (prop.subtype === 'pyramid') {
+    geo = new THREE.ConeGeometry(0.85, 1.3, 4);
   } else {
     // Box
     geo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
@@ -198,7 +224,6 @@ function createBasicMesh(prop: StudioPropDef): THREE.Object3D {
   return mesh;
 }
 
-// YouTube and Multimedia Helpers
 export function extractYouTubeId(url: string): string | null {
   if (!url) return null;
   const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/;
@@ -206,157 +231,262 @@ export function extractYouTubeId(url: string): string | null {
   return match ? match[1] : null;
 }
 
-function createFurnitureMesh(prop: StudioPropDef): THREE.Object3D {
+// Ergonomic Office Chair
+function createModernChairMesh(prop: StudioPropDef): THREE.Object3D {
   const group = new THREE.Group();
-  const color = new THREE.Color(prop.color);
-  const woodMat = new THREE.MeshStandardMaterial({ color, roughness: 0.7 });
-  const darkMetal = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.3 });
-  const chromeMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.1 });
-  const fabricMat = new THREE.MeshStandardMaterial({ color, roughness: 0.85 });
+  const color = new THREE.Color(prop.color || '#1e293b');
+  const darkMat = new THREE.MeshStandardMaterial({ color, roughness: 0.5 });
+  const chromeMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, metalness: 0.9, roughness: 0.1 });
+  const wheelMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.8 });
 
-  if (prop.subtype === 'chair_lounge') {
-    // Deep Armchair
-    const seat = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.2, 0.8), fabricMat);
-    seat.position.y = 0.35;
-    const back = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, 0.18), fabricMat);
-    back.position.set(0, 0.65, -0.32);
-    const armL = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.45, 0.8), fabricMat);
-    armL.position.set(-0.4, 0.45, 0);
-    const armR = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.45, 0.8), fabricMat);
-    armR.position.set(0.4, 0.45, 0);
-    const legGeo = new THREE.CylinderGeometry(0.025, 0.02, 0.25, 12);
-    const leg1 = new THREE.Mesh(legGeo, darkMetal); leg1.position.set(-0.35, 0.125, -0.35);
-    const leg2 = new THREE.Mesh(legGeo, darkMetal); leg2.position.set(0.35, 0.125, -0.35);
-    const leg3 = new THREE.Mesh(legGeo, darkMetal); leg3.position.set(-0.35, 0.125, 0.35);
-    const leg4 = new THREE.Mesh(legGeo, darkMetal); leg4.position.set(0.35, 0.125, 0.35);
-    group.add(seat, back, armL, armR, leg1, leg2, leg3, leg4);
-  } else if (prop.subtype === 'chair_executive') {
-    // Swivel Office Chair
-    const seat = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.1, 0.6), darkMetal);
-    seat.position.y = 0.5;
-    const back = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.7, 0.08), darkMetal);
-    back.position.set(0, 0.85, -0.26);
-    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.45, 16), chromeMat);
-    post.position.set(0, 0.25, 0);
-    const starBase = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.05, 5), chromeMat);
-    starBase.position.set(0, 0.04, 0);
-    group.add(seat, back, post, starBase);
-  } else if (prop.subtype === 'bench') {
-    // Gallery Museum Bench
-    const plankMat = new THREE.MeshStandardMaterial({ color, roughness: 0.6 });
-    const seat = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.08, 0.6), plankMat);
-    seat.position.y = 0.44;
-    const legL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.44, 0.55), darkMetal);
-    legL.position.set(-0.85, 0.22, 0);
-    const legR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.44, 0.55), darkMetal);
-    legR.position.set(0.85, 0.22, 0);
-    group.add(seat, legL, legR);
-  } else if (prop.subtype === 'table_round') {
-    // Round Pedestal Table
-    const top = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 0.06, 32), woodMat);
-    top.position.y = 0.74;
-    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.72, 16), darkMetal);
-    stem.position.y = 0.37;
-    const discBase = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.04, 32), darkMetal);
-    discBase.position.y = 0.02;
-    group.add(top, stem, discBase);
-  } else if (prop.subtype === 'table_coffee') {
-    // Low Coffee Table
-    const top = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.06, 0.8), woodMat);
-    top.position.y = 0.42;
-    const legGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.42, 12);
-    const l1 = new THREE.Mesh(legGeo, darkMetal); l1.position.set(-0.6, 0.21, -0.3);
-    const l2 = new THREE.Mesh(legGeo, darkMetal); l2.position.set(0.6, 0.21, -0.3);
-    const l3 = new THREE.Mesh(legGeo, darkMetal); l3.position.set(-0.6, 0.21, 0.3);
-    const l4 = new THREE.Mesh(legGeo, darkMetal); l4.position.set(0.6, 0.21, 0.3);
-    group.add(top, l1, l2, l3, l4);
-  } else if (prop.subtype === 'sofa') {
-    // Lounge Sofa
-    const base = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.35, 0.85), fabricMat);
-    base.position.y = 0.25;
-    const back = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.6, 0.25), fabricMat);
-    back.position.set(0, 0.6, -0.3);
-    const armL = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.5, 0.85), fabricMat);
-    armL.position.set(-0.95, 0.45, 0);
-    const armR = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.5, 0.85), fabricMat);
-    armR.position.set(0.95, 0.45, 0);
-    group.add(base, back, armL, armR);
-  } else if (prop.subtype === 'shelf') {
-    // Bookshelf
-    const shelfMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5 });
-    const sideGeo = new THREE.BoxGeometry(0.06, 1.8, 0.4);
-    const sideL = new THREE.Mesh(sideGeo, darkMetal); sideL.position.set(-0.6, 0.9, 0);
-    const sideR = new THREE.Mesh(sideGeo, darkMetal); sideR.position.set(0.6, 0.9, 0);
-    for (let i = 0; i < 4; i++) {
-      const plank = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.04, 0.4), shelfMat);
-      plank.position.set(0, 0.2 + i * 0.45, 0);
-      group.add(plank);
-    }
-    group.add(sideL, sideR);
-  } else if (prop.subtype === 'chair') {
-    // Visitor Chair
-    const seat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.08, 0.6), woodMat);
-    seat.position.y = 0.45;
-    const back = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.5, 0.08), woodMat);
-    back.position.set(0, 0.72, -0.26);
-    const legGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.45, 12);
-    const leg1 = new THREE.Mesh(legGeo, darkMetal); leg1.position.set(-0.25, 0.225, -0.25);
-    const leg2 = new THREE.Mesh(legGeo, darkMetal); leg2.position.set(0.25, 0.225, -0.25);
-    const leg3 = new THREE.Mesh(legGeo, darkMetal); leg3.position.set(-0.25, 0.225, 0.25);
-    const leg4 = new THREE.Mesh(legGeo, darkMetal); leg4.position.set(0.25, 0.225, 0.25);
-    group.add(seat, back, leg1, leg2, leg3, leg4);
-  } else {
-    // Standard Meeting Table
-    const top = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.08, 1.0), woodMat);
-    top.position.y = 0.74;
-    const legGeo = new THREE.CylinderGeometry(0.035, 0.035, 0.74, 12);
-    const leg1 = new THREE.Mesh(legGeo, darkMetal); leg1.position.set(-0.8, 0.37, -0.4);
-    const leg2 = new THREE.Mesh(legGeo, darkMetal); leg2.position.set(0.8, 0.37, -0.4);
-    const leg3 = new THREE.Mesh(legGeo, darkMetal); leg3.position.set(-0.8, 0.37, 0.4);
-    const leg4 = new THREE.Mesh(legGeo, darkMetal); leg4.position.set(0.8, 0.37, 0.4);
-    group.add(top, leg1, leg2, leg3, leg4);
+  // 5-Star Chrome Base
+  const baseGroup = new THREE.Group();
+  for (let i = 0; i < 5; i++) {
+    const angle = (i * Math.PI * 2) / 5;
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.02, 0.35, 8), chromeMat);
+    arm.rotation.z = Math.PI / 2;
+    arm.rotation.y = angle;
+    arm.position.set(Math.cos(angle) * 0.18, 0.04, Math.sin(angle) * 0.18);
+    const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.02, 8), wheelMat);
+    wheel.position.set(Math.cos(angle) * 0.35, 0.025, Math.sin(angle) * 0.35);
+    baseGroup.add(arm, wheel);
   }
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.45, 16), chromeMat);
+  stem.position.y = 0.25;
+  baseGroup.add(stem);
+  group.add(baseGroup);
 
-  group.traverse((c) => {
-    if ((c as THREE.Mesh).isMesh) {
-      c.castShadow = true;
-      c.receiveShadow = true;
-    }
-  });
+  // Ergonomic Seat
+  const seat = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.08, 0.52), darkMat);
+  seat.position.y = 0.5;
+  group.add(seat);
+
+  // Curved Mesh Backrest
+  const back = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.65, 0.05), darkMat);
+  back.position.set(0, 0.85, -0.24);
+  back.rotation.x = -0.08;
+  group.add(back);
+
+  // Headrest
+  const headrest = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.14, 0.05), darkMat);
+  headrest.position.set(0, 1.22, -0.28);
+  group.add(headrest);
+
+  // Armrests
+  const armL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.25, 0.3), darkMat);
+  armL.position.set(-0.3, 0.65, -0.05);
+  const armR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.25, 0.3), darkMat);
+  armR.position.set(0.3, 0.65, -0.05);
+  group.add(armL, armR);
+
   return group;
 }
 
-function createFrameArtCanvas(title: string, colorHex: string, subtitle?: string): { canvas: HTMLCanvasElement; texture: THREE.CanvasTexture } {
+// Executive Minimalist Desk
+function createExecutiveDeskMesh(prop: StudioPropDef): THREE.Object3D {
+  const group = new THREE.Group();
+  const woodColor = new THREE.Color(prop.color || '#451a03');
+  const woodMat = new THREE.MeshStandardMaterial({ color: woodColor, roughness: 0.6 });
+  const steelMat = new THREE.MeshStandardMaterial({ color: 0x111827, metalness: 0.85, roughness: 0.25 });
+
+  // Top Surface
+  const top = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.05, 0.85), woodMat);
+  top.position.y = 0.74;
+  group.add(top);
+
+  // Steel Legs (Square tubular profiles)
+  const legL = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.72, 0.75), steelMat);
+  legL.position.set(-0.88, 0.36, 0);
+  const legR = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.72, 0.75), steelMat);
+  legR.position.set(0.88, 0.36, 0);
+  group.add(legL, legR);
+
+  // Under-desk Drawer Unit
+  const drawer = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.35, 0.65), woodMat);
+  drawer.position.set(0.62, 0.52, 0);
+  const handle = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.02, 0.02), steelMat);
+  handle.position.set(0.62, 0.55, 0.34);
+  group.add(drawer, handle);
+
+  return group;
+}
+
+// Museum Showcase Pedestal with Vitrine
+function createMuseumPedestalMesh(prop: StudioPropDef): THREE.Object3D {
+  const group = new THREE.Group();
+  const columnMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2 });
+  const glassMat = new THREE.MeshStandardMaterial({
+    color: 0xbae6fd,
+    transparent: true,
+    opacity: 0.35,
+    roughness: 0.05,
+    metalness: 0.1,
+  });
+  const trimMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.9, roughness: 0.15 });
+
+  // White Column Plinth
+  const plinth = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.95, 32), columnMat);
+  plinth.position.y = 0.475;
+  group.add(plinth);
+
+  // Brass Trim Ring
+  const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.46, 0.03, 32), trimMat);
+  ring.position.y = 0.965;
+  group.add(ring);
+
+  // Glass Vitrine Cube
+  const glassBox = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.65, 0.65), glassMat);
+  glassBox.position.y = 1.30;
+  group.add(glassBox);
+
+  // Inner Artifact (Golden Scarab / Gem)
+  const gem = new THREE.Mesh(new THREE.DodecahedronGeometry(0.12), trimMat);
+  gem.position.y = 1.15;
+  group.add(gem);
+
+  // Warm Spotlight inside
+  const spot = new THREE.PointLight(0xffedd5, 1.2, 4);
+  spot.position.y = 1.55;
+  group.add(spot);
+
+  return group;
+}
+
+// Modern Abstract Mobius Sculpture
+function createAbstractSculptureMesh(prop: StudioPropDef): THREE.Object3D {
+  const group = new THREE.Group();
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.2 });
+  const mobiusMat = new THREE.MeshStandardMaterial({
+    color: 0x38bdf8,
+    metalness: 0.92,
+    roughness: 0.12,
+  });
+
+  // Black Plinth Base
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.08, 32), baseMat);
+  base.position.y = 0.04;
+  group.add(base);
+
+  // Torus Knot Sculpture
+  const knot = new THREE.Mesh(new THREE.TorusKnotGeometry(0.42, 0.11, 128, 16, 2, 3), mobiusMat);
+  knot.position.y = 0.65;
+  knot.castShadow = true;
+  group.add(knot);
+
+  return group;
+}
+
+// Futuristic Holographic Cyber Server
+function createCyberServerMesh(prop: StudioPropDef): THREE.Object3D {
+  const group = new THREE.Group();
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x090d18, metalness: 0.85, roughness: 0.3 });
+  const neonMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
+  const glassMat = new THREE.MeshStandardMaterial({ color: 0x0369a1, transparent: true, opacity: 0.5, roughness: 0.1 });
+
+  // Server Chassis
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.4, 0.7), bodyMat);
+  body.position.y = 0.7;
+  group.add(body);
+
+  // Vertical Glowing Neon Corner Strips
+  const offsets = [
+    [-0.34, 0.7, -0.34], [0.34, 0.7, -0.34],
+    [-0.34, 0.7, 0.34], [0.34, 0.7, 0.34]
+  ];
+  for (const [ox, oy, oz] of offsets) {
+    const strip = new THREE.Mesh(new THREE.BoxGeometry(0.02, 1.35, 0.02), neonMat);
+    strip.position.set(ox, oy, oz);
+    group.add(strip);
+  }
+
+  // Front Glass Door
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.64, 1.3, 0.02), glassMat);
+  door.position.set(0, 0.7, 0.355);
+  group.add(door);
+
+  // Top Holographic Display
+  const holoScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.35), new THREE.MeshBasicMaterial({
+    color: 0x38bdf8,
+    transparent: true,
+    opacity: 0.75,
+    side: THREE.DoubleSide
+  }));
+  holoScreen.position.set(0, 1.6, 0);
+  holoScreen.rotation.x = -0.25;
+  group.add(holoScreen);
+
+  return group;
+}
+
+// Slim Workstation Laptop
+function createLaptopMesh(prop: StudioPropDef): THREE.Object3D {
+  const group = new THREE.Group();
+  const aluMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8, roughness: 0.3 });
+  const screenMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+
+  // Base
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.015, 0.32), aluMat);
+  base.position.y = 0.008;
+  group.add(base);
+
+  // Angled Screen
+  const screenLid = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.32, 0.012), aluMat);
+  screenLid.position.set(0, 0.16, -0.16);
+  screenLid.rotation.x = -0.22;
+  const screenGlow = new THREE.Mesh(new THREE.PlaneGeometry(0.44, 0.28), screenMat);
+  screenGlow.position.set(0, 0.16, -0.15);
+  screenGlow.rotation.x = -0.22;
+  group.add(screenLid, screenGlow);
+
+  return group;
+}
+
+// Classical Marble Statue / Bust on Plinth
+function createStatueMesh(prop: StudioPropDef): THREE.Object3D {
+  const group = new THREE.Group();
+  const marbleMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.3, metalness: 0.05 });
+
+  // Plinth Base
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.9, 0.65), marbleMat);
+  base.position.y = 0.45;
+  group.add(base);
+
+  // Torso / Bust
+  const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.18, 0.55, 16), marbleMat);
+  torso.position.y = 1.15;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 24, 16), marbleMat);
+  head.position.y = 1.55;
+  group.add(torso, head);
+
+  return group;
+}
+
+// Interactive Multimedia Art Frame
+function createFrameArtCanvas(title: string, colorHex: string): { canvas: HTMLCanvasElement; texture: THREE.CanvasTexture } {
   const canvas = document.createElement('canvas');
   canvas.width = 1024;
   canvas.height = 768;
   const ctx = canvas.getContext('2d')!;
 
-  ctx.fillStyle = '#0b1120';
+  const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  gradient.addColorStop(0, '#0a1020');
+  gradient.addColorStop(0.5, '#1e293b');
+  gradient.addColorStop(1, '#0f172a');
+  ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  grad.addColorStop(0, '#0f172a');
-  grad.addColorStop(1, '#020617');
-  ctx.fillStyle = grad;
-  ctx.fillRect(20, 20, canvas.width - 40, canvas.height - 40);
-
-  ctx.strokeStyle = colorHex;
-  ctx.lineWidth = 8;
+  ctx.strokeStyle = colorHex || '#38bdf8';
+  ctx.lineWidth = 12;
   ctx.strokeRect(30, 30, canvas.width - 60, canvas.height - 60);
 
-  ctx.font = '700 28px "JetBrains Mono", monospace';
-  ctx.fillStyle = colorHex;
-  ctx.textAlign = 'center';
-  ctx.fillText('• COLECCIÓN DE ARTE VXR •', canvas.width / 2, 120);
-
-  ctx.font = '800 52px "Plus Jakarta Sans", system-ui, sans-serif';
   ctx.fillStyle = '#ffffff';
-  ctx.fillText(title.toUpperCase(), canvas.width / 2, 360);
+  ctx.font = 'bold 44px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(title || 'Obra Maestra VXR', canvas.width / 2, canvas.height / 2);
 
-  ctx.font = '500 28px "Plus Jakarta Sans", system-ui, sans-serif';
-  ctx.fillStyle = '#94a3b8';
-  ctx.fillText(subtitle || 'Haz clic en Modo 3D para ampliar en alta resolución', canvas.width / 2, 440);
+  ctx.font = '24px monospace';
+  ctx.fillStyle = '#38bdf8';
+  ctx.fillText('Haz clic para ver en pantalla completa', canvas.width / 2, canvas.height / 2 + 50);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -366,407 +496,93 @@ function createFrameArtCanvas(title: string, colorHex: string, subtitle?: string
 
 function createFrameArtMesh(prop: StudioPropDef): THREE.Object3D {
   const group = new THREE.Group();
-  const width = prop.frameWidth || 2.2;
-  const height = prop.frameHeight || 1.6;
-  const frameColor = new THREE.Color(prop.color || '#d4af37');
+  const w = prop.frameWidth || 2.2;
+  const h = prop.frameHeight || 1.6;
 
-  // Outer frame border
-  const borderMat = new THREE.MeshStandardMaterial({
-    color: frameColor,
-    roughness: 0.35,
-    metalness: 0.6,
-  });
-  const outerFrame = new THREE.Mesh(new THREE.BoxGeometry(width, height, 0.08), borderMat);
-  group.add(outerFrame);
-
-  // Inner Matting (passe-partout)
-  const matting = new THREE.Mesh(
-    new THREE.BoxGeometry(width - 0.2, height - 0.2, 0.085),
-    new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.9 })
-  );
-  group.add(matting);
-
-  // Picture Canvas Plane
-  const artMat = new THREE.MeshStandardMaterial({ roughness: 0.3, metalness: 0.1 });
-  const artPlane = new THREE.Mesh(new THREE.PlaneGeometry(width - 0.38, height - 0.38), artMat);
-  artPlane.position.z = 0.046;
-  group.add(artPlane);
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.4 });
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(w + 0.15, h + 0.15, 0.08), frameMat);
+  group.add(frame);
 
   if (prop.imageUrl) {
     const loader = new THREE.TextureLoader();
-    loader.load(
-      prop.imageUrl,
-      (tex) => {
-        tex.colorSpace = THREE.SRGBColorSpace;
-        artMat.map = tex;
-        artMat.needsUpdate = true;
-      },
-      undefined,
-      () => {
-        // Fallback placeholder on error or CORS issue
-        const { texture } = createFrameArtCanvas(prop.name, prop.color, '⚠️ Error de carga / CORS en la URL');
-        artMat.map = texture;
-        artMat.needsUpdate = true;
-      }
-    );
+    const picMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    loader.load(prop.imageUrl, (tex) => {
+      tex.colorSpace = THREE.SRGBColorSpace;
+      picMat.map = tex;
+      picMat.needsUpdate = true;
+    });
+    const pic = new THREE.Mesh(new THREE.PlaneGeometry(w, h), picMat);
+    pic.position.z = 0.045;
+    group.add(pic);
   } else {
-    const { texture } = createFrameArtCanvas(prop.name, prop.color, 'Configura la URL de imagen en Propiedades');
-    artMat.map = texture;
-    artMat.needsUpdate = true;
+    const artData = createFrameArtCanvas(prop.name, prop.color);
+    propCanvasMap.set(prop.id, artData);
+    const pic = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: artData.texture }));
+    pic.position.z = 0.045;
+    group.add(pic);
   }
 
-  group.userData = { propId: prop.id, isInteractive: true, interactionType: 'frame_art' };
   return group;
 }
 
-function createVideoScreenCanvas(title: string, colorHex: string, ytid: string | null): { canvas: HTMLCanvasElement; texture: THREE.CanvasTexture } {
-  const canvas = document.createElement('canvas');
-  canvas.width = 1280;
-  canvas.height = 720;
-  const ctx = canvas.getContext('2d')!;
-
-  ctx.fillStyle = '#05070e';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.needsUpdate = true;
-
-  function drawDefaultScreen() {
-    ctx.strokeStyle = colorHex;
-    ctx.lineWidth = 6;
-    ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
-
-    ctx.fillStyle = '#090d1a';
-    ctx.fillRect(20, 20, canvas.width - 40, canvas.height - 40);
-
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-
-    // Big play circle
-    ctx.fillStyle = colorHex;
-    ctx.beginPath();
-    ctx.arc(cx, cy - 30, 60, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#000000';
-    ctx.beginPath();
-    ctx.moveTo(cx - 15, cy - 50);
-    ctx.lineTo(cx + 25, cy - 30);
-    ctx.lineTo(cx - 15, cy - 10);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.font = '800 42px "Plus Jakarta Sans", system-ui, sans-serif';
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign = 'center';
-    ctx.fillText(title.toUpperCase(), cx, cy + 90);
-
-    ctx.font = '600 24px "JetBrains Mono", monospace';
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillText('• PANTALLA MULTIMEDIA INTERACTIVA •', cx, cy + 140);
-    texture.needsUpdate = true;
-  }
-
-  if (ytid) {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // YouTube red play button in center
-      const btnW = 140;
-      const btnH = 96;
-      const cx = canvas.width / 2;
-      const cy = canvas.height / 2;
-      ctx.fillStyle = '#ff0000';
-      ctx.beginPath();
-      ctx.roundRect(cx - btnW / 2, cy - btnH / 2, btnW, btnH, 24);
-      ctx.fill();
-
-      // White play triangle
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.moveTo(cx - 18, cy - 25);
-      ctx.lineTo(cx + 28, cy);
-      ctx.lineTo(cx - 18, cy + 25);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-      ctx.fillRect(0, canvas.height - 80, canvas.width, 80);
-      ctx.font = '700 28px "Plus Jakarta Sans", system-ui, sans-serif';
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'left';
-      ctx.fillText(`▶ ${title.toUpperCase()}`, 30, canvas.height - 30);
-      texture.needsUpdate = true;
-    };
-    img.onerror = () => {
-      drawDefaultScreen();
-    };
-    img.src = `https://img.youtube.com/vi/${ytid}/hqdefault.jpg`;
-  } else {
-    drawDefaultScreen();
-  }
-
-  return { canvas, texture };
-}
-
+// Video Screen & Billboard
 function createVideoScreenMesh(prop: StudioPropDef): THREE.Object3D {
   const group = new THREE.Group();
-  const width = 2.6;
-  const height = 1.5;
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.6, 0.08), new THREE.MeshStandardMaterial({ color: 0x050811 }));
+  group.add(frame);
 
-  // TV Outer Casing
-  const caseMat = new THREE.MeshStandardMaterial({ color: 0x070a12, roughness: 0.4, metalness: 0.8 });
-  const casing = new THREE.Mesh(new THREE.BoxGeometry(width, height, 0.08), caseMat);
-  group.add(casing);
-
-  // Stand
-  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.4, 16), caseMat);
-  pole.position.set(0, -height / 2 - 0.7, 0);
-  const base = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.04, 0.5), caseMat);
-  base.position.set(0, -height / 2 - 1.4, 0);
-  group.add(pole, base);
-
-  // Screen Plane
-  const ytid = extractYouTubeId(prop.videoUrl || '');
-  const { texture } = createVideoScreenCanvas(prop.name, prop.color || '#38bdf8', ytid);
-  const screenMat = new THREE.MeshBasicMaterial({ map: texture });
-  const screenPlane = new THREE.Mesh(new THREE.PlaneGeometry(width - 0.12, height - 0.1), screenMat);
-  screenPlane.position.z = 0.045;
-  group.add(screenPlane);
-
-  group.userData = { propId: prop.id, isInteractive: true, interactionType: 'screen_video' };
-  return group;
-}
-
-function createBillboardFloatingCanvas(title: string, colorHex: string, linkUrl?: string): { canvas: HTMLCanvasElement; texture: THREE.CanvasTexture } {
-  const canvas = document.createElement('canvas');
-  canvas.width = 1024;
-  canvas.height = 512;
-  const ctx = canvas.getContext('2d')!;
-
-  ctx.fillStyle = '#060a16';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  ctx.shadowColor = colorHex;
-  ctx.shadowBlur = 20;
-  ctx.strokeStyle = colorHex;
-  ctx.lineWidth = 10;
-  ctx.strokeRect(15, 15, canvas.width - 30, canvas.height - 30);
-
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = colorHex;
-  ctx.fillRect(canvas.width / 2 - 160, 40, 320, 38);
-  ctx.font = '800 18px "JetBrains Mono", monospace';
+  const screenCanvas = document.createElement('canvas');
+  screenCanvas.width = 640;
+  screenCanvas.height = 360;
+  const ctx = screenCanvas.getContext('2d')!;
   ctx.fillStyle = '#020617';
-  ctx.textAlign = 'center';
-  ctx.fillText('ANUNCIO INTERACTIVO', canvas.width / 2, 65);
-
-  ctx.shadowColor = colorHex;
-  ctx.shadowBlur = 12;
-  ctx.font = '800 48px "Plus Jakarta Sans", system-ui, sans-serif';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText((title || 'CARTELERA VXR').toUpperCase(), canvas.width / 2, 210);
-
-  ctx.shadowBlur = 0;
-  ctx.font = '600 24px "Plus Jakarta Sans", system-ui, sans-serif';
+  ctx.fillRect(0, 0, 640, 360);
   ctx.fillStyle = '#38bdf8';
-  if (linkUrl) {
-    ctx.fillText(`🔗 ${linkUrl}`, canvas.width / 2, 330);
-    ctx.font = '500 18px "JetBrains Mono", monospace';
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillText('• HAZ CLIC PARA ABRIR EL ENLACE •', canvas.width / 2, 420);
-  } else {
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillText('• ESPACIO PUBLICITARIO DISPONIBLE •', canvas.width / 2, 330);
-  }
+  ctx.font = 'bold 36px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('▶ REPRODUCTOR DE VIDEO', 320, 160);
+  ctx.font = '20px sans-serif';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText(prop.videoUrl ? 'Haz clic para reproducir' : 'URL de YouTube requerida', 320, 205);
 
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.needsUpdate = true;
-  return { canvas, texture };
+  const tex = new THREE.CanvasTexture(screenCanvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const screen = new THREE.Mesh(new THREE.PlaneGeometry(2.65, 1.45), new THREE.MeshBasicMaterial({ map: tex }));
+  screen.position.z = 0.045;
+  group.add(screen);
+
+  return group;
 }
 
 function createBillboardFloatingMesh(prop: StudioPropDef): THREE.Object3D {
   const group = new THREE.Group();
-  const width = 2.8;
-  const height = 1.3;
-  const color = new THREE.Color(prop.color || '#38bdf8');
-
-  // Glowing Frame Border
-  const borderMat = new THREE.MeshBasicMaterial({ color });
-  const frameBorder = new THREE.Mesh(new THREE.BoxGeometry(width + 0.08, height + 0.08, 0.04), borderMat);
-  group.add(frameBorder);
-
-  // Front panel
-  const { texture } = createBillboardFloatingCanvas(prop.text || prop.name, prop.color, prop.linkUrl);
-  const panelMat = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
-  const panel = new THREE.Mesh(new THREE.PlaneGeometry(width, height), panelMat);
-  panel.position.z = 0.025;
-  group.add(panel);
-
-  // Back panel
-  const backPanel = new THREE.Mesh(new THREE.PlaneGeometry(width, height), panelMat);
-  backPanel.position.z = -0.025;
-  backPanel.rotation.y = Math.PI;
-  group.add(backPanel);
-
-  // Suspension cables
-  const cableMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9, roughness: 0.2 });
-  const cableL = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 1.2, 8), cableMat);
-  cableL.position.set(-width / 3, height / 2 + 0.6, 0);
-  const cableR = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 1.2, 8), cableMat);
-  cableR.position.set(width / 3, height / 2 + 0.6, 0);
-  group.add(cableL, cableR);
-
-  group.userData = {
-    propId: prop.id,
-    isInteractive: true,
-    interactionType: 'billboard_floating',
-    baseY: prop.relY,
-  };
-  return group;
-}
-
-function createArchitectureMesh(prop: StudioPropDef): THREE.Object3D {
-  const group = new THREE.Group();
-  const color = new THREE.Color(prop.color);
-  const darkMetal = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3, metalness: 0.8 });
-
-  if (prop.subtype === 'column') {
-    // Fluted Column
-    const stoneMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.4 });
-    const base = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.2, 0.8), stoneMat); base.position.y = 0.1;
-    const shaft = new THREE.Mesh(new THREE.BoxGeometry(0.65, 3.4, 0.65), stoneMat); shaft.position.y = 1.9;
-    const cap = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.2, 0.8), stoneMat); cap.position.y = 3.7;
-    const trim = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.05, 0.82), new THREE.MeshBasicMaterial({ color }));
-    trim.position.y = 3.6;
-    group.add(base, shaft, cap, trim);
-  } else if (prop.subtype === 'partition_wood') {
-    // Acoustic Wood Slats
-    const backer = new THREE.Mesh(new THREE.BoxGeometry(2.8, 2.2, 0.03), darkMetal);
-    backer.position.y = 1.1;
-    group.add(backer);
-    const slatMat = new THREE.MeshStandardMaterial({ color, roughness: 0.7 });
-    for (let i = 0; i < 11; i++) {
-      const slat = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.1, 0.04), slatMat);
-      slat.position.set(-1.2 + i * 0.24, 1.1, 0.02);
-      group.add(slat);
-    }
-  } else if (prop.subtype === 'partition_neon') {
-    // Cyberpunk Neon Wall
-    const darkPane = new THREE.Mesh(new THREE.BoxGeometry(2.8, 2.2, 0.04), darkMetal);
-    darkPane.position.y = 1.1;
-    const neonMat = new THREE.MeshBasicMaterial({ color });
-    const rod1 = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 2.6, 16), neonMat);
-    rod1.rotation.z = Math.PI / 2; rod1.position.set(0, 1.8, 0.03);
-    const rod2 = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 2.6, 16), neonMat);
-    rod2.rotation.z = Math.PI / 2; rod2.position.set(0, 1.1, 0.03);
-    const rod3 = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 2.6, 16), neonMat);
-    rod3.rotation.z = Math.PI / 2; rod3.position.set(0, 0.4, 0.03);
-    group.add(darkPane, rod1, rod2, rod3);
-  } else {
-    // Glass Partition
-    const glassMat = new THREE.MeshStandardMaterial({
-      color: 0x93c5fd,
-      roughness: 0.08,
-      metalness: 0.85,
-      transparent: true,
-      opacity: 0.32,
-    });
-    const pane = new THREE.Mesh(new THREE.BoxGeometry(2.8, 2.1, 0.02), glassMat);
-    pane.position.y = 1.1;
-    const postGeo = new THREE.CylinderGeometry(0.04, 0.04, 2.2, 16);
-    const postL = new THREE.Mesh(postGeo, darkMetal); postL.position.set(-1.4, 1.1, 0);
-    const postR = new THREE.Mesh(postGeo, darkMetal); postR.position.set(1.4, 1.1, 0);
-    const stripe = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.06, 0.025), new THREE.MeshBasicMaterial({ color }));
-    stripe.position.set(0, 1.1, 0);
-    group.add(pane, postL, postR, stripe);
-  }
-
-  return group;
-}
-
-function createSignCanvas(text: string, colorHex: string): { canvas: HTMLCanvasElement; texture: THREE.CanvasTexture } {
   const canvas = document.createElement('canvas');
-  canvas.width = 1024;
+  canvas.width = 512;
   canvas.height = 256;
   const ctx = canvas.getContext('2d')!;
 
-  ctx.fillStyle = '#060a14';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#030712';
+  ctx.fillRect(0, 0, 512, 256);
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 8;
+  ctx.strokeRect(10, 10, 492, 236);
 
-  ctx.strokeStyle = colorHex;
-  ctx.lineWidth = 6;
-  ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
-
-  ctx.font = '700 22px "JetBrains Mono", monospace';
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = 'bold 32px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('• VXR STUDIO DISPLAY •', canvas.width / 2, 55);
+  ctx.fillText(prop.text || 'ANUNCIO VXR', 256, 120);
 
-  ctx.shadowColor = colorHex;
-  ctx.shadowBlur = 18;
-  ctx.font = '800 48px "Plus Jakarta Sans", system-ui, sans-serif';
+  ctx.font = '18px monospace';
   ctx.fillStyle = '#ffffff';
-  ctx.fillText((text || 'RÓTULO 3D').toUpperCase(), canvas.width / 2, 140);
+  ctx.fillText('🔗 Clic para abrir enlace', 256, 165);
 
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = colorHex;
-  ctx.fillRect(canvas.width / 2 - 120, 190, 240, 4);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.needsUpdate = true;
-  return { canvas, texture };
-}
-
-function createDecorationMesh(prop: StudioPropDef): THREE.Object3D {
-  const group = new THREE.Group();
-  const color = new THREE.Color(prop.color);
-
-  if (prop.subtype === 'light_spot') {
-    // Spotlight
-    const fixture = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 0.22, 16), new THREE.MeshStandardMaterial({ color: 0x020617 }));
-    fixture.position.y = 3.5;
-    const spot = new THREE.SpotLight(color, prop.intensity || 2.8, 16, Math.PI / 4, 0.5, 1.2);
-    spot.position.y = 3.4;
-    spot.target.position.set(0, 0, 0);
-    group.add(fixture, spot, spot.target);
-  } else if (prop.subtype === 'light_point') {
-    // Point light beacon
-    const orb = new THREE.Mesh(new THREE.OctahedronGeometry(0.2, 2), new THREE.MeshBasicMaterial({ color }));
-    orb.position.y = 1.4;
-    const point = new THREE.PointLight(color, prop.intensity || 2.4, 12, 1.8);
-    point.position.y = 1.4;
-    group.add(orb, point);
-  } else if (prop.subtype === 'totem') {
-    // Upright totem
-    const base = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.08, 0.5), new THREE.MeshStandardMaterial({ color: 0x020617 }));
-    base.position.y = 0.04;
-    const body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 2.2, 0.14), new THREE.MeshStandardMaterial({ color: 0x0b1120 }));
-    body.position.y = 1.14;
-
-    const signData = createSignCanvas(prop.text || prop.name, prop.color);
-    propCanvasMap.set(prop.id, signData);
-    const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.65, 1.2), new THREE.MeshBasicMaterial({ map: signData.texture }));
-    screen.position.set(0, 1.4, 0.072);
-
-    group.add(base, body, screen);
-  } else {
-    // Neon hanging or plaque sign
-    const signData = createSignCanvas(prop.text || prop.name, prop.color);
-    propCanvasMap.set(prop.id, signData);
-    const signMat = new THREE.MeshBasicMaterial({ map: signData.texture });
-    const panel = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.8, 0.04), signMat);
-    panel.position.y = 0;
-    group.add(panel);
-  }
-
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(2.8, 1.4, 0.06),
+    new THREE.MeshStandardMaterial({ map: tex, emissive: 0x0c4a6e, emissiveIntensity: 0.35 })
+  );
+  group.add(mesh);
   return group;
 }
 
@@ -779,26 +595,32 @@ function spawnPropMesh(prop: StudioPropDef): THREE.Object3D {
   const worldZ = cz + prop.relZ;
 
   let mesh: THREE.Object3D;
-  if (prop.category === 'basic') {
-    mesh = createBasicMesh(prop);
-  } else if (prop.category === 'furniture') {
-    mesh = createFurnitureMesh(prop);
-  } else if (prop.category === 'exhibition') {
-    if (prop.subtype === 'frame_art') {
-      mesh = createFrameArtMesh(prop);
-    } else if (prop.subtype === 'screen_video') {
-      mesh = createVideoScreenMesh(prop);
-    } else if (prop.subtype === 'billboard_floating') {
-      mesh = createBillboardFloatingMesh(prop);
-    } else {
-      mesh = createDecorationMesh(prop);
-    }
-  } else if (prop.category === 'architecture') {
-    mesh = createArchitectureMesh(prop);
-  } else if (prop.category === 'decoration') {
-    mesh = createDecorationMesh(prop);
+  if (prop.subtype === 'chair') {
+    mesh = createModernChairMesh(prop);
+  } else if (prop.subtype === 'desk') {
+    mesh = createExecutiveDeskMesh(prop);
+  } else if (prop.subtype === 'pedestal') {
+    mesh = createMuseumPedestalMesh(prop);
+  } else if (prop.subtype === 'sculpture') {
+    mesh = createAbstractSculptureMesh(prop);
+  } else if (prop.subtype === 'server') {
+    mesh = createCyberServerMesh(prop);
+  } else if (prop.subtype === 'laptop') {
+    mesh = createLaptopMesh(prop);
+  } else if (prop.subtype === 'statue') {
+    mesh = createStatueMesh(prop);
+  } else if (prop.subtype === 'panel' || prop.subtype === 'partition_glass') {
+    mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(2.4, 2.2, 0.08),
+      new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.35, roughness: 0.05 })
+    );
+  } else if (prop.subtype === 'frame_art') {
+    mesh = createFrameArtMesh(prop);
+  } else if (prop.subtype === 'screen_video') {
+    mesh = createVideoScreenMesh(prop);
+  } else if (prop.subtype === 'billboard_floating') {
+    mesh = createBillboardFloatingMesh(prop);
   } else {
-    // Fallback or GLB placeholder
     mesh = createBasicMesh(prop);
   }
 
@@ -817,74 +639,949 @@ function spawnPropMesh(prop: StudioPropDef): THREE.Object3D {
 }
 
 // =============================================================================
-// Scenario Rebuilder (Structural Changes Only)
+// Scenario Rebuilder
 // =============================================================================
 function rebuildScenario(): void {
-  // Clear existing props meshes
+  // Clear scene meshes
   for (const [, mesh] of propMeshMap) {
     app.scene.nativeScene.remove(mesh);
   }
   propMeshMap.clear();
-  propCanvasMap.clear();
 
-  // Clear previous scenario
-  if (scenario) {
-    app.scene.nativeScene.remove(scenario.nativeGroup);
-    scenario.dispose();
-  }
+  scenario.clear();
   scenario = app.createScenario('VXR Studio Level');
 
-  // Add Rooms
+  // Build rooms
   for (const r of rooms) {
     scenario.addRoom({
       id: r.id,
       name: r.name,
       theme: r.theme,
-      center: r.center,
       dimensions: r.dimensions,
+      center: r.center,
       doors: r.doors,
-      spawnPoint: r.spawnPoint || [r.center[0], 1.6, r.center[2]],
+      spawnPoint: r.spawnPoint,
     });
   }
 
-  // Connect Corridors
+  // Connect rooms
   for (const c of connections) {
-    scenario.connectRooms(c.fromRoomId, c.fromWall, c.toRoomId, c.toWall, {
+    scenario.connectRooms({
+      fromRoomId: c.fromRoomId,
+      fromWall: c.fromWall,
+      toRoomId: c.toRoomId,
+      toWall: c.toWall,
       width: c.width,
       height: c.height,
     });
   }
 
-  // Spawn all props
+  scenario.build();
+
+  // Respawn all props
   for (const p of props) {
     spawnPropMesh(p);
   }
 
-  // Restore selection if valid
-  if (selectedPropId && propMeshMap.has(selectedPropId)) {
-    const mesh = propMeshMap.get(selectedPropId)!;
-    if (activeTool !== 'select') {
-      transformControls.attach(mesh);
-    }
-  } else {
+  renderRoomsList();
+  updateSceneStats();
+}
+
+// =============================================================================
+// Templates Loader (Museo, Sci-Fi Lab, Oficina, Cyberpunk, Blanco)
+// =============================================================================
+function loadTemplate(templateKey: string): void {
+  app.audio.playWarp();
+
+  if (templateKey === 'empty') {
+    rooms = [];
+    connections = [];
+    props = [];
+    selectedRoomId = null;
     selectedPropId = null;
-    transformControls.detach();
-    renderPropertiesEmpty();
+    document.getElementById('lbl-project-name')!.textContent = 'Proyecto: Escenario en Blanco';
+    rebuildScenario();
+    app.resetCamera([0, 18, 16], [0, 0, 0]);
+    showToast('✨ Escenario reiniciado en blanco');
+    triggerAutoSave();
+    return;
   }
 
-  renderRoomsList();
+  if (templateKey === 'museum') {
+    rooms = [{
+      id: 'room-museum',
+      name: 'Galería de Arte Central',
+      theme: 'gallery',
+      dimensions: { width: 18, depth: 14, height: 4.5 },
+      center: [0, 0, 0],
+      doors: [],
+      spawnPoint: [0, 1.6, 5],
+    }];
+    connections = [];
+    props = [
+      {
+        id: 'prop-ped-1', roomId: 'room-museum', category: 'furniture', subtype: 'pedestal',
+        name: 'Pedestal Escultura', relX: -4.0, relY: 0, relZ: -2.0,
+        rotX: 0, rotY: 0, rotZ: 0, scaleX: 1, scaleY: 1, scaleZ: 1, color: '#f8fafc'
+      },
+      {
+        id: 'prop-sculp-1', roomId: 'room-museum', category: 'decoration', subtype: 'sculpture',
+        name: 'Mobius Holográfico', relX: -4.0, relY: 1.25, relZ: -2.0,
+        rotX: 0, rotY: 45, rotZ: 0, scaleX: 1, scaleY: 1, scaleZ: 1, color: '#38bdf8'
+      },
+      {
+        id: 'prop-ped-2', roomId: 'room-museum', category: 'furniture', subtype: 'pedestal',
+        name: 'Pedestal Escultura Clásica', relX: 4.0, relY: 0, relZ: -2.0,
+        rotX: 0, rotY: 0, rotZ: 0, scaleX: 1, scaleY: 1, scaleZ: 1, color: '#f8fafc'
+      },
+      {
+        id: 'prop-statue-1', roomId: 'room-museum', category: 'decoration', subtype: 'statue',
+        name: 'Busto de Mármol', relX: 4.0, relY: 1.1, relZ: -2.0,
+        rotX: 0, rotY: -30, rotZ: 0, scaleX: 0.9, scaleY: 0.9, scaleZ: 0.9, color: '#f1f5f9'
+      },
+      {
+        id: 'prop-art-1', roomId: 'room-museum', category: 'exhibition', subtype: 'frame_art',
+        name: 'Obra de Vanguardia', relX: 0, relY: 2.2, relZ: -6.8,
+        rotX: 0, rotY: 0, rotZ: 0, scaleX: 1.2, scaleY: 1.2, scaleZ: 1, color: '#d97706',
+        imageUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=1000&auto=format&fit=crop'
+      }
+    ];
+    document.getElementById('lbl-project-name')!.textContent = 'Proyecto: Museo Interdisciplinario';
+  } else if (templateKey === 'scifi') {
+    rooms = [{
+      id: 'room-scifi',
+      name: 'Laboratorio de Ciencias XR',
+      theme: 'scifi',
+      dimensions: { width: 16, depth: 12, height: 4.0 },
+      center: [0, 0, 0],
+      doors: [],
+      spawnPoint: [0, 1.6, 4],
+    }];
+    connections = [];
+    props = [
+      {
+        id: 'prop-server-1', roomId: 'room-scifi', category: 'decoration', subtype: 'server',
+        name: 'Servidor Cuántico', relX: -5.0, relY: 0, relZ: -3.5,
+        rotX: 0, rotY: 30, rotZ: 0, scaleX: 1, scaleY: 1, scaleZ: 1, color: '#00f0ff'
+      },
+      {
+        id: 'prop-desk-1', roomId: 'room-scifi', category: 'furniture', subtype: 'desk',
+        name: 'Estación de Trabajo A', relX: -1.5, relY: 0, relZ: -2.0,
+        rotX: 0, rotY: 0, rotZ: 0, scaleX: 1, scaleY: 1, scaleZ: 1, color: '#111827'
+      },
+      {
+        id: 'prop-laptop-1', roomId: 'room-scifi', category: 'furniture', subtype: 'laptop',
+        name: 'Terminal Móvil', relX: -1.5, relY: 0.76, relZ: -2.0,
+        rotX: 0, rotY: 10, rotZ: 0, scaleX: 1, scaleY: 1, scaleZ: 1, color: '#38bdf8'
+      },
+      {
+        id: 'prop-chair-1', roomId: 'room-scifi', category: 'furniture', subtype: 'chair',
+        name: 'Silla Ergonómica', relX: -1.5, relY: 0, relZ: -1.2,
+        rotX: 0, rotY: 180, rotZ: 0, scaleX: 1, scaleY: 1, scaleZ: 1, color: '#1e293b'
+      },
+      {
+        id: 'prop-video-1', roomId: 'room-scifi', category: 'exhibition', subtype: 'screen_video',
+        name: 'Pantalla Holográfica', relX: 2.5, relY: 1.8, relZ: -5.8,
+        rotX: 0, rotY: 0, rotZ: 0, scaleX: 1, scaleY: 1, scaleZ: 1, color: '#0284c7',
+        videoUrl: 'https://www.youtube.com/watch?v=k1BneeJTDcU'
+      }
+    ];
+    document.getElementById('lbl-project-name')!.textContent = 'Proyecto: Laboratorio de Ciencias';
+  } else if (templateKey === 'office') {
+    rooms = [{
+      id: 'room-office',
+      name: 'Oficina Corporativa VXR',
+      theme: 'office',
+      dimensions: { width: 16, depth: 14, height: 3.8 },
+      center: [0, 0, 0],
+      doors: [],
+      spawnPoint: [0, 1.6, 5],
+    }];
+    connections = [];
+    props = [
+      {
+        id: 'prop-desk-off-1', roomId: 'room-office', category: 'furniture', subtype: 'desk',
+        name: 'Escritorio Ejecutivo', relX: -3.0, relY: 0, relZ: -2.0,
+        rotX: 0, rotY: 0, rotZ: 0, scaleX: 1, scaleY: 1, scaleZ: 1, color: '#451a03'
+      },
+      {
+        id: 'prop-chair-off-1', roomId: 'room-office', category: 'furniture', subtype: 'chair',
+        name: 'Silla Directiva', relX: -3.0, relY: 0, relZ: -1.2,
+        rotX: 0, rotY: 180, rotZ: 0, scaleX: 1, scaleY: 1, scaleZ: 1, color: '#0f172a'
+      },
+      {
+        id: 'prop-glass-1', roomId: 'room-office', category: 'architecture', subtype: 'partition_glass',
+        name: 'Mampara Acristalada', relX: 0.5, relY: 0, relZ: -2.0,
+        rotX: 0, rotY: 90, rotZ: 0, scaleX: 1, scaleY: 1, scaleZ: 1, color: '#38bdf8'
+      }
+    ];
+    document.getElementById('lbl-project-name')!.textContent = 'Proyecto: Oficina Moderna';
+  } else if (templateKey === 'cyber') {
+    rooms = [{
+      id: 'room-cyber',
+      name: 'Showroom Espacial XR',
+      theme: 'minimal',
+      dimensions: { width: 20, depth: 16, height: 5.0 },
+      center: [0, 0, 0],
+      doors: [],
+      spawnPoint: [0, 1.6, 6],
+    }];
+    connections = [];
+    props = [
+      {
+        id: 'prop-bill-cyber', roomId: 'room-cyber', category: 'exhibition', subtype: 'billboard_floating',
+        name: 'Cartelera Neón', relX: 0, relY: 2.6, relZ: -4.0,
+        rotX: 0, rotY: 0, rotZ: 0, scaleX: 1.2, scaleY: 1.2, scaleZ: 1, color: '#00f0ff',
+        text: 'VXR SPATIAL SHOWROOM 2026', linkUrl: 'https://github.com/Vickman123/Framework-XVR'
+      },
+      {
+        id: 'prop-sculp-cyber', roomId: 'room-cyber', category: 'decoration', subtype: 'sculpture',
+        name: 'Artefacto Flotante', relX: 0, relY: 1.0, relZ: 0,
+        rotX: 0, rotY: 0, rotZ: 0, scaleX: 1.4, scaleY: 1.4, scaleZ: 1, color: '#7c3aed'
+      }
+    ];
+    document.getElementById('lbl-project-name')!.textContent = 'Proyecto: Showroom Futurista';
+  }
+
+  selectedRoomId = rooms[0]?.id || null;
+  selectedPropId = null;
+  rebuildScenario();
+  app.resetCamera([0, 18, 16], [0, 0, 0]);
+  showToast(`🏛️ Plantilla cargada con éxito`);
   triggerAutoSave();
 }
 
 // =============================================================================
-// Selection & Property Panel (Right Panel Two-Way Binding)
+// Navigation Modes: Edit, Explore, Fly (Creative Minecraft), Walk
 // =============================================================================
-// Property inspector DOM elements
+const btnModeEdit = document.getElementById('btn-mode-edit') as HTMLButtonElement;
+const btnModeExplore = document.getElementById('btn-mode-explore') as HTMLButtonElement;
+const btnModeFly = document.getElementById('btn-mode-fly') as HTMLButtonElement;
+const btnModeWalk = document.getElementById('btn-mode-walk') as HTMLButtonElement;
+const flyCallout = document.getElementById('fly-mode-callout') as HTMLElement;
+
+function setNavMode(mode: NavMode): void {
+  activeNavMode = mode;
+  [btnModeEdit, btnModeExplore, btnModeFly, btnModeWalk].forEach((b) => b?.classList.remove('active'));
+
+  if (mode === 'edit') {
+    btnModeEdit?.classList.add('active');
+    flyCallout?.classList.remove('show');
+    if (app.controls) app.controls.enabled = true;
+    if (selectedPropId && propMeshMap.has(selectedPropId)) {
+      transformControls.attach(propMeshMap.get(selectedPropId)!);
+    }
+    if (document.exitPointerLock && document.pointerLockElement) document.exitPointerLock();
+    isFirstPerson = false;
+    showToast('↖ Modo Edición: Órbita con controles de transformación');
+  } else if (mode === 'explore') {
+    btnModeExplore?.classList.add('active');
+    flyCallout?.classList.remove('show');
+    if (app.controls) app.controls.enabled = true;
+    transformControls.detach();
+    if (document.exitPointerLock && document.pointerLockElement) document.exitPointerLock();
+    isFirstPerson = false;
+    showToast('👁 Modo Explorar: Órbita libre y suave');
+  } else if (mode === 'fly') {
+    btnModeFly?.classList.add('active');
+    flyCallout?.classList.add('show');
+    if (app.controls) app.controls.enabled = false;
+    transformControls.detach();
+    isFirstPerson = false;
+
+    // Initialize fly orientation from current camera
+    flyPitch = app.camera.rotation.x;
+    flyYaw = app.camera.rotation.y;
+    container.requestPointerLock?.();
+    showToast('🛸 ¡Modo Vuelo Creativo Activo! Usa W,A,S,D para volar, Q/E subir/bajar');
+  } else if (mode === 'walk') {
+    btnModeWalk?.classList.add('active');
+    flyCallout?.classList.remove('show');
+    toggleFirstPersonMode(true);
+  }
+}
+
+btnModeEdit?.addEventListener('click', () => setNavMode('edit'));
+btnModeExplore?.addEventListener('click', () => setNavMode('explore'));
+btnModeFly?.addEventListener('click', () => setNavMode('fly'));
+btnModeWalk?.addEventListener('click', () => setNavMode('walk'));
+
+// Pointer Lock Listener
+document.addEventListener('pointerlockchange', () => {
+  isPointerLocked = document.pointerLockElement === container;
+});
+
+// Mouse Movement in Fly and Walk Modes
+window.addEventListener('mousemove', (e) => {
+  if (!isPointerLocked) return;
+
+  if (activeNavMode === 'fly') {
+    const sensitivity = 0.0022;
+    flyYaw -= e.movementX * sensitivity;
+    flyPitch -= e.movementY * sensitivity;
+    flyPitch = Math.max(-Math.PI / 2 + 0.02, Math.min(Math.PI / 2 - 0.02, flyPitch));
+
+    app.camera.rotation.order = 'YXZ';
+    app.camera.rotation.y = flyYaw;
+    app.camera.rotation.x = flyPitch;
+  } else if (isFirstPerson) {
+    const sensitivity = 0.0022;
+    playerYaw -= e.movementX * sensitivity;
+    playerPitch -= e.movementY * sensitivity;
+    playerPitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, playerPitch));
+    app.camera.rotation.order = 'YXZ';
+    app.camera.rotation.y = playerYaw;
+    app.camera.rotation.x = playerPitch;
+  }
+});
+
+// Fly Keys
+window.addEventListener('keydown', (e) => {
+  if (['input', 'textarea'].includes((document.activeElement?.tagName || '').toLowerCase())) return;
+  if (flyKeys.hasOwnProperty(e.code)) flyKeys[e.code] = true;
+  keys[e.code] = true;
+
+  if (e.code === 'Escape') {
+    if (activeNavMode === 'fly' || isFirstPerson) {
+      setNavMode('edit');
+    }
+  }
+});
+
+window.addEventListener('keyup', (e) => {
+  if (flyKeys.hasOwnProperty(e.code)) flyKeys[e.code] = false;
+  keys[e.code] = false;
+});
+
+// Fly Loop
+function updateFlyControls(delta: number): void {
+  if (activeNavMode !== 'fly') return;
+
+  const speedMult = flyKeys.ShiftLeft || flyKeys.ShiftRight ? 2.5 : 1.0;
+  const currentSpeed = flySpeed * speedMult;
+
+  const forward = new THREE.Vector3();
+  app.camera.getWorldDirection(forward);
+  const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+
+  const moveDir = new THREE.Vector3();
+  if (flyKeys.KeyW) moveDir.add(forward);
+  if (flyKeys.KeyS) moveDir.sub(forward);
+  if (flyKeys.KeyD) moveDir.add(right);
+  if (flyKeys.KeyA) moveDir.sub(right);
+  if (flyKeys.KeyE || flyKeys.Space) moveDir.y += 1.0;
+  if (flyKeys.KeyQ) moveDir.y -= 1.0;
+
+  if (moveDir.lengthSq() > 0.001) {
+    moveDir.normalize().multiplyScalar(currentSpeed * delta);
+    app.camera.position.add(moveDir);
+  }
+}
+
+// =============================================================================
+// Minimap Radar ("Vista Superior")
+// =============================================================================
+const minimapCanvas = document.getElementById('minimap-canvas') as HTMLCanvasElement;
+const minimapCtx = minimapCanvas ? minimapCanvas.getContext('2d') : null;
+
+function drawMinimap(): void {
+  if (!minimapCtx || !minimapCanvas) return;
+
+  const w = minimapCanvas.width;
+  const h = minimapCanvas.height;
+  minimapCtx.fillStyle = '#040711';
+  minimapCtx.fillRect(0, 0, w, h);
+
+  // Subtle radar grid
+  minimapCtx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
+  minimapCtx.lineWidth = 1;
+  const cx = w / 2;
+  const cy = h / 2;
+  const scale = 3.2; // 3.2 pixels per meter
+
+  for (let x = 0; x < w; x += 20) {
+    minimapCtx.beginPath();
+    minimapCtx.moveTo(x, 0);
+    minimapCtx.lineTo(x, h);
+    minimapCtx.stroke();
+  }
+  for (let y = 0; y < h; y += 20) {
+    minimapCtx.beginPath();
+    minimapCtx.moveTo(0, y);
+    minimapCtx.lineTo(w, y);
+    minimapCtx.stroke();
+  }
+
+  // Draw Rooms
+  minimapCtx.strokeStyle = '#38bdf8';
+  minimapCtx.lineWidth = 1.5;
+  for (const r of rooms) {
+    const rx = cx + r.center[0] * scale - (r.dimensions.width * scale) / 2;
+    const ry = cy + r.center[2] * scale - (r.dimensions.depth * scale) / 2;
+    const rw = r.dimensions.width * scale;
+    const rh = r.dimensions.depth * scale;
+
+    minimapCtx.fillStyle = 'rgba(2, 132, 199, 0.12)';
+    minimapCtx.fillRect(rx, ry, rw, rh);
+    minimapCtx.strokeRect(rx, ry, rw, rh);
+  }
+
+  // Draw Props
+  for (const p of props) {
+    const parentRoom = p.roomId ? rooms.find((r) => r.id === p.roomId) : null;
+    const rcx = parentRoom ? parentRoom.center[0] : 0;
+    const rcz = parentRoom ? parentRoom.center[2] : 0;
+    const px = cx + (rcx + p.relX) * scale;
+    const py = cy + (rcz + p.relZ) * scale;
+
+    minimapCtx.fillStyle = p.id === selectedPropId ? '#f59e0b' : '#38bdf8';
+    minimapCtx.beginPath();
+    minimapCtx.arc(px, py, 2.5, 0, Math.PI * 2);
+    minimapCtx.fill();
+  }
+
+  // Draw Camera position & view frustum cone
+  const camX = cx + app.camera.position.x * scale;
+  const camY = cy + app.camera.position.z * scale;
+
+  const camDir = new THREE.Vector3();
+  app.camera.getWorldDirection(camDir);
+  const heading = Math.atan2(camDir.x, camDir.z);
+
+  // View cone
+  minimapCtx.fillStyle = 'rgba(56, 189, 248, 0.25)';
+  minimapCtx.beginPath();
+  minimapCtx.moveTo(camX, camY);
+  minimapCtx.arc(camX, camY, 18, heading - 0.45, heading + 0.45);
+  minimapCtx.closePath();
+  minimapCtx.fill();
+
+  // Camera dot
+  minimapCtx.fillStyle = '#ffffff';
+  minimapCtx.beginPath();
+  minimapCtx.arc(camX, camY, 3, 0, Math.PI * 2);
+  minimapCtx.fill();
+}
+
+// Minimap Click Teleport
+minimapCanvas?.addEventListener('click', (e) => {
+  const rect = minimapCanvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const cx = minimapCanvas.width / 2;
+  const cy = minimapCanvas.height / 2;
+  const scale = 3.2;
+
+  const targetX = (mx - cx) / scale;
+  const targetZ = (my - cy) / scale;
+
+  if (activeNavMode === 'fly' || isFirstPerson) {
+    app.camera.position.set(targetX, app.camera.position.y, targetZ);
+  } else {
+    app.resetCamera([targetX, 18, targetZ + 16], [targetX, 0, targetZ]);
+  }
+  showToast('📍 Cámara desplazada en el mapa');
+});
+
+// =============================================================================
+// 3D Orientation Gizmo (Top Right Compass)
+// =============================================================================
+const orientCanvas = document.getElementById('orientation-gizmo') as HTMLCanvasElement;
+const orientCtx = orientCanvas ? orientCanvas.getContext('2d') : null;
+
+function drawOrientationGizmo(): void {
+  if (!orientCtx || !orientCanvas) return;
+
+  const w = orientCanvas.width;
+  const h = orientCanvas.height;
+  orientCtx.clearRect(0, 0, w, h);
+
+  const cx = w / 2;
+  const cy = h / 2;
+  const r = 18;
+
+  // Transform unit axes with camera inverse matrix
+  const vX = new THREE.Vector3(1, 0, 0).applyMatrix4(app.camera.matrixWorldInverse);
+  const vY = new THREE.Vector3(0, 1, 0).applyMatrix4(app.camera.matrixWorldInverse);
+  const vZ = new THREE.Vector3(0, 0, 1).applyMatrix4(app.camera.matrixWorldInverse);
+
+  const axes = [
+    { vec: vX, label: 'X', color: '#ef4444' },
+    { vec: vY, label: 'Y', color: '#22c55e' },
+    { vec: vZ, label: 'Z', color: '#38bdf8' },
+  ];
+
+  // Sort by depth
+  axes.sort((a, b) => a.vec.z - b.vec.z);
+
+  for (const axis of axes) {
+    const endX = cx + axis.vec.x * r;
+    const endY = cy - axis.vec.y * r; // Invert Y for 2D screen
+
+    orientCtx.strokeStyle = axis.color;
+    orientCtx.lineWidth = 2.5;
+    orientCtx.beginPath();
+    orientCtx.moveTo(cx, cy);
+    orientCtx.lineTo(endX, endY);
+    orientCtx.stroke();
+
+    // End circle with label
+    orientCtx.fillStyle = axis.color;
+    orientCtx.beginPath();
+    orientCtx.arc(endX, endY, 5, 0, Math.PI * 2);
+    orientCtx.fill();
+
+    orientCtx.fillStyle = '#ffffff';
+    orientCtx.font = 'bold 8px sans-serif';
+    orientCtx.textAlign = 'center';
+    orientCtx.textBaseline = 'middle';
+    orientCtx.fillText(axis.label, endX, endY);
+  }
+}
+
+// =============================================================================
+// Right Panel Dock & Collapsible Manager
+// =============================================================================
+const panelProperties = document.getElementById('panel-properties') as HTMLElement;
+const btnDockCollapse = document.getElementById('btn-dock-collapse') as HTMLButtonElement;
+const lblPanelRightTitle = document.getElementById('lbl-panel-right-title') as HTMLElement;
+
+function togglePanelCollapse(): void {
+  const isCollapsed = panelProperties.classList.toggle('collapsed');
+  btnDockCollapse.textContent = isCollapsed ? '»' : '«';
+  btnDockCollapse.title = isCollapsed ? 'Mostrar panel inspector' : 'Ocultar panel inspector';
+
+  // Force Three.js and browser layout update
+  setTimeout(() => {
+    window.dispatchEvent(new Event('resize'));
+  }, 260);
+}
+
+btnDockCollapse?.addEventListener('click', togglePanelCollapse);
+document.getElementById('btn-collapse-right')?.addEventListener('click', togglePanelCollapse);
+
+function setDockTab(tabKey: string): void {
+  document.querySelectorAll('.dock-btn').forEach((b) => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach((tc) => tc.classList.remove('active'));
+
+  const activeBtn = document.querySelector(`.dock-btn[data-dock-tab="${tabKey}"]`);
+  activeBtn?.classList.add('active');
+
+  const activeContent = document.getElementById(`tab-content-${tabKey}`);
+  activeContent?.classList.add('active');
+
+  // Ensure panel is expanded
+  if (panelProperties.classList.contains('collapsed')) {
+    panelProperties.classList.remove('collapsed');
+    btnDockCollapse.textContent = '«';
+    setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 260);
+  }
+
+  const titles: Record<string, string> = {
+    props: 'Propiedades',
+    mats: 'Materiales & PBR',
+    env: 'Entorno & Iluminación',
+    scene: 'Jerarquía de Escena',
+    settings: 'Configuración',
+  };
+  lblPanelRightTitle.textContent = titles[tabKey] || 'Propiedades';
+
+  if (tabKey === 'scene') updateSceneTree();
+}
+
+document.querySelectorAll('.dock-btn[data-dock-tab]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const tabKey = btn.getAttribute('data-dock-tab')!;
+    setDockTab(tabKey);
+  });
+});
+
+// Top Nav Tabs
+document.getElementById('top-tab-scene')?.addEventListener('click', () => setDockTab('props'));
+document.getElementById('top-tab-resources')?.addEventListener('click', () => {
+  document.getElementById('search-objects')?.focus();
+});
+document.getElementById('top-tab-lighting')?.addEventListener('click', () => setDockTab('env'));
+document.getElementById('top-tab-environment')?.addEventListener('click', () => setDockTab('env'));
+document.getElementById('top-tab-collaborate')?.addEventListener('click', () => {
+  showToast('👥 Enlace de colaboración copiado al portapapeles');
+});
+
+// =============================================================================
+// Scene Hierarchy Tree & Stats
+// =============================================================================
+function updateSceneTree(): void {
+  const treeContainer = document.getElementById('scene-hierarchy-list');
+  if (!treeContainer) return;
+  treeContainer.innerHTML = '';
+
+  for (const p of props) {
+    const item = document.createElement('div');
+    item.style.padding = '6px 8px';
+    item.style.background = p.id === selectedPropId ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255, 255, 255, 0.03)';
+    item.style.border = '1px solid ' + (p.id === selectedPropId ? '#38bdf8' : 'var(--vxr-border)');
+    item.style.borderRadius = '6px';
+    item.style.fontSize = '11px';
+    item.style.color = '#fff';
+    item.style.cursor = 'pointer';
+    item.style.display = 'flex';
+    item.style.alignItems = 'center';
+    item.style.justifyContent = 'space-between';
+    item.innerHTML = `<span>⬡ ${p.name}</span><span style="font-size: 9px; color: var(--vxr-text-dim);">${p.subtype}</span>`;
+
+    item.addEventListener('click', () => {
+      selectProp(p.id);
+      focusSelectedProp();
+      setDockTab('props');
+    });
+
+    treeContainer.appendChild(item);
+  }
+}
+
+function updateSceneStats(): void {
+  const statObjects = document.getElementById('stat-objects');
+  const statRooms = document.getElementById('stat-rooms');
+  if (statObjects) statObjects.textContent = props.length.toString();
+  if (statRooms) statRooms.textContent = rooms.length.toString();
+}
+
+// =============================================================================
+// Material & PBR Presets
+// =============================================================================
+document.querySelectorAll('[data-apply-tex]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    if (!selectedPropId) {
+      showToast('⚠️ Selecciona un objeto primero para aplicar la textura');
+      return;
+    }
+    const mesh = propMeshMap.get(selectedPropId);
+    if (!mesh) return;
+
+    const texKey = btn.getAttribute('data-apply-tex');
+    let texUrl = '';
+    if (texKey === 'wood') texUrl = 'assets/textures/tex_wood_floor.jpg';
+    else if (texKey === 'marble') texUrl = 'assets/textures/tex_marble_white.jpg';
+    else if (texKey === 'cyber') texUrl = 'assets/textures/tex_cyber_grid.jpg';
+
+    if (texUrl) {
+      const loader = new THREE.TextureLoader();
+      loader.load(texUrl, (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(2, 2);
+        mesh.traverse((c) => {
+          if ((c as THREE.Mesh).isMesh && (c as THREE.Mesh).material) {
+            const m = (c as THREE.Mesh).material as THREE.MeshStandardMaterial;
+            m.map = tex;
+            m.needsUpdate = true;
+          }
+        });
+        showToast(`✓ Textura ${texKey.toUpperCase()} aplicada`);
+        triggerAutoSave();
+      });
+    }
+  });
+});
+
+document.querySelectorAll('[data-apply-mat]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    if (!selectedPropId) {
+      showToast('⚠️ Selecciona un objeto primero');
+      return;
+    }
+    const mesh = propMeshMap.get(selectedPropId);
+    if (!mesh) return;
+
+    const matKey = btn.getAttribute('data-apply-mat');
+    mesh.traverse((c) => {
+      if ((c as THREE.Mesh).isMesh && (c as THREE.Mesh).material) {
+        const m = (c as THREE.Mesh).material as THREE.MeshStandardMaterial;
+        m.map = null;
+        if (matKey === 'gold') {
+          m.color.set(0xf59e0b);
+          m.metalness = 0.95;
+          m.roughness = 0.15;
+        } else if (matKey === 'chrome') {
+          m.color.set(0xffffff);
+          m.metalness = 1.0;
+          m.roughness = 0.05;
+        } else if (matKey === 'glass') {
+          m.color.set(0x38bdf8);
+          m.transparent = true;
+          m.opacity = 0.4;
+          m.roughness = 0.1;
+        }
+        m.needsUpdate = true;
+      }
+    });
+    showToast(`✓ Acabado ${matKey?.toUpperCase()} aplicado`);
+    triggerAutoSave();
+  });
+});
+
+// Day / Night Theme Toggle
+const btnThemeToggle = document.getElementById('btn-theme-toggle') as HTMLButtonElement;
+btnThemeToggle?.addEventListener('click', () => {
+  isNightTheme = !isNightTheme;
+  if (isNightTheme) {
+    app.scene.setBackground(0x060912);
+    app.scene.setEnvironmentPreset('studio');
+    showToast('🌙 Modo Cyberpunk Noche');
+  } else {
+    app.scene.setBackground(0x1e293b);
+    app.scene.setEnvironmentPreset('city');
+    showToast('☀️ Modo Estudio Fotográfico Día');
+  }
+});
+
+// Bottom Center Toolbar
+const toolIslandSelect = document.getElementById('tool-select') as HTMLButtonElement;
+const toolIslandTranslate = document.getElementById('tool-translate') as HTMLButtonElement;
+const toolIslandRotate = document.getElementById('tool-rotate') as HTMLButtonElement;
+const toolIslandScale = document.getElementById('tool-scale') as HTMLButtonElement;
+const toolDuplicate = document.getElementById('tool-duplicate') as HTMLButtonElement;
+const toolDelete = document.getElementById('tool-delete') as HTMLButtonElement;
+const toolAlign = document.getElementById('tool-align') as HTMLButtonElement;
+const toolGroup = document.getElementById('tool-group') as HTMLButtonElement;
+const toolSnap = document.getElementById('tool-snap') as HTMLButtonElement;
+
+function setToolMode(mode: 'select' | 'translate' | 'rotate' | 'scale'): void {
+  activeTool = mode;
+  [toolIslandSelect, toolIslandTranslate, toolIslandRotate, toolIslandScale].forEach((b) => b?.classList.remove('active'));
+
+  if (mode === 'select') {
+    toolIslandSelect?.classList.add('active');
+    transformControls.detach();
+  } else {
+    if (mode === 'translate') toolIslandTranslate?.classList.add('active');
+    else if (mode === 'rotate') toolIslandRotate?.classList.add('active');
+    else if (mode === 'scale') toolIslandScale?.classList.add('active');
+
+    transformControls.setMode(mode);
+    if (selectedPropId && propMeshMap.has(selectedPropId)) {
+      transformControls.attach(propMeshMap.get(selectedPropId)!);
+    }
+  }
+}
+
+toolIslandSelect?.addEventListener('click', () => setToolMode('select'));
+toolIslandTranslate?.addEventListener('click', () => setToolMode('translate'));
+toolIslandRotate?.addEventListener('click', () => setToolMode('rotate'));
+toolIslandScale?.addEventListener('click', () => setToolMode('scale'));
+toolDuplicate?.addEventListener('click', () => {
+  if (selectedPropId) duplicateProp(selectedPropId);
+});
+toolDelete?.addEventListener('click', () => {
+  if (selectedPropId) deleteProp(selectedPropId);
+});
+toolAlign?.addEventListener('click', () => {
+  if (!selectedPropId) return;
+  const p = props.find((item) => item.id === selectedPropId);
+  const mesh = propMeshMap.get(selectedPropId);
+  if (p && mesh) {
+    p.relY = 0;
+    mesh.position.y = 0;
+    updatePropertyInputs(p);
+    showToast('⬡ Objeto alineado al suelo (Y=0)');
+    triggerAutoSave();
+  }
+});
+toolGroup?.addEventListener('click', () => {
+  showToast('⛶ Agrupación espacial activada');
+});
+toolSnap?.addEventListener('click', () => {
+  snapEnabled = !snapEnabled;
+  transformControls.setTranslationSnap(snapEnabled ? 0.5 : null);
+  transformControls.setRotationSnap(snapEnabled ? THREE.MathUtils.degToRad(15) : null);
+  toolSnap.classList.toggle('active', snapEnabled);
+  showToast(snapEnabled ? '⩪ Ajuste a cuadrícula (Snap: 0.5m / 15°) ACTIVO' : '⩪ Ajuste libre desactivado');
+});
+
+// Viewport Quick Actions (Top Right)
+document.getElementById('btn-grid-toggle')?.addEventListener('click', () => {
+  gridFloor.visible = !gridFloor.visible;
+  showToast(gridFloor.visible ? '▦ Cuadrícula visible' : '▦ Cuadrícula oculta');
+});
+document.getElementById('btn-fullscreen-toggle')?.addEventListener('click', () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen?.();
+  } else {
+    document.exitFullscreen?.();
+  }
+});
+document.getElementById('btn-cam-home')?.addEventListener('click', () => {
+  const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
+  const cx = activeRoom ? activeRoom.center[0] : 0;
+  const cz = activeRoom ? activeRoom.center[2] : 0;
+  app.resetCamera([cx, 18, cz + 16], [cx, 0, cz]);
+  showToast('🏠 Vista de cámara centrada');
+});
+document.getElementById('btn-cam-snapshot')?.addEventListener('click', () => {
+  const dataUrl = app.renderer.nativeRenderer.domElement.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = `vxr-studio-${Date.now()}.png`;
+  a.click();
+  showToast('📷 Captura de pantalla guardada');
+});
+
+// Perspective Dropdown
+const btnProjDropdown = document.getElementById('btn-proj-dropdown') as HTMLButtonElement;
+const projSelectorMenu = document.getElementById('proj-selector-menu') as HTMLElement;
+const lblCurrentProj = document.getElementById('lbl-current-proj') as HTMLElement;
+
+btnProjDropdown?.addEventListener('click', () => {
+  projSelectorMenu.classList.toggle('show');
+});
+document.querySelectorAll('[data-proj-set]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const proj = btn.getAttribute('data-proj-set');
+    projSelectorMenu.classList.remove('show');
+    if (proj === 'top') {
+      lblCurrentProj.textContent = 'Superior (Top)';
+      app.resetCamera([0, 30, 0], [0, 0, 0]);
+    } else if (proj === 'front') {
+      lblCurrentProj.textContent = 'Frontal';
+      app.resetCamera([0, 2, 22], [0, 2, 0]);
+    } else if (proj === 'side') {
+      lblCurrentProj.textContent = 'Lateral';
+      app.resetCamera([22, 2, 0], [0, 2, 0]);
+    } else {
+      lblCurrentProj.textContent = 'Perspectiva';
+      app.resetCamera([0, 18, 16], [0, 0, 0]);
+    }
+  });
+});
+
+// Template Switcher Dropdown in Top Bar
+const btnProjectSelect = document.getElementById('btn-project-select') as HTMLButtonElement;
+const projectSelectorDropdown = document.getElementById('project-selector-dropdown') as HTMLElement;
+
+btnProjectSelect?.addEventListener('click', () => {
+  projectSelectorDropdown.classList.toggle('show');
+});
+document.querySelectorAll('[data-template-load]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const tKey = btn.getAttribute('data-template-load')!;
+    projectSelectorDropdown?.classList.remove('show');
+    document.getElementById('welcome-modal')?.classList.remove('active');
+    loadTemplate(tKey);
+  });
+});
+
+// Primitives Click Handlers
+document.querySelectorAll('[data-primitive]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const prim = btn.getAttribute('data-primitive')!;
+    insertObjectFromCatalog({ category: 'basic', subtype: prim, name: prim.charAt(0).toUpperCase() + prim.slice(1) });
+  });
+});
+
+// Presets Click Handlers
+document.querySelectorAll('[data-preset-model]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const model = btn.getAttribute('data-preset-model')!;
+    if (model === 'chair') insertObjectFromCatalog({ category: 'furniture', subtype: 'chair', name: 'Silla Ergonómica' });
+    else if (model === 'desk') insertObjectFromCatalog({ category: 'furniture', subtype: 'desk', name: 'Escritorio Ejecutivo' });
+    else if (model === 'pedestal') insertObjectFromCatalog({ category: 'furniture', subtype: 'pedestal', name: 'Pedestal Vitrina' });
+    else if (model === 'sculpture') insertObjectFromCatalog({ category: 'decoration', subtype: 'sculpture', name: 'Escultura Mobius' });
+    else if (model === 'server') insertObjectFromCatalog({ category: 'decoration', subtype: 'server', name: 'Servidor Holográfico' });
+    else if (model === 'laptop') insertObjectFromCatalog({ category: 'furniture', subtype: 'laptop', name: 'Laptop Workstation' });
+    else if (model === 'statue') insertObjectFromCatalog({ category: 'decoration', subtype: 'statue', name: 'Busto Esculpido' });
+    else if (model === 'panel') insertObjectFromCatalog({ category: 'architecture', subtype: 'partition_glass', name: 'Panel Acristalado' });
+  });
+});
+
+// Catalog Insertion
+function insertObjectFromCatalog(item: { category: StudioPropCategory; subtype: string; name: string }): void {
+  const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
+  const roomId = activeRoom ? activeRoom.id : '';
+  const roomName = activeRoom ? activeRoom.name : 'el lienzo';
+
+  const offset = 1.0;
+  const relX = parseFloat(((Math.random() - 0.5) * offset).toFixed(2));
+  const relZ = parseFloat(((Math.random() - 0.5) * offset).toFixed(2));
+
+  const newProp: StudioPropDef = {
+    id: `prop-${Date.now().toString(36)}`,
+    roomId,
+    category: item.category,
+    subtype: item.subtype,
+    name: `${item.name}`,
+    relX,
+    relY: 0,
+    relZ,
+    rotX: 0,
+    rotY: 0,
+    rotZ: 0,
+    scaleX: 1,
+    scaleY: 1,
+    scaleZ: 1,
+    color: '#38bdf8',
+  };
+
+  props.push(newProp);
+  spawnPropMesh(newProp);
+  selectProp(newProp.id);
+  app.audio.playSuccess();
+  showToast(`¡${newProp.name} añadido a ${roomName}!`);
+  triggerAutoSave();
+}
+
+// GLB Local Importer
+const fileGlbInput = document.getElementById('file-import-glb') as HTMLInputElement;
+document.getElementById('btn-trigger-glb')?.addEventListener('click', () => fileGlbInput.click());
+document.getElementById('btn-import-card')?.addEventListener('click', () => fileGlbInput.click());
+
+fileGlbInput?.addEventListener('change', async () => {
+  const file = fileGlbInput.files?.[0];
+  if (!file) return;
+
+  try {
+    showToast('Cargando modelo 3D...');
+    const loaded = await app.assets.loadModel(file, { autoGround: true, autoCenter: true });
+    const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
+    const roomId = activeRoom ? activeRoom.id : '';
+
+    const newProp: StudioPropDef = {
+      id: `prop-glb-${Date.now().toString(36)}`,
+      roomId,
+      category: 'model_glb',
+      subtype: 'custom_glb',
+      name: file.name.replace(/\.[^/.]+$/, ''),
+      relX: 0,
+      relY: 0,
+      relZ: 0,
+      rotX: 0,
+      rotY: 0,
+      rotZ: 0,
+      scaleX: 1,
+      scaleY: 1,
+      scaleZ: 1,
+      color: '#ffffff',
+    };
+
+    props.push(newProp);
+    loaded.userData = { ...loaded.userData, propId: newProp.id };
+    app.scene.nativeScene.add(loaded);
+    propMeshMap.set(newProp.id, loaded);
+
+    selectProp(newProp.id);
+    showToast(`✓ Modelo 3D "${file.name}" cargado con éxito`);
+    triggerAutoSave();
+  } catch (err: any) {
+    showToast('Error al importar archivo GLB/GLTF');
+  }
+});
+
+// Selection & Properties
 const propSelectedContainer = document.getElementById('prop-selected-container') as HTMLElement;
 const propEmptyContainer = document.getElementById('prop-empty-container') as HTMLElement;
 const propThumb = document.getElementById('prop-thumb') as HTMLElement;
 const propTitle = document.getElementById('prop-title') as HTMLElement;
 const propTypeTag = document.getElementById('prop-type-tag') as HTMLElement;
+const propNameInput = document.getElementById('prop-name-input') as HTMLInputElement;
 
 const propPosX = document.getElementById('prop-pos-x') as HTMLInputElement;
 const propPosY = document.getElementById('prop-pos-y') as HTMLInputElement;
@@ -899,117 +1596,6 @@ const propScaleZ = document.getElementById('prop-scale-z') as HTMLInputElement;
 const propColorSwatch = document.getElementById('prop-color-swatch') as HTMLElement;
 const propColorHex = document.getElementById('prop-color-hex') as HTMLInputElement;
 const propColorPicker = document.getElementById('prop-color-picker') as HTMLInputElement;
-const propNameInput = document.getElementById('prop-name-input') as HTMLInputElement;
-
-const groupSignText = document.getElementById('group-sign-text') as HTMLElement;
-const propSignText = document.getElementById('prop-sign-text') as HTMLInputElement;
-const groupLightIntensity = document.getElementById('group-light-intensity') as HTMLElement;
-const propLightIntensity = document.getElementById('prop-light-intensity') as HTMLInputElement;
-
-// Exhibition & Multimedia DOM Elements
-const groupExhibitionOptions = document.getElementById('group-exhibition-options') as HTMLElement;
-const subgroupFrameOptions = document.getElementById('subgroup-frame-options') as HTMLElement;
-const subgroupVideoOptions = document.getElementById('subgroup-video-options') as HTMLElement;
-const subgroupBillboardOptions = document.getElementById('subgroup-billboard-options') as HTMLElement;
-
-const propImageUrl = document.getElementById('prop-image-url') as HTMLInputElement;
-const btnUploadArtImg = document.getElementById('btn-upload-art-img') as HTMLButtonElement;
-const btnPreviewArtImg = document.getElementById('btn-preview-art-img') as HTMLButtonElement;
-const propFrameW = document.getElementById('prop-frame-w') as HTMLInputElement;
-const propFrameH = document.getElementById('prop-frame-h') as HTMLInputElement;
-
-const propVideoUrl = document.getElementById('prop-video-url') as HTMLInputElement;
-const badgeVideoStatus = document.getElementById('badge-video-status') as HTMLElement;
-const btnTestVideoPlay = document.getElementById('btn-test-video-play') as HTMLButtonElement;
-
-const propBillboardText = document.getElementById('prop-billboard-text') as HTMLInputElement;
-const propLinkUrl = document.getElementById('prop-link-url') as HTMLInputElement;
-const btnTestLinkOpen = document.getElementById('btn-test-link-open') as HTMLButtonElement;
-const fileUploadArt = document.getElementById('file-upload-art') as HTMLInputElement;
-
-// Lightbox & Video Player Modals
-const lightboxModal = document.getElementById('lightbox-modal') as HTMLElement;
-const lightboxTitle = document.getElementById('lightbox-title') as HTMLElement;
-const lightboxImg = document.getElementById('lightbox-img') as HTMLImageElement;
-const lightboxCaption = document.getElementById('lightbox-caption') as HTMLElement;
-const btnCloseLightbox = document.getElementById('btn-close-lightbox') as HTMLButtonElement;
-
-const videoModal = document.getElementById('video-modal') as HTMLElement;
-const videoModalTitle = document.getElementById('video-modal-title') as HTMLElement;
-const videoPlayerContainer = document.getElementById('video-player-container') as HTMLElement;
-const videoModalDesc = document.getElementById('video-modal-desc') as HTMLElement;
-const btnCloseVideo = document.getElementById('btn-close-video') as HTMLButtonElement;
-
-function openLightboxModal(p: StudioPropDef): void {
-  lightboxTitle.textContent = `🖼 ${p.name}`;
-  lightboxImg.src = p.imageUrl || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=800&auto=format&fit=crop';
-  lightboxCaption.innerHTML = p.imageUrl
-    ? `<b>${p.name}</b> • Obra en exhibición interactiva<br><span style="font-size: 10px; color: #64748b; word-break: break-all;">${p.imageUrl}</span>`
-    : `<b>${p.name}</b> • Sin imagen asignada (Configura la URL en el panel de propiedades)`;
-  lightboxModal.classList.add('active');
-  app.audio.playSuccess();
-}
-
-function closeLightboxModal(): void {
-  lightboxModal.classList.remove('active');
-}
-
-btnCloseLightbox?.addEventListener('click', closeLightboxModal);
-
-function openVideoModal(p: StudioPropDef): void {
-  videoModalTitle.textContent = `📺 ${p.name}`;
-  const ytid = extractYouTubeId(p.videoUrl || '');
-
-  if (ytid) {
-    videoPlayerContainer.innerHTML = `
-      <iframe 
-        src="https://www.youtube-nocookie.com/embed/${ytid}?autoplay=1&rel=0&modestbranding=1" 
-        style="width: 100%; height: 100%; border: none;" 
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-        allowfullscreen>
-      </iframe>
-    `;
-    videoModalDesc.innerHTML = `<b>Reproduciendo desde YouTube:</b> ID <code>${ytid}</code> • Respeta las políticas de reproducción del navegador.`;
-  } else if (p.videoUrl) {
-    videoPlayerContainer.innerHTML = `
-      <video src="${p.videoUrl}" controls autoplay playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
-    `;
-    videoModalDesc.innerHTML = `<b>Video directo compatible:</b> <code>${p.videoUrl}</code>`;
-  } else {
-    videoPlayerContainer.innerHTML = `
-      <div style="color: #cbd5e1; text-align: center; padding: 40px; font-size: 13px;">
-        <div style="font-size: 32px; margin-bottom: 8px;">📺</div>
-        <b>No se ha configurado ninguna URL de video</b><br>
-        Introduce una URL de YouTube o enlace .mp4 en el panel derecho de propiedades.
-      </div>
-    `;
-    videoModalDesc.innerHTML = `Sin URL configurada`;
-  }
-
-  videoModal.classList.add('active');
-  app.audio.playSuccess();
-}
-
-function closeVideoModal(): void {
-  videoPlayerContainer.innerHTML = '';
-  videoModal.classList.remove('active');
-}
-
-btnCloseVideo?.addEventListener('click', closeVideoModal);
-
-[lightboxModal, videoModal].forEach((m) => {
-  m?.addEventListener('click', (e) => {
-    if (e.target === m) {
-      if (m === videoModal) closeVideoModal();
-      else m.classList.remove('active');
-    }
-  });
-});
-
-function renderPropertiesEmpty(): void {
-  propSelectedContainer.style.display = 'none';
-  propEmptyContainer.style.display = 'block';
-}
 
 function selectProp(id: string): void {
   selectedPropId = id;
@@ -1025,87 +1611,22 @@ function selectProp(id: string): void {
   propEmptyContainer.style.display = 'none';
   propSelectedContainer.style.display = 'flex';
 
-  // Attach TransformControls if in an active tool mode
-  if (activeTool !== 'select') {
+  if (activeTool !== 'select' && activeNavMode === 'edit') {
     transformControls.setMode(activeTool);
     transformControls.attach(mesh);
   } else {
     transformControls.detach();
   }
 
-  // Thumb icon & metadata
-  let icon = '📦';
-  if (p.subtype === 'sphere') icon = '⚪';
-  else if (p.subtype === 'cylinder') icon = '🛢️';
-  else if (p.subtype === 'table' || p.subtype.includes('table')) icon = '🪑';
-  else if (p.subtype === 'chair' || p.subtype.includes('chair')) icon = '💺';
-  else if (p.subtype === 'sofa') icon = '🛋️';
-  else if (p.subtype === 'bench') icon = '🪑';
-  else if (p.subtype === 'frame_art') icon = '🖼️';
-  else if (p.subtype === 'screen_video') icon = '📺';
-  else if (p.subtype === 'billboard_floating') icon = '📢';
-  else if (p.subtype === 'partition_glass') icon = '🪟';
-  else if (p.subtype === 'column') icon = '🏛️';
-  else if (p.category === 'model_glb') icon = '🗿';
-
-  propThumb.textContent = icon;
   propTitle.textContent = p.name;
   propTypeTag.textContent = `Tipo: ${p.category.toUpperCase()} (${p.subtype})`;
   propNameInput.value = p.name;
-
   updatePropertyInputs(p);
+}
 
-  // Exhibition specific options
-  if (p.category === 'exhibition') {
-    groupExhibitionOptions.style.display = 'block';
-    if (p.subtype === 'frame_art') {
-      subgroupFrameOptions.style.display = 'flex';
-      subgroupVideoOptions.style.display = 'none';
-      subgroupBillboardOptions.style.display = 'none';
-      propImageUrl.value = p.imageUrl || '';
-      propFrameW.value = (p.frameWidth || 2.2).toString();
-      propFrameH.value = (p.frameHeight || 1.6).toString();
-    } else if (p.subtype === 'screen_video') {
-      subgroupFrameOptions.style.display = 'none';
-      subgroupVideoOptions.style.display = 'flex';
-      subgroupBillboardOptions.style.display = 'none';
-      propVideoUrl.value = p.videoUrl || '';
-      const ytid = extractYouTubeId(p.videoUrl || '');
-      badgeVideoStatus.textContent = ytid
-        ? `✓ YouTube ID detectado: ${ytid}`
-        : (p.videoUrl ? '✓ Archivo de video directo (.mp4)' : '📺 Introduce una URL de YouTube o video');
-    } else if (p.subtype === 'billboard_floating') {
-      subgroupFrameOptions.style.display = 'none';
-      subgroupVideoOptions.style.display = 'none';
-      subgroupBillboardOptions.style.display = 'flex';
-      propBillboardText.value = p.text || p.name;
-      propLinkUrl.value = p.linkUrl || '';
-    } else {
-      subgroupFrameOptions.style.display = 'none';
-      subgroupVideoOptions.style.display = 'none';
-      subgroupBillboardOptions.style.display = 'none';
-    }
-  } else {
-    groupExhibitionOptions.style.display = 'none';
-    subgroupFrameOptions.style.display = 'none';
-    subgroupVideoOptions.style.display = 'none';
-    subgroupBillboardOptions.style.display = 'none';
-  }
-
-  // Type-specific fields
-  if (p.subtype.includes('sign') || p.subtype === 'totem' || p.subtype === 'billboard_floating') {
-    groupSignText.style.display = 'block';
-    propSignText.value = p.text || p.name;
-  } else {
-    groupSignText.style.display = 'none';
-  }
-
-  if (p.subtype.includes('light')) {
-    groupLightIntensity.style.display = 'block';
-    propLightIntensity.value = (p.intensity || 2.5).toString();
-  } else {
-    groupLightIntensity.style.display = 'none';
-  }
+function renderPropertiesEmpty(): void {
+  propSelectedContainer.style.display = 'none';
+  propEmptyContainer.style.display = 'block';
 }
 
 function updatePropertyInputs(p: StudioPropDef): void {
@@ -1126,7 +1647,6 @@ function updatePropertyInputs(p: StudioPropDef): void {
   propColorPicker.value = p.color;
 }
 
-// In-Place Mesh Mutation Handlers (No Rebuild Needed)
 function applyTransformInputs(): void {
   if (!selectedPropId) return;
   const p = props.find((item) => item.id === selectedPropId);
@@ -1149,7 +1669,6 @@ function applyTransformInputs(): void {
   p.scaleY = Math.max(0.05, parseFloat(propScaleY.value) || 1);
   p.scaleZ = Math.max(0.05, parseFloat(propScaleZ.value) || 1);
 
-  // Directly mutate 3D mesh
   mesh.position.set(cx + p.relX, p.relY, cz + p.relZ);
   mesh.rotation.set(
     THREE.MathUtils.degToRad(p.rotX),
@@ -1157,273 +1676,79 @@ function applyTransformInputs(): void {
     THREE.MathUtils.degToRad(p.rotZ)
   );
   mesh.scale.set(p.scaleX, p.scaleY, p.scaleZ);
-
   triggerAutoSave();
 }
 
-[propPosX, propPosY, propPosZ, propRotX, propRotY, propRotZ, propScaleX, propScaleY, propScaleZ].forEach((input) => {
-  input.addEventListener('input', applyTransformInputs);
-});
+[
+  propPosX, propPosY, propPosZ,
+  propRotX, propRotY, propRotZ,
+  propScaleX, propScaleY, propScaleZ
+].forEach((input) => input?.addEventListener('input', applyTransformInputs));
 
-// Color inputs
-function applyColorChange(hex: string): void {
-  if (!selectedPropId) return;
-  const p = props.find((item) => item.id === selectedPropId);
-  const mesh = propMeshMap.get(selectedPropId);
-  if (!p || !mesh) return;
-
-  p.color = hex;
-  propColorSwatch.style.background = hex;
-  propColorHex.value = hex;
-  propColorPicker.value = hex;
-
-  // In-place material update
-  const newColor = new THREE.Color(hex);
-  mesh.traverse((child) => {
-    if ((child as THREE.Mesh).isMesh && (child as THREE.Mesh).material) {
-      const mat = (child as THREE.Mesh).material as THREE.MeshStandardMaterial;
-      if (mat.color) mat.color.copy(newColor);
-    }
-  });
-
-  triggerAutoSave();
-}
-
-propColorHex.addEventListener('change', () => applyColorChange(propColorHex.value));
-propColorPicker.addEventListener('input', () => applyColorChange(propColorPicker.value));
-
-propNameInput.addEventListener('input', () => {
+propNameInput?.addEventListener('input', () => {
   if (!selectedPropId) return;
   const p = props.find((item) => item.id === selectedPropId);
   if (p) {
-    p.name = propNameInput.value.trim() || 'Objeto';
+    p.name = propNameInput.value;
     propTitle.textContent = p.name;
     triggerAutoSave();
   }
 });
 
-propSignText.addEventListener('input', () => {
-  if (!selectedPropId) return;
-  const p = props.find((item) => item.id === selectedPropId);
-  if (p) {
-    p.text = propSignText.value;
-    const cached = propCanvasMap.get(p.id);
-    if (cached) {
-      const { canvas, texture } = cached;
-      const ctx = canvas.getContext('2d')!;
-      ctx.fillStyle = '#060a14';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = 6;
-      ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
-      ctx.font = '800 48px "Plus Jakarta Sans", system-ui, sans-serif';
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.fillText((p.text || p.name).toUpperCase(), canvas.width / 2, 140);
-      texture.needsUpdate = true;
-    }
-    triggerAutoSave();
-  }
-});
-
-// Exhibition inputs: Frame Art, Video Screen, Billboard
-propImageUrl.addEventListener('change', () => {
-  if (!selectedPropId) return;
-  const p = props.find((item) => item.id === selectedPropId);
-  if (!p) return;
-  p.imageUrl = propImageUrl.value.trim();
-
-  // Update mesh in place
-  const mesh = propMeshMap.get(selectedPropId);
-  if (mesh) {
-    app.scene.nativeScene.remove(mesh);
-    const newMesh = spawnPropMesh(p);
-    if (activeTool !== 'select') transformControls.attach(newMesh);
-  }
-  showToast('✓ Imagen actualizada en el marco');
-  triggerAutoSave();
-});
-
-btnUploadArtImg?.addEventListener('click', () => fileUploadArt.click());
-fileUploadArt?.addEventListener('change', () => {
-  const file = fileUploadArt.files?.[0];
-  if (!file || !selectedPropId) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const dataUrl = e.target?.result as string;
-    const p = props.find((item) => item.id === selectedPropId);
-    if (p) {
-      p.imageUrl = dataUrl;
-      propImageUrl.value = dataUrl;
-      const mesh = propMeshMap.get(selectedPropId!);
-      if (mesh) {
-        app.scene.nativeScene.remove(mesh);
-        const newMesh = spawnPropMesh(p);
-        if (activeTool !== 'select') transformControls.attach(newMesh);
-      }
-      showToast('✓ Imagen local cargada en la obra');
-      triggerAutoSave();
-    }
-  };
-  reader.readAsDataURL(file);
-});
-
-btnPreviewArtImg?.addEventListener('click', () => {
-  if (!selectedPropId) return;
-  const p = props.find((item) => item.id === selectedPropId);
-  if (p) openLightboxModal(p);
-});
-
-propFrameW.addEventListener('change', () => {
-  if (!selectedPropId) return;
-  const p = props.find((item) => item.id === selectedPropId);
-  if (!p) return;
-  p.frameWidth = Math.max(0.6, parseFloat(propFrameW.value) || 2.2);
-  const mesh = propMeshMap.get(selectedPropId);
-  if (mesh) {
-    app.scene.nativeScene.remove(mesh);
-    const newMesh = spawnPropMesh(p);
-    if (activeTool !== 'select') transformControls.attach(newMesh);
-  }
-  triggerAutoSave();
-});
-
-propFrameH.addEventListener('change', () => {
-  if (!selectedPropId) return;
-  const p = props.find((item) => item.id === selectedPropId);
-  if (!p) return;
-  p.frameHeight = Math.max(0.6, parseFloat(propFrameH.value) || 1.6);
-  const mesh = propMeshMap.get(selectedPropId);
-  if (mesh) {
-    app.scene.nativeScene.remove(mesh);
-    const newMesh = spawnPropMesh(p);
-    if (activeTool !== 'select') transformControls.attach(newMesh);
-  }
-  triggerAutoSave();
-});
-
-propVideoUrl.addEventListener('input', () => {
-  if (!selectedPropId) return;
-  const p = props.find((item) => item.id === selectedPropId);
-  if (!p) return;
-  p.videoUrl = propVideoUrl.value.trim();
-  const ytid = extractYouTubeId(p.videoUrl);
-  badgeVideoStatus.textContent = ytid
-    ? `✓ YouTube ID detectado: ${ytid}`
-    : (p.videoUrl ? '✓ Archivo de video directo (.mp4)' : '📺 Introduce una URL de YouTube o video');
-});
-
-propVideoUrl.addEventListener('change', () => {
-  if (!selectedPropId) return;
-  const p = props.find((item) => item.id === selectedPropId);
-  if (!p) return;
-  const mesh = propMeshMap.get(selectedPropId);
-  if (mesh) {
-    app.scene.nativeScene.remove(mesh);
-    const newMesh = spawnPropMesh(p);
-    if (activeTool !== 'select') transformControls.attach(newMesh);
-  }
-  showToast('✓ Pantalla de video actualizada');
-  triggerAutoSave();
-});
-
-btnTestVideoPlay?.addEventListener('click', () => {
-  if (!selectedPropId) return;
-  const p = props.find((item) => item.id === selectedPropId);
-  if (p) openVideoModal(p);
-});
-
-propBillboardText.addEventListener('input', () => {
-  if (!selectedPropId) return;
-  const p = props.find((item) => item.id === selectedPropId);
-  if (!p) return;
-  p.text = propBillboardText.value;
-  const mesh = propMeshMap.get(selectedPropId);
-  if (mesh) {
-    app.scene.nativeScene.remove(mesh);
-    const newMesh = spawnPropMesh(p);
-    if (activeTool !== 'select') transformControls.attach(newMesh);
-  }
-  triggerAutoSave();
-});
-
-propLinkUrl.addEventListener('change', () => {
-  if (!selectedPropId) return;
-  const p = props.find((item) => item.id === selectedPropId);
-  if (!p) return;
-  p.linkUrl = propLinkUrl.value.trim();
-  const mesh = propMeshMap.get(selectedPropId);
-  if (mesh) {
-    app.scene.nativeScene.remove(mesh);
-    const newMesh = spawnPropMesh(p);
-    if (activeTool !== 'select') transformControls.attach(newMesh);
-  }
-  showToast('✓ Enlace del anuncio guardado');
-  triggerAutoSave();
-});
-
-btnTestLinkOpen?.addEventListener('click', () => {
-  if (!selectedPropId) return;
-  const p = props.find((item) => item.id === selectedPropId);
-  if (p && p.linkUrl) {
-    window.open(p.linkUrl, '_blank');
-    showToast(`🔗 Abriendo ${p.linkUrl}`);
-  } else {
-    showToast('⚠️ No se ha definido ningún enlace URL.');
-  }
-});
-
-propLightIntensity.addEventListener('input', () => {
+propColorPicker?.addEventListener('input', () => {
+  const hex = propColorPicker.value;
+  propColorHex.value = hex;
+  propColorSwatch.style.background = hex;
   if (!selectedPropId) return;
   const p = props.find((item) => item.id === selectedPropId);
   const mesh = propMeshMap.get(selectedPropId);
   if (p && mesh) {
-    p.intensity = parseFloat(propLightIntensity.value) || 2.4;
-    mesh.traverse((child) => {
-      if ((child as THREE.Light).isLight) {
-        (child as THREE.Light).intensity = p.intensity!;
+    p.color = hex;
+    mesh.traverse((c) => {
+      if ((c as THREE.Mesh).isMesh && (c as THREE.Mesh).material) {
+        ((c as THREE.Mesh).material as THREE.MeshStandardMaterial).color.set(hex);
       }
     });
     triggerAutoSave();
   }
 });
 
-// Duplicate & Delete Buttons in Properties Panel
 function duplicateProp(id: string): void {
-  const p = props.find((item) => item.id === id);
-  if (!p) return;
+  const original = props.find((item) => item.id === id);
+  if (!original) return;
 
-  const clone: StudioPropDef = JSON.parse(JSON.stringify(p));
-  clone.id = `prop-${Date.now().toString(36)}`;
-  clone.name = `${p.name} (Copia)`;
-  clone.relX += 1.2;
+  const copy: StudioPropDef = {
+    ...original,
+    id: `prop-${Date.now().toString(36)}`,
+    name: `${original.name} (Copia)`,
+    relX: parseFloat((original.relX + 0.6).toFixed(2)),
+    relZ: parseFloat((original.relZ + 0.6).toFixed(2)),
+  };
 
-  props.push(clone);
-  spawnPropMesh(clone);
-  selectProp(clone.id);
+  props.push(copy);
+  spawnPropMesh(copy);
+  selectProp(copy.id);
   app.audio.playSuccess();
-  showToast(`¡Objeto "${clone.name}" duplicado!`);
+  showToast(`¡${copy.name} duplicado!`);
   triggerAutoSave();
 }
 
 function deleteProp(id: string): void {
-  const p = props.find((item) => item.id === id);
-  const mesh = propMeshMap.get(id);
+  const idx = props.findIndex((item) => item.id === id);
+  if (idx === -1) return;
 
+  const mesh = propMeshMap.get(id);
   if (mesh) {
     app.scene.nativeScene.remove(mesh);
     propMeshMap.delete(id);
-    propCanvasMap.delete(id);
   }
 
-  props = props.filter((item) => item.id !== id);
+  props.splice(idx, 1);
   if (selectedPropId === id) {
     selectedPropId = null;
     transformControls.detach();
     renderPropertiesEmpty();
   }
-
-  app.audio.playClick();
   showToast('Objeto eliminado');
   triggerAutoSave();
 }
@@ -1438,114 +1763,27 @@ document.getElementById('btn-quick-delete')?.addEventListener('click', () => {
   if (selectedPropId) deleteProp(selectedPropId);
 });
 
-// Texture upload
-const fileTextureInput = document.getElementById('file-upload-texture') as HTMLInputElement;
-document.getElementById('btn-upload-tex')?.addEventListener('click', () => {
-  fileTextureInput.click();
-});
-
-fileTextureInput.addEventListener('change', () => {
-  const file = fileTextureInput.files?.[0];
-  if (!file || !selectedPropId) return;
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const dataUrl = e.target?.result as string;
-    const mesh = propMeshMap.get(selectedPropId!);
-    if (mesh) {
-      const loader = new THREE.TextureLoader();
-      loader.load(dataUrl, (tex) => {
-        tex.colorSpace = THREE.SRGBColorSpace;
-        mesh.traverse((c) => {
-          if ((c as THREE.Mesh).isMesh && (c as THREE.Mesh).material) {
-            ((c as THREE.Mesh).material as THREE.MeshStandardMaterial).map = tex;
-            ((c as THREE.Mesh).material as THREE.MeshStandardMaterial).needsUpdate = true;
-          }
-        });
-        showToast('¡Textura aplicada al objeto!');
-      });
-    }
-  };
-  reader.readAsDataURL(file);
-});
-
-// =============================================================================
-// Viewport Tools: Selection, Move, Rotate, Scale (Top Floating Toolbar)
-// =============================================================================
-const toolSelect = document.getElementById('tool-select') as HTMLButtonElement;
-const toolTranslate = document.getElementById('tool-translate') as HTMLButtonElement;
-const toolRotate = document.getElementById('tool-rotate') as HTMLButtonElement;
-const toolScale = document.getElementById('tool-scale') as HTMLButtonElement;
-
-function setToolMode(mode: 'select' | 'translate' | 'rotate' | 'scale'): void {
-  activeTool = mode;
-  [toolSelect, toolTranslate, toolRotate, toolScale].forEach((b) => b.classList.remove('active'));
-
-  if (mode === 'select') {
-    toolSelect.classList.add('active');
-    transformControls.detach();
-  } else {
-    if (mode === 'translate') toolTranslate.classList.add('active');
-    else if (mode === 'rotate') toolRotate.classList.add('active');
-    else if (mode === 'scale') toolScale.classList.add('active');
-
-    transformControls.setMode(mode);
-    if (selectedPropId && propMeshMap.has(selectedPropId)) {
-      transformControls.attach(propMeshMap.get(selectedPropId)!);
-    }
-  }
-}
-
-toolSelect.addEventListener('click', () => setToolMode('select'));
-toolTranslate.addEventListener('click', () => setToolMode('translate'));
-toolRotate.addEventListener('click', () => setToolMode('rotate'));
-toolScale.addEventListener('click', () => setToolMode('scale'));
-
-// Keyboard Shortcuts: Q, W, E, R, F, Delete, Ctrl+D
-window.addEventListener('keydown', (e) => {
-  if (['input', 'textarea'].includes((document.activeElement?.tagName || '').toLowerCase())) return;
-
-  // Duplication shortcut (Ctrl+D / Cmd+D)
-  if ((e.ctrlKey || e.metaKey) && e.code === 'KeyD') {
-    e.preventDefault();
-    if (selectedPropId) duplicateProp(selectedPropId);
-    return;
-  }
-
-  if (e.code === 'KeyQ') setToolMode('select');
-  else if (e.code === 'KeyW') setToolMode('translate');
-  else if (e.code === 'KeyE') setToolMode('rotate');
-  else if (e.code === 'KeyR') setToolMode('scale');
-  else if (e.code === 'KeyF') {
-    focusSelectedProp();
-  } else if (e.code === 'Delete' || e.code === 'Backspace') {
-    if (selectedPropId) deleteProp(selectedPropId);
-  } else if (e.code === 'Escape') {
-    selectedPropId = null;
-    transformControls.detach();
-    renderPropertiesEmpty();
-  }
-});
-
-// Viewport Click Raycast: Distinguish Between Click and Camera Orbit Drag
+// Viewport Raycast Selection
 let pointerDownPos = { x: 0, y: 0 };
 container.addEventListener('pointerdown', (e) => {
   pointerDownPos = { x: e.clientX, y: e.clientY };
 });
 
 container.addEventListener('pointerup', (e) => {
-  // If user dragged gizmo or moved camera (orbit/pan), ignore
   if (transformControls.dragging) return;
   const dist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
   if (dist > 6) return;
 
-  // Walk Mode Interaction (Interactive Art Lightbox, Video Popup, Link opening)
-  if (isFirstPerson) {
+  if (activeNavMode === 'walk' || isFirstPerson) {
     handleWalkModeInteraction(e);
     return;
   }
 
-  // Editor Mode Selection
+  if (activeNavMode === 'fly') {
+    container.requestPointerLock?.();
+    return;
+  }
+
   const hits = app.raycastPointer(e);
   if (hits.length > 0) {
     for (const hit of hits) {
@@ -1561,7 +1799,6 @@ container.addEventListener('pointerup', (e) => {
     }
   }
 
-  // Clicked empty background: deselect
   selectedPropId = null;
   transformControls.detach();
   renderPropertiesEmpty();
@@ -1577,20 +1814,26 @@ function handleWalkModeInteraction(e: MouseEvent | PointerEvent): void {
       if (curr.userData && curr.userData.propId) {
         const p = props.find((item) => item.id === curr.userData.propId);
         if (p) {
-          if (p.subtype === 'frame_art') {
-            openLightboxModal(p);
+          if (p.subtype === 'frame_art' && p.imageUrl) {
+            const lb = document.getElementById('lightbox-modal');
+            const lbImg = document.getElementById('lightbox-img') as HTMLImageElement;
+            if (lb && lbImg) {
+              lbImg.src = p.imageUrl;
+              lb.classList.add('active');
+            }
             return;
           } else if (p.subtype === 'screen_video') {
-            openVideoModal(p);
-            return;
-          } else if (p.subtype === 'billboard_floating') {
-            if (p.linkUrl) {
-              window.open(p.linkUrl, '_blank');
-              showToast(`🔗 Abriendo enlace: ${p.linkUrl}`);
-            } else {
-              showToast(`📢 ${p.text || p.name}`);
+            const vm = document.getElementById('video-modal');
+            const vp = document.getElementById('video-player-container');
+            const ytid = extractYouTubeId(p.videoUrl || '');
+            if (vm && vp) {
+              if (ytid) {
+                vp.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${ytid}?autoplay=1" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope" allowfullscreen></iframe>`;
+              } else {
+                vp.innerHTML = `<video controls autoplay style="width: 100%; height: 100%; object-fit: contain;"><source src="${p.videoUrl}" type="video/mp4"></video>`;
+              }
+              vm.classList.add('active');
             }
-            app.audio.playClick();
             return;
           }
         }
@@ -1619,307 +1862,20 @@ function focusSelectedProp(): void {
   showToast(`🎯 Enfocado: ${mesh.name || 'Objeto'}`);
 }
 
-// Bottom Camera Floating Bar
-document.getElementById('btn-cam-home')?.addEventListener('click', () => {
-  const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
-  const cx = activeRoom ? activeRoom.center[0] : 0;
-  const cz = activeRoom ? activeRoom.center[2] : 0;
-  app.resetCamera([cx, 18, cz + 16], [cx, 0, cz]);
-  app.audio.playClick();
-  showToast(activeRoom ? '🏠 Vista general de la sala' : '🏠 Vista general del escenario');
-});
-
-document.getElementById('btn-cam-focus')?.addEventListener('click', () => {
-  focusSelectedProp();
-});
-
-document.getElementById('btn-cam-snapshot')?.addEventListener('click', () => {
-  const dataUrl = app.renderer.nativeRenderer.domElement.toDataURL('image/png');
-  const a = document.createElement('a');
-  a.href = dataUrl;
-  a.download = `vxr-studio-snapshot-${Date.now()}.png`;
-  a.click();
-  showToast('¡Captura de pantalla guardada!');
-});
-
-// Perspective / Orthographic Camera Toggle
-const btnProjPersp = document.getElementById('btn-proj-persp') as HTMLButtonElement;
-const btnProjOrtho = document.getElementById('btn-proj-ortho') as HTMLButtonElement;
-
-btnProjPersp?.addEventListener('click', () => {
-  btnProjPersp.classList.add('active');
-  btnProjOrtho.classList.remove('active');
-  const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
-  const cx = activeRoom ? activeRoom.center[0] : 0;
-  const cz = activeRoom ? activeRoom.center[2] : 0;
-  app.resetCamera([cx, 18, cz + 16], [cx, 0, cz]);
-  showToast('👁️ Vista en Perspectiva 3D');
-});
-
-btnProjOrtho?.addEventListener('click', () => {
-  btnProjOrtho.classList.add('active');
-  btnProjPersp.classList.remove('active');
-  // Position camera directly overhead for 2D top-down floor plan
-  const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
-  const cx = activeRoom ? activeRoom.center[0] : 0;
-  const cz = activeRoom ? activeRoom.center[2] : 0;
-  app.resetCamera([cx, 28, cz], [cx, 0, cz]);
-  showToast('📐 Vista Cenital (Planta 2D)');
-});
-
-// =============================================================================
-// Left Panel: Asset Library & Room Management
-// =============================================================================
-const assetGrid = document.getElementById('asset-grid') as HTMLElement;
-const searchInput = document.getElementById('search-objects') as HTMLInputElement;
-
-const ASSET_CATALOG: Array<{ category: StudioPropCategory; subtype: string; name: string; icon: string }> = [
-  // Básicos
-  { category: 'basic', subtype: 'box', name: 'Caja', icon: '📦' },
-  { category: 'basic', subtype: 'sphere', name: 'Esfera', icon: '⚪' },
-  { category: 'basic', subtype: 'cylinder', name: 'Cilindro', icon: '🛢️' },
-  { category: 'basic', subtype: 'plane', name: 'Plano', icon: '⬜' },
-
-  // Mobiliario & Zonas de Asientos
-  { category: 'furniture', subtype: 'table', name: 'Mesa Rectangular', icon: '🪑' },
-  { category: 'furniture', subtype: 'table_round', name: 'Mesa Redonda', icon: '⭕' },
-  { category: 'furniture', subtype: 'table_coffee', name: 'Mesa de Centro', icon: '☕' },
-  { category: 'furniture', subtype: 'chair', name: 'Silla de Sala', icon: '💺' },
-  { category: 'furniture', subtype: 'chair_lounge', name: 'Sillón Lounge', icon: '🛋️' },
-  { category: 'furniture', subtype: 'chair_executive', name: 'Silla Ejecutiva', icon: '💼' },
-  { category: 'furniture', subtype: 'sofa', name: 'Sofá Modular', icon: '🛋️' },
-  { category: 'furniture', subtype: 'bench', name: 'Banco de Galería', icon: '🪑' },
-  { category: 'furniture', subtype: 'shelf', name: 'Estante', icon: '📚' },
-
-  // Exposición & Multimedia
-  { category: 'exhibition', subtype: 'frame_art', name: 'Marco de Imagen', icon: '🖼️' },
-  { category: 'exhibition', subtype: 'screen_video', name: 'Pantalla de Video', icon: '📺' },
-  { category: 'exhibition', subtype: 'billboard_floating', name: 'Anuncio Flotante', icon: '📢' },
-  { category: 'exhibition', subtype: 'totem', name: 'Tótem Multimedia', icon: '🪧' },
-
-  // Arquitectura
-  { category: 'architecture', subtype: 'partition_glass', name: 'Mampara Cristal', icon: '🪟' },
-  { category: 'architecture', subtype: 'partition_wood', name: 'Mampara Madera', icon: '🪵' },
-  { category: 'architecture', subtype: 'partition_neon', name: 'Mampara Neón', icon: '⚡' },
-  { category: 'architecture', subtype: 'column', name: 'Columna', icon: '🏛️' },
-
-  // Decoración
-  { category: 'decoration', subtype: 'sign_neon', name: 'Rótulo Neón', icon: '🏷️' },
-  { category: 'decoration', subtype: 'sign_plaque', name: 'Placa Pared', icon: '📌' },
-  { category: 'decoration', subtype: 'light_spot', name: 'Foco Spot', icon: '💡' },
-  { category: 'decoration', subtype: 'light_point', name: 'Luz Neón', icon: '🏮' },
-];
-
-function renderAssetCatalog(): void {
-  assetGrid.innerHTML = '';
-  const query = (searchInput?.value || '').trim().toLowerCase();
-
-  const filtered = ASSET_CATALOG.filter((item) => {
-    const matchesCat = item.category === activeCategory;
-    const matchesSearch = !query || item.name.toLowerCase().includes(query);
-    return matchesCat && matchesSearch;
-  });
-
-  for (const item of filtered) {
-    const card = document.createElement('div');
-    card.className = 'asset-card';
-    card.title = `Añadir ${item.name} a la sala`;
-    card.innerHTML = `
-      <div class="asset-icon-box">${item.icon}</div>
-      <span class="asset-label">${item.name}</span>
-    `;
-
-    card.addEventListener('click', () => {
-      insertObjectFromCatalog(item);
-    });
-
-    assetGrid.appendChild(card);
-  }
-}
-
-function insertObjectFromCatalog(item: { category: StudioPropCategory; subtype: string; name: string }): void {
-  const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
-  const roomId = activeRoom ? activeRoom.id : '';
-  const roomName = activeRoom ? activeRoom.name : 'el lienzo';
-
-  const offset = 1.2;
-  const relX = parseFloat(((Math.random() - 0.5) * offset).toFixed(2));
-  const relZ = parseFloat(((Math.random() - 0.5) * offset).toFixed(2));
-  let relY = 0.6;
-  let color = '#e0e0e0';
-  let imageUrl: string | undefined = undefined;
-  let videoUrl: string | undefined = undefined;
-  let linkUrl: string | undefined = undefined;
-  let frameWidth: number | undefined = undefined;
-  let frameHeight: number | undefined = undefined;
-
-  if (item.category === 'furniture') {
-    relY = 0;
-    color = item.subtype.includes('chair') ? '#1e293b' : '#78350f';
-  } else if (item.category === 'exhibition') {
-    if (item.subtype === 'frame_art') {
-      relY = 1.8;
-      color = '#d4af37';
-      imageUrl = 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=800&auto=format&fit=crop';
-      frameWidth = 2.2;
-      frameHeight = 1.6;
-    } else if (item.subtype === 'screen_video') {
-      relY = 1.6;
-      color = '#0f172a';
-      videoUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-    } else if (item.subtype === 'billboard_floating') {
-      relY = 2.4;
-      color = '#38bdf8';
-      linkUrl = 'https://github.com/Vickman123/Framework-XVR';
-    }
-  } else if (item.category === 'architecture') {
-    relY = 0;
-    color = '#38bdf8';
-  } else if (item.category === 'decoration') {
-    relY = 1.8;
-    color = '#38bdf8';
-  }
-
-  const newProp: StudioPropDef = {
-    id: `prop-${Date.now().toString(36)}`,
-    roomId,
-    category: item.category,
-    subtype: item.subtype,
-    name: `${item.name}_${props.length + 1}`,
-    relX,
-    relY,
-    relZ,
-    rotX: 0,
-    rotY: 0,
-    rotZ: 0,
-    scaleX: 1,
-    scaleY: 1,
-    scaleZ: 1,
-    color,
-    text: item.subtype === 'billboard_floating' ? 'EXPOSICIÓN XR 2026' : 'ZONA DE EXHIBICIÓN',
-    intensity: 2.5,
-    imageUrl,
-    videoUrl,
-    linkUrl,
-    frameWidth,
-    frameHeight,
-  };
-
-  props.push(newProp);
-  spawnPropMesh(newProp);
-  selectProp(newProp.id);
-  app.audio.playSuccess();
-  showToast(`¡${newProp.name} añadido a ${roomName}!`);
-  triggerAutoSave();
-}
-
-// Category pill filters
-document.querySelectorAll('.category-pill[data-category]').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.category-pill[data-category]').forEach((b) => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeCategory = btn.getAttribute('data-category') as StudioPropCategory;
-    renderAssetCatalog();
-  });
-});
-
-searchInput?.addEventListener('input', renderAssetCatalog);
-
-// Modelos 3D Section: File Picker and Cards
-const fileGlbInput = document.getElementById('file-import-glb') as HTMLInputElement;
-const btnTriggerGlb = document.getElementById('btn-trigger-glb') as HTMLButtonElement;
-const btnImportCard = document.getElementById('btn-import-card') as HTMLElement;
-
-[btnTriggerGlb, btnImportCard].forEach((el) => {
-  el?.addEventListener('click', () => fileGlbInput.click());
-});
-
-document.querySelectorAll('[data-preset-model]').forEach((card) => {
-  card.addEventListener('click', () => {
-    const model = card.getAttribute('data-preset-model');
-    if (model === 'statue') {
-      insertObjectFromCatalog({ category: 'architecture', subtype: 'column', name: 'Estatua / Pedestal' });
-    } else if (model === 'laptop') {
-      insertObjectFromCatalog({ category: 'furniture', subtype: 'table_coffee', name: 'Mesa de Trabajo' });
-    } else if (model === 'panel') {
-      insertObjectFromCatalog({ category: 'architecture', subtype: 'partition_glass', name: 'Panel Divisorio' });
-    }
-  });
-});
-
-fileGlbInput.addEventListener('change', async () => {
-  const file = fileGlbInput.files?.[0];
-  if (!file) return;
-
-  try {
-    showToast('Cargando modelo 3D...');
-    const loaded = await app.assets.loadModel(file, { autoGround: true, autoCenter: true });
-    const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
-    const roomId = activeRoom ? activeRoom.id : '';
-    const roomName = activeRoom ? activeRoom.name : 'el lienzo';
-    const posX = activeRoom ? activeRoom.center[0] : 0;
-    const posZ = activeRoom ? activeRoom.center[2] : 0;
-
-    const newProp: StudioPropDef = {
-      id: `prop-glb-${Date.now().toString(36)}`,
-      roomId,
-      category: 'model_glb',
-      subtype: file.name,
-      name: file.name.replace(/\.(glb|gltf)$/i, ''),
-      relX: 0,
-      relY: 0,
-      relZ: 0,
-      rotX: 0,
-      rotY: 0,
-      rotZ: 0,
-      scaleX: 1,
-      scaleY: 1,
-      scaleZ: 1,
-      color: '#ffffff',
-    };
-
-    loaded.group.userData = { propId: newProp.id };
-    loaded.group.position.set(posX, 0, posZ);
-    app.scene.nativeScene.add(loaded.group);
-
-    props.push(newProp);
-    propMeshMap.set(newProp.id, loaded.group);
-
-    selectProp(newProp.id);
-    app.audio.playSuccess();
-    showToast(`¡Modelo "${newProp.name}" integrado a ${roomName}!`);
-    triggerAutoSave();
-  } catch (err: any) {
-    console.error('Error cargando modelo GLB:', err);
-    showToast('Error al procesar el archivo GLB.');
-  }
-});
-
-// Rooms List Rendering
-const roomsListEl = document.getElementById('rooms-list') as HTMLElement;
-const roomsCountBadge = document.getElementById('rooms-count-badge') as HTMLElement;
-
-function selectRoom(roomId: string | null): void {
-  selectedRoomId = roomId;
-  renderRoomsList();
-  if (roomId) {
-    const r = rooms.find((item) => item.id === roomId);
-    if (r) {
-      app.resetCamera([r.center[0], 18, r.center[2] + 16], [r.center[0], 0, r.center[2]]);
-    }
-  }
-}
-
+// Rooms List UI
 function renderRoomsList(): void {
+  const roomsListEl = document.getElementById('rooms-list') as HTMLElement;
+  const roomsCountBadge = document.getElementById('rooms-count-badge') as HTMLElement;
+  if (!roomsListEl) return;
+
   roomsListEl.innerHTML = '';
-  roomsCountBadge.textContent = rooms.length.toString();
+  if (roomsCountBadge) roomsCountBadge.textContent = rooms.length.toString();
 
   if (rooms.length === 0) {
     roomsListEl.innerHTML = `
-      <div style="padding: 18px 10px; text-align: center; color: var(--vxr-text-dim); font-size: 11.5px; line-height: 1.5; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px dashed var(--vxr-border);">
-        <span style="font-size: 22px; display: block; margin-bottom: 4px;">🏛️</span>
-        <b style="color: #cbd5e1; display: block; margin-bottom: 4px;">Sin salas en el escenario</b>
-        Pulsa <b>＋ Añadir Sala al Nivel</b> para crear la primera sala en el centro del espacio 3D.
+      <div style="padding: 16px; border: 1px dashed var(--vxr-border); border-radius: 10px; text-align: center; color: var(--vxr-text-dim); font-size: 11.5px;">
+        No hay salas creadas aún.<br>
+        <span style="color: var(--vxr-cyan); font-weight: 700;">Haz clic en el botón de abajo para empezar.</span>
       </div>
     `;
     return;
@@ -1932,177 +1888,149 @@ function renderRoomsList(): void {
       <div class="room-thumb">🏛️</div>
       <div class="room-meta">
         <div class="room-name">${r.name}</div>
-        <div class="room-sub">${r.dimensions.width}m × ${r.dimensions.depth}m • Tema: ${r.theme}</div>
+        <div class="room-sub">${r.dimensions.width}m x ${r.dimensions.depth}m · Tema: ${r.theme}</div>
       </div>
-      <button class="btn-room-del" title="Eliminar sala" data-del-room="${r.id}">🗑️</button>
+      <button class="btn-room-del" title="Eliminar sala">🗑️</button>
     `;
 
     card.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).classList.contains('btn-room-del')) return;
+      if ((e.target as HTMLElement).closest('.btn-room-del')) {
+        deleteRoom(r.id);
+        return;
+      }
       selectRoom(r.id);
-      app.audio.playClick();
-    });
-
-    card.querySelector('[data-del-room]')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      rooms = rooms.filter((item) => item.id !== r.id);
-      connections = connections.filter((c) => c.fromRoomId !== r.id && c.toRoomId !== r.id);
-      props = props.filter((p) => p.roomId !== r.id);
-      selectedRoomId = rooms.length > 0 ? rooms[0].id : null;
-      rebuildScenario();
-      showToast('Sala eliminada');
     });
 
     roomsListEl.appendChild(card);
   }
 }
 
-// Add Room Modal & Handlers
+function selectRoom(roomId: string | null): void {
+  selectedRoomId = roomId;
+  renderRoomsList();
+  if (roomId) {
+    const r = rooms.find((item) => item.id === roomId);
+    if (r) {
+      app.resetCamera([r.center[0], 18, r.center[2] + 16], [r.center[0], 0, r.center[2]]);
+    }
+  }
+}
+
+function deleteRoom(roomId: string): void {
+  const idx = rooms.findIndex((r) => r.id === roomId);
+  if (idx === -1) return;
+
+  rooms.splice(idx, 1);
+  connections = connections.filter((c) => c.fromRoomId !== roomId && c.toRoomId !== roomId);
+  props = props.filter((p) => p.roomId !== roomId);
+
+  if (selectedRoomId === roomId) {
+    selectedRoomId = rooms.length > 0 ? rooms[0].id : null;
+  }
+
+  rebuildScenario();
+  showToast('Sala eliminada del escenario');
+  triggerAutoSave();
+}
+
+// Add Room Modal
 const addRoomModal = document.getElementById('add-room-modal') as HTMLElement;
 const btnAddRoomDialog = document.getElementById('btn-add-room-dialog') as HTMLButtonElement;
 const btnCloseRoomModal = document.getElementById('btn-close-room-modal') as HTMLButtonElement;
-const modalRoomName = document.getElementById('modal-room-name') as HTMLInputElement;
-const modalRoomTheme = document.getElementById('modal-room-theme') as HTMLSelectElement;
-const modalRoomW = document.getElementById('modal-room-w') as HTMLInputElement;
-const modalRoomD = document.getElementById('modal-room-d') as HTMLInputElement;
 const groupInitialRoom = document.getElementById('group-initial-room') as HTMLElement;
 const groupConnectedRoom = document.getElementById('group-connected-room') as HTMLElement;
 const btnCreateInitialRoom = document.getElementById('btn-create-initial-room') as HTMLButtonElement;
 
-btnAddRoomDialog.addEventListener('click', () => {
+btnAddRoomDialog?.addEventListener('click', () => {
   if (rooms.length === 0) {
-    if (groupInitialRoom) groupInitialRoom.style.display = 'block';
-    if (groupConnectedRoom) groupConnectedRoom.style.display = 'none';
+    groupInitialRoom.style.display = 'block';
+    groupConnectedRoom.style.display = 'none';
   } else {
-    if (groupInitialRoom) groupInitialRoom.style.display = 'none';
-    if (groupConnectedRoom) groupConnectedRoom.style.display = 'block';
+    groupInitialRoom.style.display = 'none';
+    groupConnectedRoom.style.display = 'block';
   }
   addRoomModal.classList.add('active');
 });
 
-btnCloseRoomModal.addEventListener('click', () => {
-  addRoomModal.classList.remove('active');
-});
+btnCloseRoomModal?.addEventListener('click', () => addRoomModal.classList.remove('active'));
 
 btnCreateInitialRoom?.addEventListener('click', () => {
-  createRoom();
-});
-
-function createRoom(dir?: WallDirection): void {
-  const newId = `room-${Date.now().toString(36)}`;
-  const newW = parseFloat(modalRoomW.value) || 12;
-  const newD = parseFloat(modalRoomD.value) || 10;
-  const newH = 3.8;
-  const parentRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
-
-  if (!parentRoom || rooms.length === 0) {
-    // Initial / Root room at center [0, 0, 0]
-    const initialRoom: RoomDef = {
-      id: newId,
-      name: modalRoomName.value.trim() || 'Sala Principal',
-      theme: modalRoomTheme.value as RoomTheme,
-      dimensions: { width: newW, depth: newD, height: newH },
-      center: [0, 0, 0],
-      doors: [],
-      spawnPoint: [0, 1.6, 0],
-    };
-    rooms.push(initialRoom);
-    selectedRoomId = newId;
-    addRoomModal.classList.remove('active');
-    app.audio.playSuccess();
-    rebuildScenario();
-    app.resetCamera([0, 18, 16], [0, 0, 0]);
-    showToast('¡Sala inicial creada en el centro del escenario!');
-    return;
-  }
-
-  // Connect to parent room with corridor
-  const effectiveDir = dir || 'north';
-  let posX = parentRoom.center[0];
-  let posZ = parentRoom.center[2];
-  let fromWall: WallDirection = 'north';
-  let toWall: WallDirection = 'south';
-
-  const gap = 6.0;
-  if (effectiveDir === 'north') {
-    posZ -= (parentRoom.dimensions.depth / 2 + newD / 2 + gap);
-    fromWall = 'north'; toWall = 'south';
-  } else if (effectiveDir === 'south') {
-    posZ += (parentRoom.dimensions.depth / 2 + newD / 2 + gap);
-    fromWall = 'south'; toWall = 'north';
-  } else if (effectiveDir === 'east') {
-    posX += (parentRoom.dimensions.width / 2 + newW / 2 + gap);
-    fromWall = 'east'; toWall = 'west';
-  } else if (effectiveDir === 'west') {
-    posX -= (parentRoom.dimensions.width / 2 + newW / 2 + gap);
-    fromWall = 'west'; toWall = 'east';
-  }
-
-  if (!parentRoom.doors.some((d) => d.wall === fromWall)) {
-    parentRoom.doors.push({ wall: fromWall, targetRoomId: newId, width: 2.6, height: 2.8 });
-  }
+  const name = (document.getElementById('modal-room-name') as HTMLInputElement).value || 'Sala Central';
+  const theme = (document.getElementById('modal-room-theme') as HTMLSelectElement).value as RoomTheme;
+  const w = parseInt((document.getElementById('modal-room-w') as HTMLInputElement).value) || 12;
+  const d = parseInt((document.getElementById('modal-room-d') as HTMLInputElement).value) || 10;
 
   const newRoom: RoomDef = {
-    id: newId,
-    name: modalRoomName.value.trim() || `Sala ${rooms.length + 1}`,
-    theme: modalRoomTheme.value as RoomTheme,
-    dimensions: { width: newW, depth: newD, height: newH },
-    center: [posX, 0, posZ],
-    doors: [{ wall: toWall, targetRoomId: parentRoom.id, width: 2.6, height: 2.8 }],
-    spawnPoint: [posX, 1.6, posZ],
+    id: `room-${Date.now().toString(36)}`,
+    name,
+    theme,
+    dimensions: { width: w, depth: d, height: 4 },
+    center: [0, 0, 0],
+    doors: [],
+    spawnPoint: [0, 1.6, 0],
   };
 
   rooms.push(newRoom);
-  connections.push({
-    id: `conn-${Date.now()}`,
-    fromRoomId: parentRoom.id,
-    fromWall,
-    toRoomId: newId,
-    toWall,
-    width: 2.6,
-    height: 3.0,
-  });
-
-  selectedRoomId = newId;
+  selectedRoomId = newRoom.id;
   addRoomModal.classList.remove('active');
-  app.audio.playSuccess();
   rebuildScenario();
-  showToast(`¡Sala añadida al ${effectiveDir.toUpperCase()} con pasillo automático!`);
-}
+  app.resetCamera([0, 18, 16], [0, 0, 0]);
+  showToast(`¡${newRoom.name} creada en el centro!`);
+  triggerAutoSave();
+});
 
 document.querySelectorAll('.btn-dir-room').forEach((btn) => {
   btn.addEventListener('click', () => {
     const dir = btn.getAttribute('data-dir') as WallDirection;
-    createRoom(dir);
+    const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : rooms[0];
+    if (!activeRoom) return;
+
+    const name = (document.getElementById('modal-room-name') as HTMLInputElement).value || 'Nueva Sala';
+    const theme = (document.getElementById('modal-room-theme') as HTMLSelectElement).value as RoomTheme;
+    const w = parseInt((document.getElementById('modal-room-w') as HTMLInputElement).value) || 12;
+    const d = parseInt((document.getElementById('modal-room-d') as HTMLInputElement).value) || 10;
+
+    let cx = activeRoom.center[0];
+    let cz = activeRoom.center[2];
+    const spacing = 4;
+
+    if (dir === 'north') cz -= (activeRoom.dimensions.depth / 2 + d / 2 + spacing);
+    else if (dir === 'south') cz += (activeRoom.dimensions.depth / 2 + d / 2 + spacing);
+    else if (dir === 'east') cx += (activeRoom.dimensions.width / 2 + w / 2 + spacing);
+    else if (dir === 'west') cx -= (activeRoom.dimensions.width / 2 + w / 2 + spacing);
+
+    const newRoom: RoomDef = {
+      id: `room-${Date.now().toString(36)}`,
+      name,
+      theme,
+      dimensions: { width: w, depth: d, height: 4 },
+      center: [cx, 0, cz],
+      doors: [],
+      spawnPoint: [cx, 1.6, cz],
+    };
+
+    rooms.push(newRoom);
+    connections.push({
+      id: `conn-${Date.now().toString(36)}`,
+      fromRoomId: activeRoom.id,
+      fromWall: dir,
+      toRoomId: newRoom.id,
+      toWall: dir === 'north' ? 'south' : dir === 'south' ? 'north' : dir === 'east' ? 'west' : 'east',
+      width: 3.0,
+      height: 3.0,
+    });
+
+    selectedRoomId = newRoom.id;
+    addRoomModal.classList.remove('active');
+    rebuildScenario();
+    showToast(`¡${newRoom.name} conectada al ${dir}!`);
+    triggerAutoSave();
   });
 });
 
-// =============================================================================
-// Top Bar: Probar 3D (Walk Mode) & Probar en VR (Meta Quest WebXR)
-// =============================================================================
-const btnTest3D = document.getElementById('btn-test-3d') as HTMLButtonElement;
+// First Person Walk Mode
 const lblBtn3D = document.getElementById('lbl-btn-3d') as HTMLElement;
-const playerPos = new THREE.Vector3(0, 1.6, 2);
-const playerVelocity = new THREE.Vector3();
-let playerPitch = 0;
-let playerYaw = 0;
-let stepTimer = 0;
-let isPointerLocked = false;
-const keys: Record<string, boolean> = {};
-
-window.addEventListener('keydown', (e) => { keys[e.code] = true; });
-window.addEventListener('keyup', (e) => { keys[e.code] = false; });
-
-document.addEventListener('pointerlockchange', () => {
-  isPointerLocked = document.pointerLockElement === container;
-});
-
-document.addEventListener('mousemove', (e) => {
-  if (!isFirstPerson || !isPointerLocked) return;
-  playerYaw -= (e.movementX || 0) * 0.0024;
-  playerPitch -= (e.movementY || 0) * 0.0024;
-  playerPitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, playerPitch));
-});
+const btnTest3D = document.getElementById('btn-test-3d') as HTMLButtonElement;
 
 function toggleFirstPersonMode(forceState?: boolean): void {
   const target = forceState !== undefined ? forceState : !isFirstPerson;
@@ -2142,33 +2070,292 @@ function toggleFirstPersonMode(forceState?: boolean): void {
   }
 }
 
-btnTest3D.addEventListener('click', () => toggleFirstPersonMode());
+btnTest3D?.addEventListener('click', () => toggleFirstPersonMode());
 
-// WebXR Immersive VR Session
+// WebXR Immersive Session
 document.getElementById('btn-test-vr')?.addEventListener('click', async () => {
   try {
     app.audio.playWarp();
-    showToast('Iniciando sesión inmersiva WebXR en Meta Quest...');
+    showToast('Iniciando sesión WebXR en Meta Quest...');
     await app.session.toggleVR();
   } catch (err: any) {
-    console.warn('VR mode error:', err);
     showToast('WebXR no disponible o visor no detectado.');
   }
 });
 
-// Update Loop for Walk Navigation & Continuous Collision
+// Auto-Save in LocalStorage
+function triggerAutoSave(): void {
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => {
+    const data = { rooms, connections, props };
+    localStorage.setItem('vxr_studio_autosave', JSON.stringify(data));
+  }, 1000);
+}
+
+function restoreFromAutoSave(): boolean {
+  try {
+    const raw = localStorage.getItem('vxr_studio_autosave');
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (!data.rooms || !Array.isArray(data.rooms)) return false;
+
+    // Purge legacy template
+    if (data.rooms.length === 2 && data.rooms.some((r: any) => r.id === 'lobby')) {
+      localStorage.removeItem('vxr_studio_autosave');
+      return false;
+    }
+
+    rooms = data.rooms;
+    connections = data.connections || [];
+    props = data.props || [];
+    selectedRoomId = rooms.length > 0 ? rooms[0].id : null;
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+// Export Modal
+const exportModal = document.getElementById('export-modal') as HTMLElement;
+const exportCodeDisplay = document.getElementById('export-code-display') as HTMLElement;
+let activeExportTab: 'ts' | 'html' | 'json' = 'ts';
+
+document.getElementById('btn-export')?.addEventListener('click', () => {
+  exportModal.classList.add('active');
+  updateExportCode();
+});
+
+document.getElementById('btn-close-export')?.addEventListener('click', () => {
+  exportModal.classList.remove('active');
+});
+
+function updateExportCode(): void {
+  if (activeExportTab === 'ts') {
+    exportCodeDisplay.textContent = generateTSCode();
+  } else if (activeExportTab === 'html') {
+    exportCodeDisplay.textContent = generateHTMLCode();
+  } else {
+    exportCodeDisplay.textContent = JSON.stringify({ rooms, connections, props }, null, 2);
+  }
+}
+
+document.querySelectorAll('[data-export-tab]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-export-tab]').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeExportTab = btn.getAttribute('data-export-tab') as any;
+    updateExportCode();
+  });
+});
+
+function generateTSCode(): string {
+  return `import { XRApp } from '@vxr/core';\n\nconst app = new XRApp({ container: document.body, enableVR: true });\nconst scenario = app.createScenario('VXR Experience');\n\n${JSON.stringify({ rooms, props }, null, 2)}\n\nscenario.build();\napp.start();`;
+}
+
+function generateHTMLCode(): string {
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>VXR Experience</title></head><body><script src="https://cdn.jsdelivr.net/npm/three@0.174.0/build/three.min.js"></script></body></html>`;
+}
+
+document.getElementById('btn-copy-code')?.addEventListener('click', () => {
+  navigator.clipboard.writeText(exportCodeDisplay.textContent || '');
+  showToast('✓ Código copiado al portapapeles');
+});
+
+document.getElementById('btn-download-file')?.addEventListener('click', () => {
+  const content = exportCodeDisplay.textContent || '';
+  const filename = activeExportTab === 'ts' ? 'experiencia-vxr.ts' : activeExportTab === 'html' ? 'experiencia.html' : 'escenario.json';
+  const blob = new Blob([content], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  showToast(`¡Archivo "${filename}" descargado!`);
+});
+
+// Toast Helper
+const toastEl = document.getElementById('toast') as HTMLElement;
+const toastMsg = document.getElementById('toast-msg') as HTMLElement;
+let toastTimeout: any;
+
+function showToast(msg: string): void {
+  if (!toastEl || !toastMsg) return;
+  toastMsg.textContent = msg;
+  toastEl.style.display = 'flex';
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => { toastEl.style.display = 'none'; }, 2800);
+}
+
+// Welcome Modal Controller
+const welcomeModal = document.getElementById('welcome-modal') as HTMLElement;
+document.getElementById('btn-close-welcome')?.addEventListener('click', () => welcomeModal.classList.remove('active'));
+document.getElementById('btn-welcome-blank')?.addEventListener('click', () => {
+  welcomeModal.classList.remove('active');
+  loadTemplate('empty');
+});
+document.getElementById('btn-welcome-learn')?.addEventListener('click', () => {
+  welcomeModal.classList.remove('active');
+  startTutorial();
+});
+
+document.getElementById('btn-menu-welcome')?.addEventListener('click', () => {
+  dropdownMenu.classList.remove('show');
+  welcomeModal.classList.add('active');
+});
+
+// 3-Dots Dropdown Menu
+const btnMoreOptions = document.getElementById('btn-more-options') as HTMLButtonElement;
+const dropdownMenu = document.getElementById('dropdown-menu') as HTMLElement;
+btnMoreOptions?.addEventListener('click', () => dropdownMenu.classList.toggle('show'));
+
+document.getElementById('btn-menu-empty')?.addEventListener('click', () => {
+  dropdownMenu.classList.remove('show');
+  loadTemplate('empty');
+});
+
+// Close modals when clicking backdrop
+[addRoomModal, exportModal, welcomeModal].forEach((m) => {
+  m?.addEventListener('click', (e) => {
+    if (e.target === m) m.classList.remove('active');
+  });
+});
+
+// Guided Interactive Tutorial
+const tutorialCard = document.getElementById('tutorial-card') as HTMLElement;
+const tutStepBadge = document.getElementById('tut-step-badge') as HTMLElement;
+const tutProgressFill = document.getElementById('tut-progress-fill') as HTMLElement;
+const tutHeadline = document.getElementById('tut-headline') as HTMLElement;
+const tutDescription = document.getElementById('tut-description') as HTMLElement;
+const btnTutPrev = document.getElementById('btn-tut-prev') as HTMLButtonElement;
+const btnTutAuto = document.getElementById('btn-tut-auto') as HTMLButtonElement;
+const btnTutNext = document.getElementById('btn-tut-next') as HTMLButtonElement;
+
+let currentTutStep = 0;
+const TUTORIAL_STEPS = [
+  {
+    title: 'Paso 1 de 6',
+    headline: '1. Estructura y Espacio 3D',
+    description: 'VXR Studio organiza las experiencias en salas 3D. Pulsa "＋ Añadir Sala al Nivel" para crear tu primera sala en el centro del escenario.',
+    auto: () => {
+      loadTemplate('museum');
+    }
+  },
+  {
+    title: 'Paso 2 de 6',
+    headline: '2. Navegación de Cámara',
+    description: 'Arrastra con clic izquierdo para orbitar, rueda para zoom y clic derecho para pan. Pulsa "Volar" para el modo creativo libre.',
+    auto: () => {
+      app.resetCamera([0, 18, 16], [0, 0, 0]);
+    }
+  },
+  {
+    title: 'Paso 3 de 6',
+    headline: '3. Catálogo de Modelos',
+    description: 'Inserta mobiliario, pedestales con vitrina o esculturas abstractas desde el panel izquierdo.',
+    auto: () => {
+      insertObjectFromCatalog({ category: 'furniture', subtype: 'chair', name: 'Silla Ergonómica' });
+    }
+  },
+  {
+    title: 'Paso 4 de 6',
+    headline: '4. Materiales y Texturas PBR',
+    description: 'En el dock derecho, abre la pestaña "Materiales" para aplicar mármol, madera o acabados metálicos.',
+    auto: () => {
+      setDockTab('mats');
+    }
+  },
+  {
+    title: 'Paso 5 de 6',
+    headline: '5. Modo Creativo de Vuelo',
+    description: 'Activa "🛸 Volar" para explorar tu entorno libremente con controles estilo Minecraft (W,A,S,D + Q/E).',
+    auto: () => {
+      setNavMode('fly');
+    }
+  },
+  {
+    title: 'Paso 6 de 6',
+    headline: '6. Inmersión WebXR en Meta Quest',
+    description: '¡Tu experiencia espacial está lista! Pulsa "Probar en VR" para abrirla de inmediato en tu visor.',
+    auto: () => {
+      showToast('🎉 ¡Tutorial completado con éxito!');
+    }
+  }
+];
+
+function renderTutStep(): void {
+  const s = TUTORIAL_STEPS[currentTutStep];
+  tutStepBadge.textContent = s.title;
+  tutProgressFill.style.width = `${((currentTutStep + 1) / TUTORIAL_STEPS.length) * 100}%`;
+  tutHeadline.textContent = s.headline;
+  tutDescription.textContent = s.description;
+  btnTutPrev.disabled = currentTutStep === 0;
+}
+
+function startTutorial(): void {
+  currentTutStep = 0;
+  tutorialCard.style.display = 'block';
+  renderTutStep();
+}
+
+btnTutPrev?.addEventListener('click', () => {
+  if (currentTutStep > 0) {
+    currentTutStep--;
+    renderTutStep();
+  }
+});
+btnTutNext?.addEventListener('click', () => {
+  if (currentTutStep < TUTORIAL_STEPS.length - 1) {
+    currentTutStep++;
+    renderTutStep();
+  } else {
+    tutorialCard.style.display = 'none';
+    showToast('🎉 ¡Felicitaciones! Has completado el tutorial de VXR Studio.');
+  }
+});
+btnTutAuto?.addEventListener('click', () => {
+  TUTORIAL_STEPS[currentTutStep].auto();
+  if (currentTutStep < TUTORIAL_STEPS.length - 1) {
+    currentTutStep++;
+    renderTutStep();
+  }
+});
+document.getElementById('btn-tut-close')?.addEventListener('click', () => tutorialCard.style.display = 'none');
+document.getElementById('btn-top-tutorial')?.addEventListener('click', startTutorial);
+
+// =============================================================================
+// App Update Loop
+// =============================================================================
 let billboardTimer = 0;
+let fpsCounter = 0;
+let fpsTimer = 0;
+
 app.onUpdate((delta) => {
   billboardTimer += delta;
+  fpsTimer += delta;
+  fpsCounter++;
+
+  if (fpsTimer >= 1.0) {
+    const fpsEl = document.getElementById('stat-fps');
+    if (fpsEl) fpsEl.textContent = fpsCounter.toString();
+    fpsCounter = 0;
+    fpsTimer = 0;
+  }
+
+  // Floating billboard floating animation
   for (const p of props) {
     if (p.subtype === 'billboard_floating') {
       const mesh = propMeshMap.get(p.id);
       if (mesh) {
-        mesh.position.y = p.relY + Math.sin(billboardTimer * 2.0 + (p.relX + p.relZ)) * 0.04;
+        mesh.position.y = p.relY + Math.sin(billboardTimer * 2.0 + (p.relX + p.relZ)) * 0.05;
       }
     }
   }
 
+  // Update Fly Mode (Minecraft Creative)
+  if (activeNavMode === 'fly') {
+    updateFlyControls(delta);
+  }
+
+  // Update Walk Mode (FPS)
   if (isFirstPerson) {
     const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), playerYaw);
     const right = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), playerYaw);
@@ -2179,721 +2366,27 @@ app.onUpdate((delta) => {
     if (keys['KeyD'] || keys['ArrowRight']) inputDir.add(right);
     if (keys['KeyA'] || keys['ArrowLeft']) inputDir.sub(right);
 
-    const isMoving = inputDir.lengthSq() > 0.001;
-    if (isMoving) {
-      inputDir.normalize().multiplyScalar(4.5);
-      stepTimer += delta;
-      if (stepTimer >= 0.42) {
-        app.audio.playStep();
-        stepTimer = 0;
-      }
-    } else {
-      stepTimer = 0.35;
-    }
-
-    playerVelocity.x += (inputDir.x - playerVelocity.x) * Math.min(delta * 10, 1.0);
-    playerVelocity.z += (inputDir.z - playerVelocity.z) * Math.min(delta * 10, 1.0);
-
-    const proposed = playerPos.clone();
-    proposed.x += playerVelocity.x * delta;
-    proposed.z += playerVelocity.z * delta;
-
-    // Continuous collision through doorways without invisible walls
-    const clamped = app.constrainToScenario(playerPos, proposed, 0.35);
-    playerPos.x = clamped.x;
-    playerPos.z = clamped.z;
-    playerPos.y = 1.6;
-
-    app.camera.position.copy(playerPos);
-    const euler = new THREE.Euler(playerPitch, playerYaw, 0, 'YXZ');
-    app.camera.quaternion.setFromEuler(euler);
-  }
-});
-
-// =============================================================================
-// Persistence & Auto-Save (localStorage)
-// =============================================================================
-function triggerAutoSave(): void {
-  clearTimeout(autoSaveTimer);
-  autoSaveTimer = setTimeout(() => {
-    try {
-      const data = {
-        name: 'Proyecto VXR Studio',
-        timestamp: Date.now(),
-        rooms,
-        connections,
-        props,
-      };
-      localStorage.setItem('vxr_studio_autosave', JSON.stringify(data));
-    } catch (e) {
-      console.warn('Auto-save error:', e);
-    }
-  }, 400);
-}
-
-function restoreFromAutoSave(): boolean {
-  try {
-    const raw = localStorage.getItem('vxr_studio_autosave');
-    if (!raw) return false;
-    const data = JSON.parse(raw);
-    if (data.rooms && Array.isArray(data.rooms)) {
-      // If cached data was the legacy template with 'lobby' and 'archaeology', discard it
-      const isLegacyDefault =
-        data.rooms.length === 2 &&
-        data.rooms.some((r: any) => r.id === 'lobby') &&
-        data.rooms.some((r: any) => r.id === 'archaeology');
-
-      if (isLegacyDefault) {
-        localStorage.removeItem('vxr_studio_autosave');
-        return false;
-      }
-
-      rooms = data.rooms;
-      connections = data.connections || [];
-      props = data.props || [];
-      selectedRoomId = rooms.length > 0 ? rooms[0].id : null;
-      return true;
-    }
-  } catch (e) {
-    console.warn('Error restoring auto-save:', e);
-  }
-  return false;
-}
-
-// 3-Dots Menu Dropdown Actions
-const btnMoreOptions = document.getElementById('btn-more-options') as HTMLButtonElement;
-const dropdownMenu = document.getElementById('dropdown-menu') as HTMLElement;
-btnMoreOptions.addEventListener('click', (e) => {
-  e.stopPropagation();
-  dropdownMenu.classList.toggle('show');
-});
-
-document.addEventListener('click', () => {
-  dropdownMenu.classList.remove('show');
-});
-
-document.getElementById('btn-menu-save')?.addEventListener('click', () => {
-  triggerAutoSave();
-  showToast('💾 Proyecto guardado en memoria local del navegador');
-});
-
-const fileImportJson = document.getElementById('file-import-json') as HTMLInputElement;
-document.getElementById('btn-menu-import')?.addEventListener('click', () => {
-  fileImportJson.click();
-});
-
-fileImportJson.addEventListener('change', () => {
-  const file = fileImportJson.files?.[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const data = JSON.parse(e.target?.result as string);
-      if (data.rooms && Array.isArray(data.rooms)) {
-        rooms = data.rooms;
-        connections = data.connections || [];
-        props = data.props || [];
-        selectedRoomId = rooms.length > 0 ? rooms[0].id : null;
-        selectedPropId = null;
-        rebuildScenario();
-        app.audio.playSuccess();
-        showToast(`¡Proyecto "${data.name || file.name}" cargado!`);
-      }
-    } catch {
-      alert('Archivo JSON no válido.');
-    }
-  };
-  reader.readAsText(file);
-});
-
-document.getElementById('btn-menu-empty')?.addEventListener('click', () => {
-  if (confirm('¿Deseas reiniciar la escena a un lienzo completamente en blanco?')) {
-    rooms = [];
-    connections = [];
-    props = [];
-    selectedRoomId = null;
-    selectedPropId = null;
-    rebuildScenario();
-    app.resetCamera([0, 22, 22], [0, 0, 0]);
-    localStorage.removeItem('vxr_studio_autosave');
-    showToast('Lienzo en blanco creado');
-  }
-});
-
-let isMuted = false;
-document.getElementById('btn-menu-sound')?.addEventListener('click', () => {
-  isMuted = app.audio.toggleMute();
-  document.getElementById('lbl-sound-status')!.textContent = isMuted ? 'MUTE' : 'ON';
-  showToast(isMuted ? '🔇 Audio silenciado' : '🔊 Audio activado');
-});
-
-// =============================================================================
-// Export Engine (TypeScript, HTML Standalone, Declarative JSON)
-// =============================================================================
-const exportModal = document.getElementById('export-modal') as HTMLElement;
-const btnExport = document.getElementById('btn-export') as HTMLButtonElement;
-const btnCloseExport = document.getElementById('btn-close-export') as HTMLButtonElement;
-const exportCodeDisplay = document.getElementById('export-code-display') as HTMLElement;
-let activeExportTab: 'ts' | 'html' | 'json' = 'ts';
-
-btnExport.addEventListener('click', () => {
-  app.audio.playClick();
-  updateExportDisplay();
-  exportModal.classList.add('active');
-});
-
-btnCloseExport.addEventListener('click', () => {
-  exportModal.classList.remove('active');
-});
-
-document.querySelectorAll('[data-export-tab]').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('[data-export-tab]').forEach((b) => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeExportTab = btn.getAttribute('data-export-tab') as any;
-    updateExportDisplay();
-  });
-});
-
-function generateTSCode(): string {
-  let code = `// =====================================================================\n`;
-  code += `// EXPERIENCIA CREADA CON VXR STUDIO\n`;
-  code += `// Framework: VXR (High-Level WebXR & Three.js)\n`;
-  code += `// =====================================================================\n\n`;
-  code += `import * as THREE from 'three';\n`;
-  code += `import { XRApp } from 'vxr';\n\n`;
-  code += `const app = new XRApp({\n`;
-  code += `  container: '#app',\n`;
-  code += `  enableVR: true,\n`;
-  code += `  autoVRButton: true,\n`;
-  code += `  enableShadows: true,\n`;
-  code += `  pixelRatioCap: 1.25,\n`;
-  code += `});\n\n`;
-  code += `const scenario = app.createScenario('Mi Escenario VXR');\n\n`;
-
-  for (const r of rooms) {
-    code += `scenario.addRoom({\n`;
-    code += `  id: '${r.id}',\n`;
-    code += `  name: '${r.name}',\n`;
-    code += `  theme: '${r.theme}',\n`;
-    code += `  center: [${r.center.join(', ')}],\n`;
-    code += `  dimensions: { width: ${r.dimensions.width}, depth: ${r.dimensions.depth}, height: ${r.dimensions.height} },\n`;
-    code += `  doors: ${JSON.stringify(r.doors)},\n`;
-    code += `});\n\n`;
-  }
-
-  for (const c of connections) {
-    code += `scenario.connectRooms('${c.fromRoomId}', '${c.fromWall}', '${c.toRoomId}', '${c.toWall}', { width: ${c.width}, height: ${c.height} });\n`;
-  }
-  code += `\n`;
-
-  for (const p of props) {
-    const parentRoom = rooms.find((r) => r.id === p.roomId);
-    const x = ((parentRoom?.center[0] || 0) + p.relX).toFixed(2);
-    const y = p.relY.toFixed(2);
-    const z = ((parentRoom?.center[2] || 0) + p.relZ).toFixed(2);
-    const varName = `obj_${p.id.replace(/-/g, '_')}`;
-
-    code += `// Objeto: ${p.name} (${p.category} / ${p.subtype})\n`;
-    if (p.subtype === 'frame_art') {
-      const w = p.frameWidth || 2.2;
-      const h = p.frameHeight || 1.6;
-      code += `const ${varName} = new THREE.Group();\n`;
-      code += `const border_${varName} = new THREE.Mesh(\n`;
-      code += `  new THREE.BoxGeometry(${w}, ${h}, 0.08),\n`;
-      code += `  new THREE.MeshStandardMaterial({ color: '${p.color}', metalness: 0.6, roughness: 0.35 })\n`;
-      code += `);\n`;
-      code += `${varName}.add(border_${varName});\n`;
-      code += `const matting_${varName} = new THREE.Mesh(\n`;
-      code += `  new THREE.BoxGeometry(${(w - 0.2).toFixed(2)}, ${(h - 0.2).toFixed(2)}, 0.085),\n`;
-      code += `  new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.9 })\n`;
-      code += `);\n`;
-      code += `${varName}.add(matting_${varName});\n`;
-      code += `const artMat_${varName} = new THREE.MeshStandardMaterial({ roughness: 0.3 });\n`;
-      if (p.imageUrl) {
-        code += `new THREE.TextureLoader().load('${p.imageUrl}', (tex) => {\n`;
-        code += `  tex.colorSpace = THREE.SRGBColorSpace;\n`;
-        code += `  artMat_${varName}.map = tex;\n`;
-        code += `  artMat_${varName}.needsUpdate = true;\n`;
-        code += `});\n`;
-      }
-      code += `const artPlane_${varName} = new THREE.Mesh(\n`;
-      code += `  new THREE.PlaneGeometry(${(w - 0.38).toFixed(2)}, ${(h - 0.38).toFixed(2)}),\n`;
-      code += `  artMat_${varName}\n`;
-      code += `);\n`;
-      code += `artPlane_${varName}.position.z = 0.046;\n`;
-      code += `${varName}.add(artPlane_${varName});\n`;
-      code += `${varName}.position.set(${x}, ${y}, ${z});\n`;
-      code += `${varName}.rotation.set(${((p.rotX * Math.PI) / 180).toFixed(3)}, ${((p.rotY * Math.PI) / 180).toFixed(3)}, ${((p.rotZ * Math.PI) / 180).toFixed(3)});\n`;
-      code += `app.scene.nativeScene.add(${varName});\n\n`;
-    } else if (p.subtype === 'screen_video') {
-      code += `const ${varName} = new THREE.Mesh(\n`;
-      code += `  new THREE.BoxGeometry(2.6, 1.5, 0.08),\n`;
-      code += `  new THREE.MeshStandardMaterial({ color: 0x070a12, roughness: 0.4, metalness: 0.8 })\n`;
-      code += `);\n`;
-      code += `${varName}.position.set(${x}, ${y}, ${z});\n`;
-      code += `${varName}.rotation.set(${((p.rotX * Math.PI) / 180).toFixed(3)}, ${((p.rotY * Math.PI) / 180).toFixed(3)}, ${((p.rotZ * Math.PI) / 180).toFixed(3)});\n`;
-      code += `${varName}.userData = { videoUrl: '${p.videoUrl || ''}' };\n`;
-      code += `app.scene.nativeScene.add(${varName});\n\n`;
-    } else if (p.subtype === 'billboard_floating') {
-      code += `const ${varName} = new THREE.Mesh(\n`;
-      code += `  new THREE.BoxGeometry(2.8, 1.3, 0.04),\n`;
-      code += `  new THREE.MeshBasicMaterial({ color: '${p.color}' })\n`;
-      code += `);\n`;
-      code += `${varName}.position.set(${x}, ${y}, ${z});\n`;
-      code += `${varName}.rotation.set(${((p.rotX * Math.PI) / 180).toFixed(3)}, ${((p.rotY * Math.PI) / 180).toFixed(3)}, ${((p.rotZ * Math.PI) / 180).toFixed(3)});\n`;
-      code += `${varName}.userData = { linkUrl: '${p.linkUrl || ''}', text: '${p.text || p.name}' };\n`;
-      code += `app.scene.nativeScene.add(${varName});\n\n`;
-    } else {
-      code += `const ${varName} = new THREE.Mesh(\n`;
-      code += `  new THREE.BoxGeometry(1.2, 1.2, 1.2),\n`;
-      code += `  new THREE.MeshStandardMaterial({ color: '${p.color}' })\n`;
-      code += `);\n`;
-      code += `${varName}.position.set(${x}, ${y}, ${z});\n`;
-      code += `${varName}.rotation.set(${((p.rotX * Math.PI) / 180).toFixed(3)}, ${((p.rotY * Math.PI) / 180).toFixed(3)}, ${((p.rotZ * Math.PI) / 180).toFixed(3)});\n`;
-      code += `app.scene.nativeScene.add(${varName});\n\n`;
+    if (inputDir.lengthSq() > 0.001) {
+      inputDir.normalize().multiplyScalar(4.5 * delta);
+      playerPos.add(inputDir);
+      app.camera.position.copy(playerPos);
     }
   }
 
-  code += `app.start();\n`;
-  return code;
-}
-
-function generateHTMLCode(): string {
-  const ts = generateTSCode();
-  return `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Experiencia VXR Studio</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body, #app { width: 100%; height: 100%; overflow: hidden; background: #050811; }
-  </style>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.174.0/build/three.min.js"></script>
-</head>
-<body>
-  <div id="app"></div>
-  <script type="module">
-    console.log("¡Experiencia VXR cargada!");
-    ${ts.replace(/import \* as THREE from 'three';/, '// Three.js vía CDN').replace(/import { XRApp } from 'vxr';/, '// Framework VXR Core')}
-  </script>
-</body>
-</html>`;
-}
-
-function generateJSONCode(): string {
-  return JSON.stringify({ name: 'VXR Studio Export', version: '2.0.0', rooms, connections, props }, null, 2);
-}
-
-function updateExportDisplay(): void {
-  if (activeExportTab === 'ts') exportCodeDisplay.textContent = generateTSCode();
-  else if (activeExportTab === 'html') exportCodeDisplay.textContent = generateHTMLCode();
-  else exportCodeDisplay.textContent = generateJSONCode();
-}
-
-document.getElementById('btn-copy-code')?.addEventListener('click', () => {
-  const code = exportCodeDisplay.textContent || '';
-  navigator.clipboard.writeText(code).then(() => showToast('¡Código copiado al portapapeles! 🚀'));
-});
-
-document.getElementById('btn-download-file')?.addEventListener('click', () => {
-  let content = '';
-  let filename = '';
-  let mime = 'text/plain';
-
-  if (activeExportTab === 'ts') { content = generateTSCode(); filename = 'experiencia-vxr.ts'; mime = 'text/typescript'; }
-  else if (activeExportTab === 'html') { content = generateHTMLCode(); filename = 'experiencia-vxr.html'; mime = 'text/html'; }
-  else { content = generateJSONCode(); filename = 'escenario-vxr.json'; mime = 'application/json'; }
-
-  const blob = new Blob([content], { type: mime });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-  showToast(`¡Archivo "${filename}" descargado!`);
-});
-
-// Toast notification helper
-const toastEl = document.getElementById('toast') as HTMLElement;
-const toastMsg = document.getElementById('toast-msg') as HTMLElement;
-let toastTimeout: any;
-
-function showToast(msg: string): void {
-  toastMsg.textContent = msg;
-  toastEl.style.display = 'flex';
-  clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => { toastEl.style.display = 'none'; }, 2800);
-}
-
-// =============================================================================
-// Welcome Modal Controller (2 Options: Learn vs Skip)
-// =============================================================================
-const welcomeModal = document.getElementById('welcome-modal') as HTMLElement;
-const btnCloseWelcome = document.getElementById('btn-close-welcome') as HTMLButtonElement;
-const btnWelcomeLearn = document.getElementById('btn-welcome-learn') as HTMLElement;
-const btnWelcomeSkip = document.getElementById('btn-welcome-skip') as HTMLElement;
-const chkWelcomeDismiss = document.getElementById('chk-welcome-dismiss') as HTMLInputElement;
-
-function showWelcomeIfNeeded(): void {
-  const dismissed = localStorage.getItem('vxr_studio_welcome_dismissed');
-  if (!dismissed && welcomeModal) {
-    welcomeModal.classList.add('active');
-  }
-}
-
-function dismissWelcome(): void {
-  if (chkWelcomeDismiss?.checked) {
-    localStorage.setItem('vxr_studio_welcome_dismissed', 'true');
-  }
-  welcomeModal?.classList.remove('active');
-}
-
-btnCloseWelcome?.addEventListener('click', dismissWelcome);
-welcomeModal?.addEventListener('click', (e) => {
-  if (e.target === welcomeModal) dismissWelcome();
-});
-
-btnWelcomeSkip?.addEventListener('click', () => {
-  dismissWelcome();
-  app.audio.playClick();
-  showToast('🚀 ¡Bienvenido al lienzo de diseño libre!');
-});
-
-btnWelcomeLearn?.addEventListener('click', () => {
-  dismissWelcome();
-  startTutorial();
+  // Update Orientation Gizmo & Minimap
+  drawOrientationGizmo();
+  drawMinimap();
 });
 
 // =============================================================================
-// Guided Interactive Tutorial Controller (6 Real Steps on Live 3D Scene)
-// =============================================================================
-const tutorialCard = document.getElementById('tutorial-card') as HTMLElement;
-const tutStepBadge = document.getElementById('tut-step-badge') as HTMLElement;
-const tutProgressFill = document.getElementById('tut-progress-fill') as HTMLElement;
-const tutHeadline = document.getElementById('tut-headline') as HTMLElement;
-const tutDescription = document.getElementById('tut-description') as HTMLElement;
-const btnTutPrev = document.getElementById('btn-tut-prev') as HTMLButtonElement;
-const btnTutAuto = document.getElementById('btn-tut-auto') as HTMLButtonElement;
-const btnTutNext = document.getElementById('btn-tut-next') as HTMLButtonElement;
-const btnTutRestart = document.getElementById('btn-tut-restart') as HTMLButtonElement;
-const btnTutClose = document.getElementById('btn-tut-close') as HTMLButtonElement;
-
-interface TutorialStep {
-  title: string;
-  headline: string;
-  description: string;
-  targetSelector?: string;
-  validate: () => boolean;
-  autoComplete: () => void;
-}
-
-let currentTutStepIndex = 0;
-let currentHighlightedEl: HTMLElement | null = null;
-
-function clearTutorialHighlight(): void {
-  if (currentHighlightedEl) {
-    currentHighlightedEl.classList.remove('tutorial-target-highlight');
-    currentHighlightedEl = null;
-  }
-}
-
-function setTutorialHighlight(selector?: string): void {
-  clearTutorialHighlight();
-  if (!selector) return;
-  const el = document.querySelector(selector) as HTMLElement;
-  if (el) {
-    el.classList.add('tutorial-target-highlight');
-    currentHighlightedEl = el;
-    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-}
-
-const TUTORIAL_STEPS: TutorialStep[] = [
-  {
-    title: 'Paso 1 de 6',
-    headline: '1. Estructura y Espacio 3D',
-    description: 'VXR Studio organiza las experiencias en salas 3D. Pulsa "＋ Añadir Sala al Nivel" para crear tu primera sala en el centro del escenario y comenzar tu diseño.',
-    targetSelector: '#btn-add-room-dialog',
-    validate: () => rooms.length > 0 && selectedRoomId !== null,
-    autoComplete: () => {
-      if (rooms.length === 0) {
-        rooms.push({
-          id: 'room-main',
-          name: 'Sala Principal',
-          theme: 'gallery',
-          dimensions: { width: 14, depth: 10, height: 4 },
-          center: [0, 0, 0],
-          doors: [],
-          spawnPoint: [0, 1.6, 0],
-        });
-        selectedRoomId = 'room-main';
-        rebuildScenario();
-      } else {
-        selectRoom(rooms[0].id);
-      }
-      showToast('✓ Sala Principal creada en el centro del escenario');
-    },
-  },
-  {
-    title: 'Paso 2 de 6',
-    headline: '2. Navegación de Cámara 3D',
-    description: 'Aprende a moverte: Arrastra con clic izquierdo para orbitar, gira la rueda del ratón para zoom, y mantén el botón derecho para desplazamiento lateral (pan). Pulsa 🏠 en la barra inferior para centrar la cámara.',
-    targetSelector: '.viewport-bottom-bar',
-    validate: () => true,
-    autoComplete: () => {
-      const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
-      const cx = activeRoom ? activeRoom.center[0] : 0;
-      const cz = activeRoom ? activeRoom.center[2] : 0;
-      app.resetCamera([cx, 18, cz + 16], [cx, 0, cz]);
-      showToast('🏠 Vista general de la cámara centrada');
-    },
-  },
-  {
-    title: 'Paso 3 de 6',
-    headline: '3. Añadir Marco de Imagen',
-    description: 'Ve a la pestaña "Exposición" en el catálogo de objetos de la izquierda y haz clic en "Marco de Imagen". Se generará un marco tridimensional biselado con paspartú.',
-    targetSelector: '[data-category="exhibition"]',
-    validate: () => props.some((p) => p.subtype === 'frame_art'),
-    autoComplete: () => {
-      document.querySelectorAll('.category-pill').forEach((p) => p.classList.remove('active'));
-      const pill = document.querySelector('[data-category="exhibition"]') as HTMLElement;
-      if (pill) pill.classList.add('active');
-      activeCategory = 'exhibition';
-      renderAssetCatalog();
-
-      let art = props.find((p) => p.subtype === 'frame_art');
-      if (!art) {
-        const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
-        const roomId = activeRoom ? activeRoom.id : '';
-        const depth = activeRoom ? activeRoom.dimensions.depth : 10;
-        art = {
-          id: `prop-${Date.now().toString(36)}`,
-          roomId,
-          category: 'exhibition',
-          subtype: 'frame_art',
-          name: 'Obra Maestra 01',
-          relX: 0,
-          relY: 2.0,
-          relZ: -depth / 2 + 0.15,
-          rotX: 0,
-          rotY: 0,
-          rotZ: 0,
-          scaleX: 1,
-          scaleY: 1,
-          scaleZ: 1,
-          color: '#d4af37',
-          frameWidth: 2.4,
-          frameHeight: 1.8,
-        };
-        props.push(art);
-        spawnPropMesh(art);
-      }
-      selectProp(art.id);
-      focusSelectedProp();
-      showToast('🖼️ Marco de Imagen colocado en el escenario');
-    },
-  },
-  {
-    title: 'Paso 4 de 6',
-    headline: '4. Configurar Imagen de la Obra',
-    description: 'En el panel derecho "Propiedades", introduce una URL de imagen o pulsa "📁 Subir Archivo" para mostrar tu fotografía o ilustración en el marco 3D.',
-    targetSelector: '#panel-properties',
-    validate: () => {
-      const art = props.find((p) => p.subtype === 'frame_art');
-      return !!(art && art.imageUrl);
-    },
-    autoComplete: () => {
-      let art = props.find((p) => p.subtype === 'frame_art');
-      if (!art) {
-        TUTORIAL_STEPS[2].autoComplete();
-        art = props.find((p) => p.subtype === 'frame_art')!;
-      }
-      art.imageUrl = 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=1000&auto=format&fit=crop';
-      art.name = 'Retrato Clásico en Óleo';
-      propImageUrl.value = art.imageUrl;
-      const mesh = propMeshMap.get(art.id);
-      if (mesh) {
-        app.scene.nativeScene.remove(mesh);
-        const newMesh = spawnPropMesh(art);
-        if (activeTool !== 'select') transformControls.attach(newMesh);
-      }
-      selectProp(art.id);
-      showToast('🎨 ¡Imagen de alta resolución cargada en el marco!');
-      triggerAutoSave();
-    },
-  },
-  {
-    title: 'Paso 5 de 6',
-    headline: '5. Pantalla de Video & Anuncios',
-    description: 'Enriquece tu nivel multimedia: añade una "Pantalla de Video" (con enlace a YouTube o MP4) o un "Anuncio Flotante" con efecto neón y enlace interactivo.',
-    targetSelector: '[data-category="exhibition"]',
-    validate: () => props.some((p) => p.subtype === 'screen_video' || p.subtype === 'billboard_floating'),
-    autoComplete: () => {
-      const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
-      const roomId = activeRoom ? activeRoom.id : '';
-      const depth = activeRoom ? activeRoom.dimensions.depth : 10;
-      if (!props.some((p) => p.subtype === 'screen_video')) {
-        const videoProp: StudioPropDef = {
-          id: `prop-${Date.now().toString(36)}_vid`,
-          roomId,
-          category: 'exhibition',
-          subtype: 'screen_video',
-          name: 'Pantalla Principal XR',
-          relX: -3.5,
-          relY: 1.5,
-          relZ: -depth / 2 + 0.8,
-          rotX: 0,
-          rotY: 15,
-          rotZ: 0,
-          scaleX: 1,
-          scaleY: 1,
-          scaleZ: 1,
-          color: '#0084ff',
-          videoUrl: 'https://www.youtube.com/watch?v=k1BneeJTDcU',
-        };
-        props.push(videoProp);
-        spawnPropMesh(videoProp);
-      }
-      if (!props.some((p) => p.subtype === 'billboard_floating')) {
-        const billboardProp: StudioPropDef = {
-          id: `prop-${Date.now().toString(36)}_bb`,
-          roomId,
-          category: 'exhibition',
-          subtype: 'billboard_floating',
-          name: 'Cartelera Holográfica',
-          text: 'VXR CORE EXPERIENCE 2026',
-          linkUrl: 'https://github.com/Vickman123/Framework-XVR',
-          relX: 3.2,
-          relY: 2.4,
-          relZ: -depth / 2 + 0.8,
-          rotX: 0,
-          rotY: -15,
-          rotZ: 0,
-          scaleX: 1,
-          scaleY: 1,
-          scaleZ: 1,
-          color: '#38bdf8',
-        };
-        props.push(billboardProp);
-        spawnPropMesh(billboardProp);
-      }
-      showToast('📺 Pantalla de video y anuncio flotante colocados');
-      triggerAutoSave();
-    },
-  },
-  {
-    title: 'Paso 6 de 6',
-    headline: '6. Inmersión 3D & Meta Quest',
-    description: '¡Tu sala interactiva está lista! Pulsa "▷ Probar 3D" para caminar en primera persona con colisiones, o entra en WebXR si dispones de unas Meta Quest. Haz clic sobre las obras para abrirlas en Lightbox o reproducir el video.',
-    targetSelector: '#btn-test-3d',
-    validate: () => isFirstPerson,
-    autoComplete: () => {
-      toggleFirstPersonMode(true);
-      showToast('🚶 ¡Caminando por tu sala 3D! Haz clic en los cuadros para interactuar.');
-    },
-  },
-];
-
-function renderTutorialStep(): void {
-  const step = TUTORIAL_STEPS[currentTutStepIndex];
-  if (!step) return;
-
-  tutStepBadge.textContent = step.title;
-  tutProgressFill.style.width = `${((currentTutStepIndex + 1) / TUTORIAL_STEPS.length) * 100}%`;
-  tutHeadline.textContent = step.headline;
-  tutDescription.textContent = step.description;
-
-  btnTutPrev.disabled = currentTutStepIndex === 0;
-  btnTutPrev.style.opacity = currentTutStepIndex === 0 ? '0.4' : '1';
-
-  if (currentTutStepIndex === TUTORIAL_STEPS.length - 1) {
-    btnTutNext.textContent = '¡Finalizar Tutorial! 🎉';
-  } else {
-    btnTutNext.textContent = 'Validar & Continuar →';
-  }
-
-  setTutorialHighlight(step.targetSelector);
-}
-
-function startTutorial(): void {
-  currentTutStepIndex = 0;
-  tutorialCard.style.display = 'block';
-  renderTutorialStep();
-  app.audio.playClick();
-  showToast('🎓 Tutorial interactivo iniciado');
-}
-
-function closeTutorial(): void {
-  tutorialCard.style.display = 'none';
-  clearTutorialHighlight();
-  showToast('Tutorial cerrado. Puedes reabrirlo con el botón "Tutorial"');
-}
-
-btnTutRestart?.addEventListener('click', () => {
-  currentTutStepIndex = 0;
-  renderTutorialStep();
-  app.audio.playClick();
-  showToast('🔄 Tutorial reiniciado al paso 1');
-});
-
-btnTutClose?.addEventListener('click', closeTutorial);
-
-btnTutPrev?.addEventListener('click', () => {
-  if (currentTutStepIndex > 0) {
-    currentTutStepIndex--;
-    renderTutorialStep();
-    app.audio.playClick();
-  }
-});
-
-btnTutAuto?.addEventListener('click', () => {
-  const step = TUTORIAL_STEPS[currentTutStepIndex];
-  if (step) {
-    step.autoComplete();
-    app.audio.playSuccess();
-    if (currentTutStepIndex < TUTORIAL_STEPS.length - 1) {
-      setTimeout(() => {
-        currentTutStepIndex++;
-        renderTutorialStep();
-      }, 700);
-    }
-  }
-});
-
-btnTutNext?.addEventListener('click', () => {
-  if (currentTutStepIndex === TUTORIAL_STEPS.length - 1) {
-    closeTutorial();
-    app.audio.playSuccess();
-    showToast('🎉 ¡Felicitaciones! Has completado el tutorial de VXR Studio.');
-    return;
-  }
-
-  const step = TUTORIAL_STEPS[currentTutStepIndex];
-  const isValid = step.validate();
-  if (isValid) {
-    currentTutStepIndex++;
-    renderTutorialStep();
-    app.audio.playSuccess();
-  } else {
-    showToast('💡 Acción validada. Avanzando al siguiente paso...');
-    currentTutStepIndex++;
-    renderTutorialStep();
-  }
-});
-
-document.getElementById('btn-top-tutorial')?.addEventListener('click', startTutorial);
-document.getElementById('btn-menu-tutorial')?.addEventListener('click', () => {
-  dropdownMenu.classList.remove('show');
-  startTutorial();
-});
-
-// =============================================================================
-// App Startup (Restore auto-save if present, build initial scenario, show welcome)
+// App Startup
 // =============================================================================
 restoreFromAutoSave();
-renderAssetCatalog();
 rebuildScenario();
 app.start();
-showWelcomeIfNeeded();
+
+// Show welcome dialog on first visit
+const dismissed = localStorage.getItem('vxr_studio_welcome_dismissed');
+if (!dismissed && welcomeModal) {
+  welcomeModal.classList.add('active');
+}
