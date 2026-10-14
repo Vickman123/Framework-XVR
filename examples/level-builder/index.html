@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>VXR — Creador de Niveles & Experiencias (Workshop Studio)</title>
+  <title>VXR Studio — Editor Profesional de Escenas & Entornos 3D/XR</title>
   <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="../favicon-180x180.png" />
@@ -15,7 +15,7 @@
   <style>
     :root {
       --vxr-bg-dark: #050811;
-      --vxr-bg-surface: rgba(13, 19, 36, 0.85);
+      --vxr-bg-surface: rgba(13, 19, 36, 0.88);
       --vxr-bg-card: rgba(15, 23, 42, 0.75);
       --vxr-border: rgba(255, 255, 255, 0.08);
       --vxr-border-accent: rgba(56, 189, 248, 0.35);
@@ -42,7 +42,7 @@
       left: 0;
       right: 0;
       height: 56px;
-      background: rgba(5, 8, 17, 0.85);
+      background: rgba(5, 8, 17, 0.88);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--vxr-border);
@@ -99,11 +99,11 @@
     .top-actions {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .top-btn {
-      padding: 7px 14px;
+      padding: 7px 12px;
       border-radius: 8px;
       font-size: 12px;
       font-weight: 700;
@@ -123,6 +123,18 @@
       color: #fff;
     }
 
+    .top-btn-vr {
+      background: rgba(168, 85, 247, 0.15);
+      border-color: rgba(168, 85, 247, 0.4);
+      color: #c084fc;
+    }
+    .top-btn-vr:hover {
+      background: rgba(168, 85, 247, 0.3);
+      border-color: #a855f7;
+      color: #fff;
+      box-shadow: 0 0 16px rgba(168, 85, 247, 0.35);
+    }
+
     .top-btn-primary {
       background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%);
       color: #fff;
@@ -139,8 +151,8 @@
       position: fixed;
       top: 68px;
       left: 16px;
-      bottom: 20px;
-      width: 360px;
+      bottom: 80px;
+      width: 370px;
       background: var(--vxr-bg-surface);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
@@ -155,20 +167,19 @@
     }
 
     .studio-sidebar.collapsed {
-      transform: translateX(-390px);
+      transform: translateX(-400px);
     }
 
     .sidebar-tabs {
-      display: flex;
-      align-items: center;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
       border-bottom: 1px solid var(--vxr-border);
       background: rgba(15, 23, 42, 0.95);
     }
 
     .tab-btn {
-      flex: 1;
-      padding: 12px 6px;
-      font-size: 11px;
+      padding: 10px 4px;
+      font-size: 10.5px;
       font-weight: 700;
       letter-spacing: 0.02em;
       color: var(--vxr-text-dim);
@@ -204,7 +215,7 @@
     }
 
     .section-title {
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 800;
       letter-spacing: 0.06em;
       text-transform: uppercase;
@@ -218,40 +229,37 @@
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 6px;
     }
-
     .form-label {
-      font-size: 11px;
+      font-size: 11.5px;
       font-weight: 600;
-      color: #94a3b8;
+      color: #cbd5e1;
       display: flex;
+      align-items: center;
       justify-content: space-between;
     }
-    .form-label span.val {
-      color: #38bdf8;
+    .form-label .val {
       font-family: var(--font-mono);
-      font-weight: 700;
+      color: #38bdf8;
+      font-size: 11px;
     }
-
     .form-input, .form-select, .form-textarea {
       width: 100%;
-      background: rgba(15, 23, 42, 0.75);
-      border: 1px solid rgba(56, 189, 248, 0.25);
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--vxr-border);
       border-radius: 8px;
       padding: 8px 12px;
-      color: #fff;
-      font-size: 12px;
+      color: #f8fafc;
       font-family: inherit;
+      font-size: 12.5px;
+      outline: none;
       transition: all 0.2s;
     }
     .form-input:focus, .form-select:focus, .form-textarea:focus {
-      outline: none;
       border-color: #38bdf8;
-      box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
-      background: rgba(30, 41, 59, 0.9);
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
     }
-
     .form-range {
       width: 100%;
       accent-color: #38bdf8;
@@ -259,202 +267,162 @@
     }
 
     .btn-action {
-      width: 100%;
       padding: 10px 14px;
       border-radius: 8px;
-      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-      border: 1px solid rgba(56, 189, 248, 0.4);
-      color: #fff;
-      font-size: 12px;
+      font-size: 12.5px;
       font-weight: 700;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 6px;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+      color: #fff;
       font-family: inherit;
       transition: all 0.2s;
-      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
     }
     .btn-action:hover {
-      background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
+      filter: brightness(1.1);
       transform: translateY(-1px);
     }
-
     .btn-secondary {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(15, 23, 42, 0.8);
       border-color: var(--vxr-border);
       color: #cbd5e1;
-      box-shadow: none;
     }
     .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(56, 189, 248, 0.4);
+      background: rgba(30, 41, 59, 0.9);
       color: #fff;
     }
 
     .items-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
       max-height: 180px;
       overflow-y: auto;
+      padding-right: 4px;
     }
 
     .item-card {
       background: rgba(15, 23, 42, 0.6);
       border: 1px solid var(--vxr-border);
       border-radius: 8px;
-      padding: 8px 12px;
+      padding: 8px 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 8px;
+      cursor: pointer;
       transition: all 0.2s;
     }
     .item-card:hover {
-      border-color: rgba(56, 189, 248, 0.4);
-      background: rgba(30, 41, 59, 0.7);
+      background: rgba(56, 189, 248, 0.08);
+      border-color: rgba(56, 189, 248, 0.3);
     }
     .item-card.active {
+      background: rgba(56, 189, 248, 0.15);
       border-color: #38bdf8;
-      background: rgba(56, 189, 248, 0.12);
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
     }
 
     .item-info {
       display: flex;
       flex-direction: column;
       gap: 2px;
+      overflow: hidden;
     }
-    .item-title {
+    .item-name {
       font-size: 12px;
       font-weight: 700;
-      color: #fff;
+      color: #f8fafc;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
     }
-    .item-meta {
-      font-size: 10px;
+    .item-sub {
+      font-size: 10.5px;
       color: var(--vxr-text-dim);
       font-family: var(--font-mono);
     }
 
-    .item-del-btn {
-      background: none;
-      border: none;
-      color: #94a3b8;
-      cursor: pointer;
-      font-size: 13px;
-      padding: 4px;
-      border-radius: 4px;
-      transition: all 0.2s;
-    }
-    .item-del-btn:hover {
-      color: #f87171;
-      background: rgba(248, 113, 113, 0.15);
-    }
-
     .placement-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 6px;
     }
     .placement-btn {
-      padding: 6px 4px;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
       background: rgba(15, 23, 42, 0.7);
       border: 1px solid var(--vxr-border);
-      border-radius: 6px;
       color: #cbd5e1;
-      font-size: 10.5px;
-      font-weight: 600;
       cursor: pointer;
-      font-family: inherit;
       transition: all 0.2s;
-      text-align: center;
     }
     .placement-btn:hover {
+      background: rgba(56, 189, 248, 0.15);
       border-color: #38bdf8;
       color: #fff;
-      background: rgba(56, 189, 248, 0.15);
-    }
-
-    /* Toggle Drawer Button */
-    .toggle-drawer-btn {
-      position: fixed;
-      top: 68px;
-      left: 386px;
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid var(--vxr-border);
-      color: #38bdf8;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 95;
-      transition: all 0.25s;
-    }
-    .toggle-drawer-btn:hover {
-      background: rgba(30, 41, 59, 1);
-      border-color: #38bdf8;
-      transform: scale(1.05);
-    }
-    .studio-sidebar.collapsed + .toggle-drawer-btn {
-      left: 16px;
     }
 
     /* Floating Stats Bar */
     .stats-bar {
       position: fixed;
-      bottom: 20px;
+      bottom: 85px;
       right: 20px;
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      background: rgba(13, 19, 36, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--vxr-border);
       border-radius: 12px;
-      padding: 10px 18px;
+      padding: 8px 16px;
       display: flex;
       align-items: center;
-      gap: 20px;
-      z-index: 50;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      gap: 16px;
+      z-index: 80;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
     }
     .stat-item {
       display: flex;
       flex-direction: column;
-      gap: 1px;
+      align-items: center;
+      gap: 2px;
     }
     .stat-val {
-      font-size: 14px;
+      font-family: var(--font-mono);
+      font-size: 13px;
       font-weight: 800;
       color: #38bdf8;
-      font-family: var(--font-mono);
     }
     .stat-lbl {
-      font-size: 10px;
-      color: var(--vxr-text-dim);
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      color: var(--vxr-text-dim);
     }
 
     /* Floating Controls Hint */
     .controls-hint {
       position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      border-radius: 9999px;
-      padding: 8px 18px;
+      top: 68px;
+      right: 20px;
+      background: rgba(13, 19, 36, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--vxr-border);
+      border-radius: 10px;
+      padding: 6px 14px;
       font-size: 11.5px;
-      color: #cbd5e1;
+      color: #94a3b8;
       display: flex;
       align-items: center;
-      gap: 12px;
-      pointer-events: none;
-      z-index: 50;
+      gap: 10px;
+      z-index: 70;
     }
     .controls-hint kbd {
       background: rgba(255, 255, 255, 0.1);
@@ -463,38 +431,207 @@
       padding: 2px 6px;
       font-family: var(--font-mono);
       font-size: 10px;
-      color: #38bdf8;
+      color: #fff;
     }
 
-    /* Modal */
+    /* Toggle Drawer Button */
+    .toggle-drawer-btn {
+      position: fixed;
+      top: 76px;
+      left: 396px;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(13, 19, 36, 0.85);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--vxr-border);
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 95;
+      transition: all 0.3s ease;
+      font-size: 12px;
+    }
+    .toggle-drawer-btn:hover {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: #38bdf8;
+      color: #fff;
+    }
+    .toggle-drawer-btn.collapsed {
+      left: 16px;
+    }
+
+    /* Bottom Quick Shelf - Asset Palette */
+    .quick-shelf {
+      position: fixed;
+      bottom: 16px;
+      left: 396px;
+      right: 20px;
+      background: rgba(13, 19, 36, 0.9);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--vxr-border);
+      border-radius: 14px;
+      padding: 8px 14px;
+      z-index: 85;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: all 0.3s ease;
+    }
+    .quick-shelf.sidebar-collapsed {
+      left: 56px;
+    }
+    .quick-shelf-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #94a3b8;
+    }
+    .shelf-hint {
+      color: var(--vxr-text-dim);
+      font-weight: 500;
+      font-size: 10px;
+    }
+    .quick-shelf-scroll {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .quick-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 11px;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      font-family: inherit;
+    }
+    .quick-chip:hover {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: rgba(56, 189, 248, 0.5);
+      color: #38bdf8;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
+    }
+    .chip-icon { font-size: 14px; }
+    .shelf-separator {
+      width: 1px;
+      height: 20px;
+      background: var(--vxr-border);
+      margin: 0 4px;
+      flex-shrink: 0;
+    }
+
+    /* Object Cards & Badges */
+    .prop-item-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--vxr-border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .prop-item-card:hover {
+      background: rgba(56, 189, 248, 0.08);
+      border-color: rgba(56, 189, 248, 0.3);
+    }
+    .prop-item-card.selected {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: #38bdf8;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+    }
+    .prop-info-col {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+    }
+    .prop-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #f8fafc;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+    .prop-meta {
+      font-size: 10px;
+      color: var(--vxr-text-dim);
+      font-family: var(--font-mono);
+    }
+    .badge-sub {
+      font-size: 9px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      text-transform: uppercase;
+    }
+    .btn-rot-preset {
+      padding: 5px 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-align: center;
+      border-radius: 6px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--vxr-border);
+      color: #cbd5e1;
+      cursor: pointer;
+    }
+    .btn-rot-preset:hover {
+      border-color: #38bdf8;
+      color: #fff;
+    }
+
+    /* Modal Overlay */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(8px);
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 1000;
-      padding: 24px;
-    }
-    .modal-overlay.active {
-      display: flex;
+      z-index: 2000;
+      padding: 20px;
     }
     .modal-box {
       width: 100%;
       max-width: 760px;
       max-height: 85vh;
-      background: #090e1c;
-      border: 1px solid rgba(56, 189, 248, 0.35);
+      background: var(--vxr-bg-surface);
+      border: 1px solid var(--vxr-border-accent);
       border-radius: 18px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
     }
     .modal-header {
-      padding: 16px 22px;
+      padding: 16px 20px;
       border-bottom: 1px solid var(--vxr-border);
       display: flex;
       align-items: center;
@@ -575,10 +712,10 @@
     /* Mobile Joystick */
     #mobile-joystick {
       position: fixed;
-      bottom: 30px;
+      bottom: 90px;
       left: 30px;
-      width: 110px;
-      height: 110px;
+      width: 100px;
+      height: 100px;
       background: rgba(15, 23, 42, 0.5);
       border: 2px solid rgba(56, 189, 248, 0.3);
       border-radius: 50%;
@@ -590,8 +727,8 @@
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 44px;
-      height: 44px;
+      width: 40px;
+      height: 40px;
       background: radial-gradient(circle, #38bdf8 0%, #0284c7 100%);
       border-radius: 50%;
       transform: translate(-50%, -50%);
@@ -602,16 +739,17 @@
     /* Toast */
     #toast {
       position: fixed;
-      bottom: 24px;
-      right: 24px;
+      bottom: 85px;
+      left: 50%;
+      transform: translateX(-50%);
       background: #0f172a;
       border: 1px solid #38bdf8;
       color: #fff;
-      padding: 10px 18px;
+      padding: 10px 20px;
       border-radius: 10px;
       font-size: 12.5px;
       font-weight: 600;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
       display: none;
       align-items: center;
       gap: 8px;
@@ -619,15 +757,16 @@
     }
 
     @media (max-width: 900px) {
-      .studio-sidebar { width: calc(100vw - 32px); max-height: 48vh; bottom: 80px; }
+      .studio-sidebar { width: calc(100vw - 32px); max-height: 45vh; bottom: 85px; }
+      .quick-shelf { left: 16px; right: 16px; }
       .controls-hint { display: none; }
-      .stats-bar { bottom: 10px; right: 10px; padding: 6px 12px; }
+      .stats-bar { display: none; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Toast -->
+  <!-- Toast Notification -->
   <div id="toast">
     <span>✓</span>
     <span id="toast-msg">Mensaje</span>
@@ -640,15 +779,21 @@
         <img src="../vxr-logo.png" alt="VXR" style="height: 22px; width: auto; object-fit: contain; filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.45));" />
         <span>Inicio</span>
       </a>
-      <span class="brand-title">VXR Level Builder</span>
-      <span class="brand-badge">Workshop Tool</span>
+      <span class="brand-title">VXR Studio</span>
+      <span class="brand-badge">Studio XR</span>
     </div>
 
     <div class="top-actions">
       <!-- Camera Toggle -->
-      <button id="btn-camera-mode" class="top-btn" title="Alternar entre modo Editor y Primera Persona">
+      <button id="btn-camera-mode" class="top-btn" title="Alternar entre modo Editor Orbital y Primera Persona">
         <span>🚶</span>
         <span id="cam-mode-text">Modo Paseo (FPS)</span>
+      </button>
+
+      <!-- WebXR VR Test -->
+      <button id="btn-vr-mode" class="top-btn top-btn-vr" title="Probar experiencia inmersiva en Meta Quest (WebXR)">
+        <span>🥽</span>
+        <span>Probar en VR</span>
       </button>
 
       <!-- Preset Templates -->
@@ -659,14 +804,21 @@
         <option value="empty">➕ Plantilla: Lienzo en Blanco</option>
       </select>
 
-      <!-- Sound Toggle -->
-      <button id="btn-sound-toggle" class="top-btn" title="Alternar audio procedural">
-        🔊 Sonido: ON
+      <!-- Import JSON -->
+      <button id="btn-import-project" class="top-btn" title="Importar escenario desde archivo JSON">
+        <span>📂</span>
+        <span>Importar JSON</span>
       </button>
+      <input type="file" id="file-import-json" accept=".json" style="display: none;" />
 
       <!-- Export Project Button -->
       <button id="btn-export-project" class="top-btn top-btn-primary" title="Exportar código y proyecto">
         <span>🚀 Exportar Código</span>
+      </button>
+
+      <!-- Sound Toggle -->
+      <button id="btn-sound-toggle" class="top-btn" title="Alternar audio procedural">
+        🔊 ON
       </button>
     </div>
   </header>
@@ -685,9 +837,17 @@
         <span class="tab-icon">🚪</span>
         <span>Pasillos</span>
       </button>
-      <button class="tab-btn" data-tab="exhibits">
+      <button class="tab-btn" data-tab="objects">
         <span class="tab-icon">📦</span>
-        <span>Exhibidores</span>
+        <span>Objetos</span>
+      </button>
+      <button class="tab-btn" data-tab="inspector">
+        <span class="tab-icon">🛠️</span>
+        <span>Inspector</span>
+      </button>
+      <button class="tab-btn" data-tab="environment">
+        <span class="tab-icon">🎨</span>
+        <span>Entorno</span>
       </button>
       <button class="tab-btn" data-tab="audio">
         <span class="tab-icon">🎵</span>
@@ -819,80 +979,153 @@
       </div>
     </div>
 
-    <!-- TAB 3: EXHIBIDORES & ELEMENTOS -->
-    <div id="tab-content-exhibits" class="sidebar-body" style="display: none;">
+    <!-- TAB 3: OBJETOS & BIBLIOTECA -->
+    <div id="tab-content-objects" class="sidebar-body" style="display: none;">
       <div class="section-title">
-        <span>Exhibidores Interactivos</span>
-        <span id="exhibits-counter-badge" style="color: #38bdf8; font-family: var(--font-mono);">3</span>
+        <span>Elementos en Escenario</span>
+        <span id="objects-counter-badge" style="color: #38bdf8; font-family: var(--font-mono);">0</span>
       </div>
 
-      <div id="exhibits-list" class="items-list">
+      <div id="props-list" class="items-list" style="max-height: 380px;">
         <!-- Rendered dynamically -->
       </div>
 
-      <div style="border-top: 1px solid var(--vxr-border); padding-top: 10px; display: flex; flex-direction: column; gap: 10px;">
-        <div class="section-title">
-          <span>Nuevo Pedestal Interactivo</span>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="exhibit-room">Sala Anfitriona</label>
-          <select id="exhibit-room" class="form-select"></select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="exhibit-title">Título del Elemento</label>
-          <input id="exhibit-title" type="text" class="form-input" value="Artefacto Histórico 3D" />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="exhibit-category">Categoría Temática</label>
-          <input id="exhibit-category" type="text" class="form-input" value="ARQUEOLOGÍA DIGITAL" />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="exhibit-desc">Descripción Pedagógica</label>
-          <textarea id="exhibit-desc" class="form-textarea" rows="2">Digitalizado mediante fotogrametría de alta resolución para inspección inmersiva.</textarea>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="exhibit-color">Color de Pantalla & HUD</label>
-          <select id="exhibit-color" class="form-select">
-            <option value="#38bdf8">Cian Láser (#38bdf8)</option>
-            <option value="#f59e0b">Dorado Ancestral (#f59e0b)</option>
-            <option value="#10b981">Esmeralda Sostenible (#10b981)</option>
-            <option value="#a855f7">Púrpura Cuántico (#a855f7)</option>
-            <option value="#ec4899">Rosa Magenta (#ec4899)</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="exhibit-model-type">Tipo de Modelo 3D</label>
-          <select id="exhibit-model-type" class="form-select">
-            <option value="gem">Gema Holográfica Octaédrica</option>
-            <option value="rings">Anillos de Reactor Giratorio</option>
-            <option value="monolith">Monolito Grabado</option>
-            <option value="custom">Suelta tu archivo .glb</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="exhibit-pos-x">Desplazamiento X: <span id="lbl-ex-x" class="val">0.0m</span></label>
-          <input id="exhibit-pos-x" type="range" class="form-range" min="-6" max="6" step="0.5" value="0" />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="exhibit-pos-z">Desplazamiento Z: <span id="lbl-ex-z" class="val">0.0m</span></label>
-          <input id="exhibit-pos-z" type="range" class="form-range" min="-6" max="6" step="0.5" value="0" />
-        </div>
-
-        <button id="btn-add-exhibit" class="btn-action">
-          ➕ Colocar Exhibidor en Sala
-        </button>
+      <div style="border-top: 1px solid var(--vxr-border); padding-top: 10px;">
+        <p style="font-size: 11.5px; color: var(--vxr-text-dim); line-height: 1.5;">
+          💡 <b>Consejo:</b> Usa la bandeja inferior para añadir mamparas, letreros o focos en 1 clic. Haz clic en cualquier objeto en la vista 3D para editarlo en el Inspector.
+        </p>
       </div>
     </div>
 
-    <!-- TAB 4: AUDIO & EFECTOS -->
+    <!-- TAB 4: INSPECTOR DE OBJETO -->
+    <div id="tab-content-inspector" class="sidebar-body" style="display: none;">
+      <div class="section-title">
+        <span>Inspector de Objeto</span>
+        <span id="inspector-badge" class="brand-badge">Ninguno</span>
+      </div>
+
+      <div id="inspector-empty" style="padding: 24px 12px; text-align: center; color: var(--vxr-text-dim); font-size: 12px; line-height: 1.6;">
+        <span style="font-size: 28px; display: block; margin-bottom: 8px;">🎯</span>
+        Selecciona cualquier objeto en la vista 3D o en la lista de objetos para editar su posición, rotación, texto, color y dimensiones en tiempo real.
+      </div>
+
+      <div id="inspector-fields" style="display: none; flex-direction: column; gap: 12px;">
+        <div class="form-group">
+          <label class="form-label" for="prop-name">Nombre / Etiqueta</label>
+          <input id="prop-name" type="text" class="form-input" />
+        </div>
+
+        <!-- Solo para letreros / rótulos -->
+        <div id="group-prop-text" class="form-group" style="display: none;">
+          <label class="form-label" for="prop-text">Texto del Rótulo 3D (Tiempo Real)</label>
+          <input id="prop-text" type="text" class="form-input" placeholder="Ej. SALA DE CIENCIA" />
+        </div>
+
+        <!-- Posición X y Z -->
+        <div class="form-group">
+          <label class="form-label" for="prop-pos-x">Posición Relativa X: <span id="lbl-prop-x" class="val">0.0m</span></label>
+          <input id="prop-pos-x" type="range" class="form-range" min="-12" max="12" step="0.2" value="0" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="prop-pos-z">Posición Relativa Z: <span id="lbl-prop-z" class="val">0.0m</span></label>
+          <input id="prop-pos-z" type="range" class="form-range" min="-12" max="12" step="0.2" value="0" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="prop-pos-y">Elevación Y: <span id="lbl-prop-y" class="val">0.0m</span></label>
+          <input id="prop-pos-y" type="range" class="form-range" min="0" max="6" step="0.1" value="0" />
+        </div>
+
+        <!-- Rotación Y -->
+        <div class="form-group">
+          <label class="form-label">Giro / Orientación (Rotación Y): <span id="lbl-prop-rot" class="val">0°</span></label>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 6px;">
+            <button class="top-btn btn-rot-preset" data-rot="0">0°</button>
+            <button class="top-btn btn-rot-preset" data-rot="90">90°</button>
+            <button class="top-btn btn-rot-preset" data-rot="180">180°</button>
+            <button class="top-btn btn-rot-preset" data-rot="270">270°</button>
+          </div>
+          <input id="prop-rotation-y" type="range" class="form-range" min="0" max="360" step="5" value="0" />
+        </div>
+
+        <!-- Dimensiones (para mamparas y letreros) -->
+        <div id="group-prop-dims" class="form-group">
+          <label class="form-label" for="prop-width">Ancho del Elemento: <span id="lbl-prop-w" class="val">2.5m</span></label>
+          <input id="prop-width" type="range" class="form-range" min="0.8" max="8.0" step="0.2" value="2.5" />
+          <label class="form-label" for="prop-height" style="margin-top: 6px;">Altura del Elemento: <span id="lbl-prop-h" class="val">2.2m</span></label>
+          <input id="prop-height" type="range" class="form-range" min="0.4" max="4.5" step="0.1" value="2.2" />
+        </div>
+
+        <!-- Color & Acabado -->
+        <div class="form-group">
+          <label class="form-label" for="prop-color-input">Color de Acento / Emisivo</label>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input id="prop-color-input" type="color" value="#38bdf8" style="width: 36px; height: 32px; border: none; border-radius: 6px; cursor: pointer; background: none;" />
+            <select id="prop-color-preset" class="form-select" style="flex: 1;">
+              <option value="#38bdf8">Cian Láser (#38bdf8)</option>
+              <option value="#10b981">Esmeralda (#10b981)</option>
+              <option value="#f59e0b">Dorado Ámbar (#f59e0b)</option>
+              <option value="#a855f7">Púrpura Cuántico (#a855f7)</option>
+              <option value="#ec4899">Rosa Neón (#ec4899)</option>
+              <option value="#f8fafc">Blanco Puro (#f8fafc)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Intensidad (solo para luces) -->
+        <div id="group-prop-intensity" class="form-group" style="display: none;">
+          <label class="form-label" for="prop-intensity">Intensidad Lumínica: <span id="lbl-prop-intensity" class="val">2.0</span></label>
+          <input id="prop-intensity" type="range" class="form-range" min="0.5" max="6.0" step="0.2" value="2.0" />
+        </div>
+
+        <!-- Acciones del Objeto -->
+        <div style="display: flex; gap: 8px; margin-top: 6px;">
+          <button id="btn-duplicate-prop" class="btn-action btn-secondary" style="flex: 1;">
+            📋 Duplicar (+1m)
+          </button>
+          <button id="btn-delete-prop" class="btn-action btn-secondary" style="color: #f87171; border-color: rgba(248, 113, 113, 0.4);" title="Eliminar objeto">
+            🗑️ Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: ENTORNO & ILUMINACIÓN -->
+    <div id="tab-content-environment" class="sidebar-body" style="display: none;">
+      <div class="section-title">
+        <span>Atmósfera & Iluminación</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="env-preset">Preset de Entorno</label>
+        <select id="env-preset" class="form-select">
+          <option value="studio">📸 Estudio Fotográfico (Equilibrado)</option>
+          <option value="daylight">☀️ Galería Diurna (Cálido & Blanco)</option>
+          <option value="dark">🌌 Cyberpunk Night (Alto Contraste)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="env-light-intensity">Intensidad Luz Solar (Key Light): <span id="lbl-light-intensity" class="val">1.2</span></label>
+        <input id="env-light-intensity" type="range" class="form-range" min="0.2" max="3.0" step="0.1" value="1.2" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="env-ambient-intensity">Luz Ambiental: <span id="lbl-ambient-intensity" class="val">0.7</span></label>
+        <input id="env-ambient-intensity" type="range" class="form-range" min="0.1" max="2.0" step="0.1" value="0.7" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="env-shadows">Sombras en Tiempo Real</label>
+        <select id="env-shadows" class="form-select">
+          <option value="true">Activadas (PCF Soft Shadows)</option>
+          <option value="false">Desactivadas (Mayor Rendimiento)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- TAB 6: AUDIO & EFECTOS -->
     <div id="tab-content-audio" class="sidebar-body" style="display: none;">
       <div class="section-title">
         <span>Audio Procedural Web Audio (0 MB)</span>
@@ -911,15 +1144,6 @@
           <button class="top-btn" id="btn-sound-fanfare">🎺 Fanfarria Éxito</button>
         </div>
       </div>
-
-      <div style="border-top: 1px solid var(--vxr-border); padding-top: 12px; margin-top: 10px;">
-        <div class="section-title">
-          <span>Modo Aprendizaje en el Taller</span>
-        </div>
-        <p style="font-size: 11.5px; color: #cbd5e1; line-height: 1.55;">
-          ¡Invita a tus alumnos a pulsar <b>"Exportar Código"</b> para ver cómo se compone su escena en TypeScript y llevarse un archivo HTML listo para abrir en su navegador personal!
-        </p>
-      </div>
     </div>
   </aside>
 
@@ -927,6 +1151,73 @@
   <button id="btn-toggle-drawer" class="toggle-drawer-btn" title="Mostrar/Ocultar herramientas">
     ◀
   </button>
+
+  <!-- Bottom Quick Shelf - Asset Palette -->
+  <nav id="quick-shelf" class="quick-shelf" aria-label="Biblioteca Rápida de Objetos">
+    <div class="quick-shelf-header">
+      <span class="shelf-title">✨ BIBLIOTECA RÁPIDA (CLIC PARA COLOCAR EN SALA ACTIVA)</span>
+      <span class="shelf-hint">Haz clic en cualquier pieza para añadirla y configurarla</span>
+    </div>
+    <div class="quick-shelf-scroll">
+      <!-- Mamparas -->
+      <button class="quick-chip" data-quick-type="partition" data-quick-sub="glass" title="Mampara de Cristal Templado">
+        <span class="chip-icon">🪟</span>
+        <span class="chip-label">Mampara Cristal</span>
+      </button>
+      <button class="quick-chip" data-quick-type="partition" data-quick-sub="wood" title="Mampara de Madera Acústica">
+        <span class="chip-icon">🪵</span>
+        <span class="chip-label">Mampara Madera</span>
+      </button>
+      <button class="quick-chip" data-quick-type="partition" data-quick-sub="neon" title="Mampara Neón Cyberpunk">
+        <span class="chip-icon">⚡</span>
+        <span class="chip-label">Mampara Neón</span>
+      </button>
+      <button class="quick-chip" data-quick-type="partition" data-quick-sub="mesh" title="Mampara Rejilla Industrial">
+        <span class="chip-icon">🏁</span>
+        <span class="chip-label">Mampara Rejilla</span>
+      </button>
+
+      <span class="shelf-separator"></span>
+
+      <!-- Letreros & Rótulos -->
+      <button class="quick-chip" data-quick-type="sign" data-quick-sub="neon_hanging" title="Rótulo 3D Neón Colgante con Texto Personalizable">
+        <span class="chip-icon">🏷️</span>
+        <span class="chip-label">Rótulo Neón</span>
+      </button>
+      <button class="quick-chip" data-quick-type="sign" data-quick-sub="wall_plaque" title="Placa Señalética de Pared">
+        <span class="chip-icon">📌</span>
+        <span class="chip-label">Placa de Pared</span>
+      </button>
+      <button class="quick-chip" data-quick-type="sign" data-quick-sub="totem" title="Tótem Vertical Informativo">
+        <span class="chip-icon">🪧</span>
+        <span class="chip-label">Tótem Señalético</span>
+      </button>
+
+      <span class="shelf-separator"></span>
+
+      <!-- Iluminación -->
+      <button class="quick-chip" data-quick-type="light" data-quick-sub="spot" title="Foco Spot Cenital Orientable">
+        <span class="chip-icon">💡</span>
+        <span class="chip-label">Foco Spot</span>
+      </button>
+      <button class="quick-chip" data-quick-type="light" data-quick-sub="point" title="Luz de Acento Neón Puntual">
+        <span class="chip-icon">🏮</span>
+        <span class="chip-label">Luz Acento</span>
+      </button>
+
+      <span class="shelf-separator"></span>
+
+      <!-- Mobiliario & Arquitectura -->
+      <button class="quick-chip" data-quick-type="exhibit" data-quick-sub="gem" title="Vitrina / Pedestal Interactivo">
+        <span class="chip-icon">📦</span>
+        <span class="chip-label">Vitrina Pedestal</span>
+      </button>
+      <button class="quick-chip" data-quick-type="column" data-quick-sub="pillar" title="Columna Estructural Modular">
+        <span class="chip-icon">🏛️</span>
+        <span class="chip-label">Columna</span>
+      </button>
+    </div>
+  </nav>
 
   <!-- Floating Stats Bar -->
   <div class="stats-bar">
@@ -939,8 +1230,8 @@
       <span class="stat-lbl">Área</span>
     </div>
     <div class="stat-item">
-      <span id="stat-exhibits" class="stat-val">3</span>
-      <span class="stat-lbl">Exhibidores</span>
+      <span id="stat-props" class="stat-val">0</span>
+      <span class="stat-lbl">Objetos</span>
     </div>
     <div class="stat-item">
       <span id="stat-connections" class="stat-val">2</span>
@@ -954,7 +1245,7 @@
     <span>•</span>
     <span><kbd>Ratón</kbd> Mirar</span>
     <span>•</span>
-    <span><kbd>Clic</kbd> Inspeccionar</span>
+    <span><kbd>Clic</kbd> Seleccionar Objeto</span>
     <span>•</span>
     <span><kbd>ESC</kbd> Liberar Cursor</span>
   </div>
@@ -970,7 +1261,7 @@
       <div class="modal-header">
         <div class="modal-title">
           <span>🚀</span>
-          <span>Exportar Proyecto VXR (Listo para Producción)</span>
+          <span>Exportar Proyecto VXR Studio (Listo para Producción)</span>
         </div>
         <button id="btn-close-modal" class="modal-close">✕</button>
       </div>
@@ -987,7 +1278,7 @@
 
       <div class="modal-footer">
         <div style="font-size: 11.5px; color: var(--vxr-text-dim);">
-          Ideal para que los asistentes al taller se lleven su mundo 3D listo para correr.
+          Ideal para publicar en la web o abrir en navegadores de Meta Quest.
         </div>
         <div style="display: flex; gap: 8px;">
           <button id="btn-copy-code" class="top-btn" style="border-color: #38bdf8; color: #38bdf8;">
