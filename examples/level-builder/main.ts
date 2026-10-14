@@ -61,159 +61,20 @@ export interface StudioPropDef {
 }
 
 // =============================================================================
-// Default Scenario Templates
+// Default Scenario Templates (Empty by default for a clean creative canvas)
 // =============================================================================
-const DEFAULT_ROOMS: RoomDef[] = [
-  {
-    id: 'lobby',
-    name: 'Lobby & Recepción Principal',
-    theme: 'gallery',
-    dimensions: { width: 12, depth: 10, height: 3.8 },
-    center: [0, 0, 0],
-    doors: [{ wall: 'north', targetRoomId: 'archaeology', width: 2.6, height: 2.8 }],
-    spawnPoint: [0, 1.6, 2],
-  },
-  {
-    id: 'archaeology',
-    name: 'Sala de Arqueología Prehispánica',
-    theme: 'cozy',
-    dimensions: { width: 14, depth: 12, height: 4.2 },
-    center: [0, 0, -18],
-    doors: [{ wall: 'south', targetRoomId: 'lobby', width: 2.6, height: 2.8 }],
-    spawnPoint: [0, 1.6, -18],
-  },
-];
-
-const DEFAULT_CONNECTIONS: ConnectionDef[] = [
-  {
-    id: 'conn-1',
-    fromRoomId: 'lobby',
-    fromWall: 'north',
-    toRoomId: 'archaeology',
-    toWall: 'south',
-    width: 2.6,
-    height: 3.2,
-  },
-];
-
-const DEFAULT_PROPS: StudioPropDef[] = [
-  {
-    id: 'prop-table-1',
-    roomId: 'lobby',
-    category: 'furniture',
-    subtype: 'table',
-    name: 'Mesa de Centro',
-    relX: -3.0,
-    relY: 0,
-    relZ: 0,
-    rotX: 0,
-    rotY: 0,
-    rotZ: 0,
-    scaleX: 1,
-    scaleY: 1,
-    scaleZ: 1,
-    color: '#78350f',
-  },
-  {
-    id: 'prop-chair-1',
-    roomId: 'lobby',
-    category: 'furniture',
-    subtype: 'chair_lounge',
-    name: 'Sillón Lounge A',
-    relX: -3.0,
-    relY: 0,
-    relZ: -1.2,
-    rotX: 0,
-    rotY: 0,
-    rotZ: 0,
-    scaleX: 1,
-    scaleY: 1,
-    scaleZ: 1,
-    color: '#1e293b',
-  },
-  {
-    id: 'prop-chair-2',
-    roomId: 'lobby',
-    category: 'furniture',
-    subtype: 'chair_lounge',
-    name: 'Sillón Lounge B',
-    relX: -3.0,
-    relY: 0,
-    relZ: 1.2,
-    rotX: 0,
-    rotY: 180,
-    rotZ: 0,
-    scaleX: 1,
-    scaleY: 1,
-    scaleZ: 1,
-    color: '#1e293b',
-  },
-  {
-    id: 'prop-frame-art-1',
-    roomId: 'lobby',
-    category: 'exhibition',
-    subtype: 'frame_art',
-    name: 'Mona Lisa Contemporánea',
-    relX: 2.5,
-    relY: 1.8,
-    relZ: -4.85,
-    rotX: 0,
-    rotY: 0,
-    rotZ: 0,
-    scaleX: 1,
-    scaleY: 1,
-    scaleZ: 1,
-    color: '#d4af37',
-    imageUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=800&auto=format&fit=crop',
-    frameWidth: 2.2,
-    frameHeight: 1.6,
-  },
-  {
-    id: 'prop-screen-1',
-    roomId: 'lobby',
-    category: 'exhibition',
-    subtype: 'screen_video',
-    name: 'Video Demostración WebXR',
-    relX: 4.8,
-    relY: 1.6,
-    relZ: 0,
-    rotX: 0,
-    rotY: -90,
-    rotZ: 0,
-    scaleX: 1,
-    scaleY: 1,
-    scaleZ: 1,
-    color: '#0f172a',
-    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-  },
-  {
-    id: 'prop-sign-1',
-    roomId: 'lobby',
-    category: 'decoration',
-    subtype: 'sign_plaque',
-    name: 'Placa Bienvenida',
-    relX: 0,
-    relY: 2.2,
-    relZ: -4.8,
-    rotX: 0,
-    rotY: 0,
-    rotZ: 0,
-    scaleX: 1,
-    scaleY: 1,
-    scaleZ: 1,
-    color: '#38bdf8',
-    text: 'BIENVENIDOS A VXR STUDIO',
-  },
-];
+const DEFAULT_ROOMS: RoomDef[] = [];
+const DEFAULT_CONNECTIONS: ConnectionDef[] = [];
+const DEFAULT_PROPS: StudioPropDef[] = [];
 
 // =============================================================================
 // Application State
 // =============================================================================
-let rooms: RoomDef[] = JSON.parse(JSON.stringify(DEFAULT_ROOMS));
-let connections: ConnectionDef[] = JSON.parse(JSON.stringify(DEFAULT_CONNECTIONS));
-let props: StudioPropDef[] = JSON.parse(JSON.stringify(DEFAULT_PROPS));
+let rooms: RoomDef[] = [];
+let connections: ConnectionDef[] = [];
+let props: StudioPropDef[] = [];
 
-let selectedRoomId: string = rooms[0].id;
+let selectedRoomId: string | null = null;
 let selectedPropId: string | null = null;
 let activeTool: 'select' | 'translate' | 'rotate' | 'scale' = 'select';
 let activeCategory: StudioPropCategory = 'basic';
@@ -283,13 +144,16 @@ transformControls.addEventListener('change', () => {
   if (!selectedPropId) return;
   const p = props.find((item) => item.id === selectedPropId);
   const mesh = propMeshMap.get(selectedPropId);
-  const parentRoom = rooms.find((r) => r.id === p?.roomId);
+  const parentRoom = p?.roomId ? rooms.find((r) => r.id === p.roomId) : null;
 
-  if (p && mesh && parentRoom) {
+  if (p && mesh) {
+    const cx = parentRoom ? parentRoom.center[0] : 0;
+    const cz = parentRoom ? parentRoom.center[2] : 0;
+
     // Sync mesh transform back to prop data model
-    p.relX = parseFloat((mesh.position.x - parentRoom.center[0]).toFixed(2));
+    p.relX = parseFloat((mesh.position.x - cx).toFixed(2));
     p.relY = parseFloat(mesh.position.y.toFixed(2));
-    p.relZ = parseFloat((mesh.position.z - parentRoom.center[2]).toFixed(2));
+    p.relZ = parseFloat((mesh.position.z - cz).toFixed(2));
 
     p.rotX = parseFloat(THREE.MathUtils.radToDeg(mesh.rotation.x).toFixed(1));
     p.rotY = parseFloat(THREE.MathUtils.radToDeg(mesh.rotation.y).toFixed(1));
@@ -907,10 +771,12 @@ function createDecorationMesh(prop: StudioPropDef): THREE.Object3D {
 }
 
 function spawnPropMesh(prop: StudioPropDef): THREE.Object3D {
-  const parentRoom = rooms.find((r) => r.id === prop.roomId) || rooms[0];
-  const worldX = parentRoom.center[0] + prop.relX;
+  const parentRoom = prop.roomId ? rooms.find((r) => r.id === prop.roomId) : (rooms.length > 0 ? rooms[0] : null);
+  const cx = parentRoom ? parentRoom.center[0] : 0;
+  const cz = parentRoom ? parentRoom.center[2] : 0;
+  const worldX = cx + prop.relX;
   const worldY = prop.relY;
-  const worldZ = parentRoom.center[2] + prop.relZ;
+  const worldZ = cz + prop.relZ;
 
   let mesh: THREE.Object3D;
   if (prop.category === 'basic') {
@@ -1265,8 +1131,11 @@ function applyTransformInputs(): void {
   if (!selectedPropId) return;
   const p = props.find((item) => item.id === selectedPropId);
   const mesh = propMeshMap.get(selectedPropId);
-  const parentRoom = rooms.find((r) => r.id === p?.roomId);
-  if (!p || !mesh || !parentRoom) return;
+  if (!p || !mesh) return;
+
+  const parentRoom = p.roomId ? rooms.find((r) => r.id === p.roomId) : null;
+  const cx = parentRoom ? parentRoom.center[0] : 0;
+  const cz = parentRoom ? parentRoom.center[2] : 0;
 
   p.relX = parseFloat(propPosX.value) || 0;
   p.relY = parseFloat(propPosY.value) || 0;
@@ -1281,7 +1150,7 @@ function applyTransformInputs(): void {
   p.scaleZ = Math.max(0.05, parseFloat(propScaleZ.value) || 1);
 
   // Directly mutate 3D mesh
-  mesh.position.set(parentRoom.center[0] + p.relX, p.relY, parentRoom.center[2] + p.relZ);
+  mesh.position.set(cx + p.relX, p.relY, cz + p.relZ);
   mesh.rotation.set(
     THREE.MathUtils.degToRad(p.rotX),
     THREE.MathUtils.degToRad(p.rotY),
@@ -1752,10 +1621,12 @@ function focusSelectedProp(): void {
 
 // Bottom Camera Floating Bar
 document.getElementById('btn-cam-home')?.addEventListener('click', () => {
-  const activeRoom = rooms.find((r) => r.id === selectedRoomId) || rooms[0];
-  app.resetCamera([activeRoom.center[0], 18, activeRoom.center[2] + 16], [activeRoom.center[0], 0, activeRoom.center[2]]);
+  const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
+  const cx = activeRoom ? activeRoom.center[0] : 0;
+  const cz = activeRoom ? activeRoom.center[2] : 0;
+  app.resetCamera([cx, 18, cz + 16], [cx, 0, cz]);
   app.audio.playClick();
-  showToast('🏠 Vista general de la sala');
+  showToast(activeRoom ? '🏠 Vista general de la sala' : '🏠 Vista general del escenario');
 });
 
 document.getElementById('btn-cam-focus')?.addEventListener('click', () => {
@@ -1778,8 +1649,10 @@ const btnProjOrtho = document.getElementById('btn-proj-ortho') as HTMLButtonElem
 btnProjPersp?.addEventListener('click', () => {
   btnProjPersp.classList.add('active');
   btnProjOrtho.classList.remove('active');
-  const activeRoom = rooms.find((r) => r.id === selectedRoomId) || rooms[0];
-  app.resetCamera([activeRoom.center[0], 18, activeRoom.center[2] + 16], [activeRoom.center[0], 0, activeRoom.center[2]]);
+  const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
+  const cx = activeRoom ? activeRoom.center[0] : 0;
+  const cz = activeRoom ? activeRoom.center[2] : 0;
+  app.resetCamera([cx, 18, cz + 16], [cx, 0, cz]);
   showToast('👁️ Vista en Perspectiva 3D');
 });
 
@@ -1787,8 +1660,10 @@ btnProjOrtho?.addEventListener('click', () => {
   btnProjOrtho.classList.add('active');
   btnProjPersp.classList.remove('active');
   // Position camera directly overhead for 2D top-down floor plan
-  const activeRoom = rooms.find((r) => r.id === selectedRoomId) || rooms[0];
-  app.resetCamera([activeRoom.center[0], 28, activeRoom.center[2]], [activeRoom.center[0], 0, activeRoom.center[2]]);
+  const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
+  const cx = activeRoom ? activeRoom.center[0] : 0;
+  const cz = activeRoom ? activeRoom.center[2] : 0;
+  app.resetCamera([cx, 28, cz], [cx, 0, cz]);
   showToast('📐 Vista Cenital (Planta 2D)');
 });
 
@@ -1863,7 +1738,9 @@ function renderAssetCatalog(): void {
 }
 
 function insertObjectFromCatalog(item: { category: StudioPropCategory; subtype: string; name: string }): void {
-  const activeRoom = rooms.find((r) => r.id === selectedRoomId) || rooms[0];
+  const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
+  const roomId = activeRoom ? activeRoom.id : '';
+  const roomName = activeRoom ? activeRoom.name : 'el lienzo';
 
   const offset = 1.2;
   const relX = parseFloat(((Math.random() - 0.5) * offset).toFixed(2));
@@ -1905,7 +1782,7 @@ function insertObjectFromCatalog(item: { category: StudioPropCategory; subtype: 
 
   const newProp: StudioPropDef = {
     id: `prop-${Date.now().toString(36)}`,
-    roomId: activeRoom.id,
+    roomId,
     category: item.category,
     subtype: item.subtype,
     name: `${item.name}_${props.length + 1}`,
@@ -1932,7 +1809,7 @@ function insertObjectFromCatalog(item: { category: StudioPropCategory; subtype: 
   spawnPropMesh(newProp);
   selectProp(newProp.id);
   app.audio.playSuccess();
-  showToast(`¡${newProp.name} añadido a ${activeRoom.name}!`);
+  showToast(`¡${newProp.name} añadido a ${roomName}!`);
   triggerAutoSave();
 }
 
@@ -1957,6 +1834,19 @@ const btnImportCard = document.getElementById('btn-import-card') as HTMLElement;
   el?.addEventListener('click', () => fileGlbInput.click());
 });
 
+document.querySelectorAll('[data-preset-model]').forEach((card) => {
+  card.addEventListener('click', () => {
+    const model = card.getAttribute('data-preset-model');
+    if (model === 'statue') {
+      insertObjectFromCatalog({ category: 'architecture', subtype: 'column', name: 'Estatua / Pedestal' });
+    } else if (model === 'laptop') {
+      insertObjectFromCatalog({ category: 'furniture', subtype: 'table_coffee', name: 'Mesa de Trabajo' });
+    } else if (model === 'panel') {
+      insertObjectFromCatalog({ category: 'architecture', subtype: 'partition_glass', name: 'Panel Divisorio' });
+    }
+  });
+});
+
 fileGlbInput.addEventListener('change', async () => {
   const file = fileGlbInput.files?.[0];
   if (!file) return;
@@ -1964,11 +1854,15 @@ fileGlbInput.addEventListener('change', async () => {
   try {
     showToast('Cargando modelo 3D...');
     const loaded = await app.assets.loadModel(file, { autoGround: true, autoCenter: true });
-    const activeRoom = rooms.find((r) => r.id === selectedRoomId) || rooms[0];
+    const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
+    const roomId = activeRoom ? activeRoom.id : '';
+    const roomName = activeRoom ? activeRoom.name : 'el lienzo';
+    const posX = activeRoom ? activeRoom.center[0] : 0;
+    const posZ = activeRoom ? activeRoom.center[2] : 0;
 
     const newProp: StudioPropDef = {
       id: `prop-glb-${Date.now().toString(36)}`,
-      roomId: activeRoom.id,
+      roomId,
       category: 'model_glb',
       subtype: file.name,
       name: file.name.replace(/\.(glb|gltf)$/i, ''),
@@ -1985,7 +1879,7 @@ fileGlbInput.addEventListener('change', async () => {
     };
 
     loaded.group.userData = { propId: newProp.id };
-    loaded.group.position.set(activeRoom.center[0], 0, activeRoom.center[2]);
+    loaded.group.position.set(posX, 0, posZ);
     app.scene.nativeScene.add(loaded.group);
 
     props.push(newProp);
@@ -1993,7 +1887,7 @@ fileGlbInput.addEventListener('change', async () => {
 
     selectProp(newProp.id);
     app.audio.playSuccess();
-    showToast(`¡Modelo "${newProp.name}" integrado al proyecto!`);
+    showToast(`¡Modelo "${newProp.name}" integrado a ${roomName}!`);
     triggerAutoSave();
   } catch (err: any) {
     console.error('Error cargando modelo GLB:', err);
@@ -2005,9 +1899,31 @@ fileGlbInput.addEventListener('change', async () => {
 const roomsListEl = document.getElementById('rooms-list') as HTMLElement;
 const roomsCountBadge = document.getElementById('rooms-count-badge') as HTMLElement;
 
+function selectRoom(roomId: string | null): void {
+  selectedRoomId = roomId;
+  renderRoomsList();
+  if (roomId) {
+    const r = rooms.find((item) => item.id === roomId);
+    if (r) {
+      app.resetCamera([r.center[0], 18, r.center[2] + 16], [r.center[0], 0, r.center[2]]);
+    }
+  }
+}
+
 function renderRoomsList(): void {
   roomsListEl.innerHTML = '';
   roomsCountBadge.textContent = rooms.length.toString();
+
+  if (rooms.length === 0) {
+    roomsListEl.innerHTML = `
+      <div style="padding: 18px 10px; text-align: center; color: var(--vxr-text-dim); font-size: 11.5px; line-height: 1.5; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px dashed var(--vxr-border);">
+        <span style="font-size: 22px; display: block; margin-bottom: 4px;">🏛️</span>
+        <b style="color: #cbd5e1; display: block; margin-bottom: 4px;">Sin salas en el escenario</b>
+        Pulsa <b>＋ Añadir Sala al Nivel</b> para crear la primera sala en el centro del espacio 3D.
+      </div>
+    `;
+    return;
+  }
 
   for (const r of rooms) {
     const card = document.createElement('div');
@@ -2023,22 +1939,16 @@ function renderRoomsList(): void {
 
     card.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).classList.contains('btn-room-del')) return;
-      selectedRoomId = r.id;
-      renderRoomsList();
-      app.resetCamera([r.center[0], 18, r.center[2] + 16], [r.center[0], 0, r.center[2]]);
+      selectRoom(r.id);
       app.audio.playClick();
     });
 
     card.querySelector('[data-del-room]')?.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (rooms.length <= 1) {
-        alert('El escenario debe contener al menos una sala.');
-        return;
-      }
       rooms = rooms.filter((item) => item.id !== r.id);
       connections = connections.filter((c) => c.fromRoomId !== r.id && c.toRoomId !== r.id);
       props = props.filter((p) => p.roomId !== r.id);
-      selectedRoomId = rooms[0].id;
+      selectedRoomId = rooms.length > 0 ? rooms[0].id : null;
       rebuildScenario();
       showToast('Sala eliminada');
     });
@@ -2055,73 +1965,115 @@ const modalRoomName = document.getElementById('modal-room-name') as HTMLInputEle
 const modalRoomTheme = document.getElementById('modal-room-theme') as HTMLSelectElement;
 const modalRoomW = document.getElementById('modal-room-w') as HTMLInputElement;
 const modalRoomD = document.getElementById('modal-room-d') as HTMLInputElement;
+const groupInitialRoom = document.getElementById('group-initial-room') as HTMLElement;
+const groupConnectedRoom = document.getElementById('group-connected-room') as HTMLElement;
+const btnCreateInitialRoom = document.getElementById('btn-create-initial-room') as HTMLButtonElement;
 
 btnAddRoomDialog.addEventListener('click', () => {
+  if (rooms.length === 0) {
+    if (groupInitialRoom) groupInitialRoom.style.display = 'block';
+    if (groupConnectedRoom) groupConnectedRoom.style.display = 'none';
+  } else {
+    if (groupInitialRoom) groupInitialRoom.style.display = 'none';
+    if (groupConnectedRoom) groupConnectedRoom.style.display = 'block';
+  }
   addRoomModal.classList.add('active');
 });
+
 btnCloseRoomModal.addEventListener('click', () => {
   addRoomModal.classList.remove('active');
 });
 
-document.querySelectorAll('.btn-dir-room').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    const dir = btn.getAttribute('data-dir') as WallDirection;
-    const parentRoom = rooms.find((r) => r.id === selectedRoomId) || rooms[0];
-    const newId = `room-${Date.now().toString(36)}`;
-    const newW = parseFloat(modalRoomW.value) || 12;
-    const newD = parseFloat(modalRoomD.value) || 10;
-    const newH = 3.8;
+btnCreateInitialRoom?.addEventListener('click', () => {
+  createRoom();
+});
 
-    let posX = parentRoom.center[0];
-    let posZ = parentRoom.center[2];
-    let fromWall: WallDirection = 'north';
-    let toWall: WallDirection = 'south';
+function createRoom(dir?: WallDirection): void {
+  const newId = `room-${Date.now().toString(36)}`;
+  const newW = parseFloat(modalRoomW.value) || 12;
+  const newD = parseFloat(modalRoomD.value) || 10;
+  const newH = 3.8;
+  const parentRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
 
-    const gap = 6.0;
-    if (dir === 'north') {
-      posZ -= (parentRoom.dimensions.depth / 2 + newD / 2 + gap);
-      fromWall = 'north'; toWall = 'south';
-    } else if (dir === 'south') {
-      posZ += (parentRoom.dimensions.depth / 2 + newD / 2 + gap);
-      fromWall = 'south'; toWall = 'north';
-    } else if (dir === 'east') {
-      posX += (parentRoom.dimensions.width / 2 + newW / 2 + gap);
-      fromWall = 'east'; toWall = 'west';
-    } else if (dir === 'west') {
-      posX -= (parentRoom.dimensions.width / 2 + newW / 2 + gap);
-      fromWall = 'west'; toWall = 'east';
-    }
-
-    if (!parentRoom.doors.some((d) => d.wall === fromWall)) {
-      parentRoom.doors.push({ wall: fromWall, targetRoomId: newId, width: 2.6, height: 2.8 });
-    }
-
-    const newRoom: RoomDef = {
+  if (!parentRoom || rooms.length === 0) {
+    // Initial / Root room at center [0, 0, 0]
+    const initialRoom: RoomDef = {
       id: newId,
-      name: modalRoomName.value.trim() || `Sala ${rooms.length + 1}`,
+      name: modalRoomName.value.trim() || 'Sala Principal',
       theme: modalRoomTheme.value as RoomTheme,
       dimensions: { width: newW, depth: newD, height: newH },
-      center: [posX, 0, posZ],
-      doors: [{ wall: toWall, targetRoomId: parentRoom.id, width: 2.6, height: 2.8 }],
-      spawnPoint: [posX, 1.6, posZ],
+      center: [0, 0, 0],
+      doors: [],
+      spawnPoint: [0, 1.6, 0],
     };
-
-    rooms.push(newRoom);
-    connections.push({
-      id: `conn-${Date.now()}`,
-      fromRoomId: parentRoom.id,
-      fromWall,
-      toRoomId: newId,
-      toWall,
-      width: 2.6,
-      height: 3.0,
-    });
-
+    rooms.push(initialRoom);
     selectedRoomId = newId;
     addRoomModal.classList.remove('active');
     app.audio.playSuccess();
     rebuildScenario();
-    showToast(`¡Sala añadida al ${dir.toUpperCase()} con pasillo automático!`);
+    app.resetCamera([0, 18, 16], [0, 0, 0]);
+    showToast('¡Sala inicial creada en el centro del escenario!');
+    return;
+  }
+
+  // Connect to parent room with corridor
+  const effectiveDir = dir || 'north';
+  let posX = parentRoom.center[0];
+  let posZ = parentRoom.center[2];
+  let fromWall: WallDirection = 'north';
+  let toWall: WallDirection = 'south';
+
+  const gap = 6.0;
+  if (effectiveDir === 'north') {
+    posZ -= (parentRoom.dimensions.depth / 2 + newD / 2 + gap);
+    fromWall = 'north'; toWall = 'south';
+  } else if (effectiveDir === 'south') {
+    posZ += (parentRoom.dimensions.depth / 2 + newD / 2 + gap);
+    fromWall = 'south'; toWall = 'north';
+  } else if (effectiveDir === 'east') {
+    posX += (parentRoom.dimensions.width / 2 + newW / 2 + gap);
+    fromWall = 'east'; toWall = 'west';
+  } else if (effectiveDir === 'west') {
+    posX -= (parentRoom.dimensions.width / 2 + newW / 2 + gap);
+    fromWall = 'west'; toWall = 'east';
+  }
+
+  if (!parentRoom.doors.some((d) => d.wall === fromWall)) {
+    parentRoom.doors.push({ wall: fromWall, targetRoomId: newId, width: 2.6, height: 2.8 });
+  }
+
+  const newRoom: RoomDef = {
+    id: newId,
+    name: modalRoomName.value.trim() || `Sala ${rooms.length + 1}`,
+    theme: modalRoomTheme.value as RoomTheme,
+    dimensions: { width: newW, depth: newD, height: newH },
+    center: [posX, 0, posZ],
+    doors: [{ wall: toWall, targetRoomId: parentRoom.id, width: 2.6, height: 2.8 }],
+    spawnPoint: [posX, 1.6, posZ],
+  };
+
+  rooms.push(newRoom);
+  connections.push({
+    id: `conn-${Date.now()}`,
+    fromRoomId: parentRoom.id,
+    fromWall,
+    toRoomId: newId,
+    toWall,
+    width: 2.6,
+    height: 3.0,
+  });
+
+  selectedRoomId = newId;
+  addRoomModal.classList.remove('active');
+  app.audio.playSuccess();
+  rebuildScenario();
+  showToast(`¡Sala añadida al ${effectiveDir.toUpperCase()} con pasillo automático!`);
+}
+
+document.querySelectorAll('.btn-dir-room').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const dir = btn.getAttribute('data-dir') as WallDirection;
+    createRoom(dir);
   });
 });
 
@@ -2165,8 +2117,10 @@ function toggleFirstPersonMode(forceState?: boolean): void {
     if (app.controls) app.controls.enabled = false;
     transformControls.detach();
 
-    const activeRoom = rooms.find((r) => r.id === selectedRoomId) || rooms[0];
-    playerPos.set(activeRoom.center[0], 1.6, activeRoom.center[2]);
+    const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
+    const spawnX = activeRoom ? activeRoom.center[0] : 0;
+    const spawnZ = activeRoom ? activeRoom.center[2] : 2;
+    playerPos.set(spawnX, 1.6, spawnZ);
     playerPitch = 0;
     playerYaw = 0;
     app.camera.position.copy(playerPos);
@@ -2282,11 +2236,22 @@ function restoreFromAutoSave(): boolean {
     const raw = localStorage.getItem('vxr_studio_autosave');
     if (!raw) return false;
     const data = JSON.parse(raw);
-    if (data.rooms && Array.isArray(data.rooms) && data.rooms.length > 0) {
+    if (data.rooms && Array.isArray(data.rooms)) {
+      // If cached data was the legacy template with 'lobby' and 'archaeology', discard it
+      const isLegacyDefault =
+        data.rooms.length === 2 &&
+        data.rooms.some((r: any) => r.id === 'lobby') &&
+        data.rooms.some((r: any) => r.id === 'archaeology');
+
+      if (isLegacyDefault) {
+        localStorage.removeItem('vxr_studio_autosave');
+        return false;
+      }
+
       rooms = data.rooms;
       connections = data.connections || [];
       props = data.props || [];
-      selectedRoomId = rooms[0].id;
+      selectedRoomId = rooms.length > 0 ? rooms[0].id : null;
       return true;
     }
   } catch (e) {
@@ -2328,7 +2293,7 @@ fileImportJson.addEventListener('change', () => {
         rooms = data.rooms;
         connections = data.connections || [];
         props = data.props || [];
-        selectedRoomId = rooms[0].id;
+        selectedRoomId = rooms.length > 0 ? rooms[0].id : null;
         selectedPropId = null;
         rebuildScenario();
         app.audio.playSuccess();
@@ -2342,23 +2307,15 @@ fileImportJson.addEventListener('change', () => {
 });
 
 document.getElementById('btn-menu-empty')?.addEventListener('click', () => {
-  if (confirm('¿Deseas reiniciar la escena a un lienzo en blanco?')) {
-    rooms = [
-      {
-        id: 'room-1',
-        name: 'Sala Principal',
-        theme: 'gallery',
-        dimensions: { width: 12, depth: 10, height: 3.8 },
-        center: [0, 0, 0],
-        doors: [],
-        spawnPoint: [0, 1.6, 0],
-      },
-    ];
+  if (confirm('¿Deseas reiniciar la escena a un lienzo completamente en blanco?')) {
+    rooms = [];
     connections = [];
     props = [];
-    selectedRoomId = rooms[0].id;
+    selectedRoomId = null;
     selectedPropId = null;
     rebuildScenario();
+    app.resetCamera([0, 22, 22], [0, 0, 0]);
+    localStorage.removeItem('vxr_studio_autosave');
     showToast('Lienzo en blanco creado');
   }
 });
@@ -2657,8 +2614,8 @@ const TUTORIAL_STEPS: TutorialStep[] = [
   {
     title: 'Paso 1 de 6',
     headline: '1. Estructura y Espacio 3D',
-    description: 'VXR Studio organiza las experiencias en salas conectadas. Selecciona tu sala activa en la lista o añade una nueva para definir el espacio de tu exposición.',
-    targetSelector: '#rooms-list',
+    description: 'VXR Studio organiza las experiencias en salas 3D. Pulsa "＋ Añadir Sala al Nivel" para crear tu primera sala en el centro del escenario y comenzar tu diseño.',
+    targetSelector: '#btn-add-room-dialog',
     validate: () => rooms.length > 0 && selectedRoomId !== null,
     autoComplete: () => {
       if (rooms.length === 0) {
@@ -2671,10 +2628,12 @@ const TUTORIAL_STEPS: TutorialStep[] = [
           doors: [],
           spawnPoint: [0, 1.6, 0],
         });
+        selectedRoomId = 'room-main';
         rebuildScenario();
+      } else {
+        selectRoom(rooms[0].id);
       }
-      selectRoom(rooms[0].id);
-      showToast('✓ Sala seleccionada para la exposición');
+      showToast('✓ Sala Principal creada en el centro del escenario');
     },
   },
   {
@@ -2684,9 +2643,11 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     targetSelector: '.viewport-bottom-bar',
     validate: () => true,
     autoComplete: () => {
-      const activeRoom = rooms.find((r) => r.id === selectedRoomId) || rooms[0];
-      app.resetCamera([activeRoom.center[0], 18, activeRoom.center[2] + 16], [activeRoom.center[0], 0, activeRoom.center[2]]);
-      showToast('🏠 Vista general de la sala centrada');
+      const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
+      const cx = activeRoom ? activeRoom.center[0] : 0;
+      const cz = activeRoom ? activeRoom.center[2] : 0;
+      app.resetCamera([cx, 18, cz + 16], [cx, 0, cz]);
+      showToast('🏠 Vista general de la cámara centrada');
     },
   },
   {
@@ -2704,16 +2665,18 @@ const TUTORIAL_STEPS: TutorialStep[] = [
 
       let art = props.find((p) => p.subtype === 'frame_art');
       if (!art) {
-        const activeRoom = rooms.find((r) => r.id === selectedRoomId) || rooms[0];
+        const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
+        const roomId = activeRoom ? activeRoom.id : '';
+        const depth = activeRoom ? activeRoom.dimensions.depth : 10;
         art = {
           id: `prop-${Date.now().toString(36)}`,
-          roomId: activeRoom.id,
+          roomId,
           category: 'exhibition',
           subtype: 'frame_art',
           name: 'Obra Maestra 01',
           relX: 0,
           relY: 2.0,
-          relZ: -activeRoom.dimensions.depth / 2 + 0.15,
+          relZ: -depth / 2 + 0.15,
           rotX: 0,
           rotY: 0,
           rotZ: 0,
@@ -2729,7 +2692,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
       }
       selectProp(art.id);
       focusSelectedProp();
-      showToast('🖼️ Marco de Imagen colocado en el muro principal');
+      showToast('🖼️ Marco de Imagen colocado en el escenario');
     },
   },
   {
@@ -2768,17 +2731,19 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     targetSelector: '[data-category="exhibition"]',
     validate: () => props.some((p) => p.subtype === 'screen_video' || p.subtype === 'billboard_floating'),
     autoComplete: () => {
-      const activeRoom = rooms.find((r) => r.id === selectedRoomId) || rooms[0];
+      const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
+      const roomId = activeRoom ? activeRoom.id : '';
+      const depth = activeRoom ? activeRoom.dimensions.depth : 10;
       if (!props.some((p) => p.subtype === 'screen_video')) {
         const videoProp: StudioPropDef = {
           id: `prop-${Date.now().toString(36)}_vid`,
-          roomId: activeRoom.id,
+          roomId,
           category: 'exhibition',
           subtype: 'screen_video',
           name: 'Pantalla Principal XR',
           relX: -3.5,
           relY: 1.5,
-          relZ: -activeRoom.dimensions.depth / 2 + 0.8,
+          relZ: -depth / 2 + 0.8,
           rotX: 0,
           rotY: 15,
           rotZ: 0,
@@ -2794,7 +2759,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
       if (!props.some((p) => p.subtype === 'billboard_floating')) {
         const billboardProp: StudioPropDef = {
           id: `prop-${Date.now().toString(36)}_bb`,
-          roomId: activeRoom.id,
+          roomId,
           category: 'exhibition',
           subtype: 'billboard_floating',
           name: 'Cartelera Holográfica',
@@ -2802,7 +2767,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
           linkUrl: 'https://github.com/Vickman123/Framework-XVR',
           relX: 3.2,
           relY: 2.4,
-          relZ: -activeRoom.dimensions.depth / 2 + 0.8,
+          relZ: -depth / 2 + 0.8,
           rotX: 0,
           rotY: -15,
           rotZ: 0,
