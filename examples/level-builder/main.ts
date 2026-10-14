@@ -25,7 +25,7 @@ export interface ConnectionDef {
   height: number;
 }
 
-export type StudioPropCategory = 'basic' | 'furniture' | 'architecture' | 'decoration' | 'model_glb';
+export type StudioPropCategory = 'basic' | 'furniture' | 'architecture' | 'decoration' | 'exhibition' | 'model_glb';
 
 export interface StudioPropDef {
   id: string;
@@ -46,6 +46,16 @@ export interface StudioPropDef {
   text?: string;
   intensity?: number;
   textureUrl?: string;
+
+  // Exhibition & Interactive properties
+  imageUrl?: string;
+  videoUrl?: string;
+  videoId?: string;
+  linkUrl?: string;
+  frameWidth?: number;
+  frameHeight?: number;
+  interactionAction?: 'lightbox' | 'video_popup' | 'open_link' | 'none';
+
   // External model data
   modelUrl?: string;
 }
@@ -88,29 +98,12 @@ const DEFAULT_CONNECTIONS: ConnectionDef[] = [
 
 const DEFAULT_PROPS: StudioPropDef[] = [
   {
-    id: 'prop-box-1',
-    roomId: 'lobby',
-    category: 'basic',
-    subtype: 'box',
-    name: 'Caja_01',
-    relX: 0,
-    relY: 0.6,
-    relZ: -1.5,
-    rotX: 0,
-    rotY: 0,
-    rotZ: 0,
-    scaleX: 1,
-    scaleY: 1,
-    scaleZ: 1,
-    color: '#e0e0e0',
-  },
-  {
     id: 'prop-table-1',
     roomId: 'lobby',
     category: 'furniture',
     subtype: 'table',
     name: 'Mesa de Centro',
-    relX: -3.2,
+    relX: -3.0,
     relY: 0,
     relZ: 0,
     rotX: 0,
@@ -122,21 +115,76 @@ const DEFAULT_PROPS: StudioPropDef[] = [
     color: '#78350f',
   },
   {
-    id: 'prop-part-glass',
+    id: 'prop-chair-1',
     roomId: 'lobby',
-    category: 'architecture',
-    subtype: 'partition_glass',
-    name: 'Mampara Cristal',
-    relX: 3.5,
+    category: 'furniture',
+    subtype: 'chair_lounge',
+    name: 'Sillón Lounge A',
+    relX: -3.0,
     relY: 0,
-    relZ: 0,
+    relZ: -1.2,
     rotX: 0,
-    rotY: 90,
+    rotY: 0,
     rotZ: 0,
     scaleX: 1,
     scaleY: 1,
     scaleZ: 1,
-    color: '#38bdf8',
+    color: '#1e293b',
+  },
+  {
+    id: 'prop-chair-2',
+    roomId: 'lobby',
+    category: 'furniture',
+    subtype: 'chair_lounge',
+    name: 'Sillón Lounge B',
+    relX: -3.0,
+    relY: 0,
+    relZ: 1.2,
+    rotX: 0,
+    rotY: 180,
+    rotZ: 0,
+    scaleX: 1,
+    scaleY: 1,
+    scaleZ: 1,
+    color: '#1e293b',
+  },
+  {
+    id: 'prop-frame-art-1',
+    roomId: 'lobby',
+    category: 'exhibition',
+    subtype: 'frame_art',
+    name: 'Mona Lisa Contemporánea',
+    relX: 2.5,
+    relY: 1.8,
+    relZ: -4.85,
+    rotX: 0,
+    rotY: 0,
+    rotZ: 0,
+    scaleX: 1,
+    scaleY: 1,
+    scaleZ: 1,
+    color: '#d4af37',
+    imageUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=800&auto=format&fit=crop',
+    frameWidth: 2.2,
+    frameHeight: 1.6,
+  },
+  {
+    id: 'prop-screen-1',
+    roomId: 'lobby',
+    category: 'exhibition',
+    subtype: 'screen_video',
+    name: 'Video Demostración WebXR',
+    relX: 4.8,
+    relY: 1.6,
+    relZ: 0,
+    rotX: 0,
+    rotY: -90,
+    rotZ: 0,
+    scaleX: 1,
+    scaleY: 1,
+    scaleZ: 1,
+    color: '#0f172a',
+    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
   },
   {
     id: 'prop-sign-1',
@@ -197,6 +245,24 @@ app.scene.setBackground(0x060912);
 const gridFloor = new THREE.GridHelper(60, 60, 0x1e293b, 0x0f172a);
 gridFloor.position.y = -0.01;
 app.scene.nativeScene.add(gridFloor);
+
+// Configure Editor Camera & OrbitControls
+if (app.controls) {
+  app.controls.enableDamping = true;
+  app.controls.dampingFactor = 0.08;
+  app.controls.minDistance = 1.0;
+  app.controls.maxDistance = 90.0;
+  app.controls.screenSpacePanning = true;
+  app.controls.mouseButtons = {
+    LEFT: THREE.MOUSE.ROTATE,
+    MIDDLE: THREE.MOUSE.DOLLY,
+    RIGHT: THREE.MOUSE.PAN,
+  };
+  app.controls.touches = {
+    ONE: THREE.TOUCH.ROTATE,
+    TWO: THREE.TOUCH.DOLLY_PAN,
+  };
+}
 
 let scenario = app.createScenario('VXR Studio Level');
 
@@ -268,36 +334,88 @@ function createBasicMesh(prop: StudioPropDef): THREE.Object3D {
   return mesh;
 }
 
+// YouTube and Multimedia Helpers
+export function extractYouTubeId(url: string): string | null {
+  if (!url) return null;
+  const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/;
+  const match = url.match(regExp);
+  return match ? match[1] : null;
+}
+
 function createFurnitureMesh(prop: StudioPropDef): THREE.Object3D {
   const group = new THREE.Group();
   const color = new THREE.Color(prop.color);
   const woodMat = new THREE.MeshStandardMaterial({ color, roughness: 0.7 });
   const darkMetal = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.3 });
+  const chromeMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.1 });
+  const fabricMat = new THREE.MeshStandardMaterial({ color, roughness: 0.85 });
 
-  if (prop.subtype === 'chair') {
-    // Seat
-    const seat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.08, 0.6), woodMat);
-    seat.position.y = 0.45;
-    // Backrest
-    const back = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.5, 0.08), woodMat);
-    back.position.set(0, 0.72, -0.26);
-    // 4 Legs
-    const legGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.45, 12);
-    const leg1 = new THREE.Mesh(legGeo, darkMetal); leg1.position.set(-0.25, 0.225, -0.25);
-    const leg2 = new THREE.Mesh(legGeo, darkMetal); leg2.position.set(0.25, 0.225, -0.25);
-    const leg3 = new THREE.Mesh(legGeo, darkMetal); leg3.position.set(-0.25, 0.225, 0.25);
-    const leg4 = new THREE.Mesh(legGeo, darkMetal); leg4.position.set(0.25, 0.225, 0.25);
-    group.add(seat, back, leg1, leg2, leg3, leg4);
+  if (prop.subtype === 'chair_lounge') {
+    // Deep Armchair
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.2, 0.8), fabricMat);
+    seat.position.y = 0.35;
+    const back = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, 0.18), fabricMat);
+    back.position.set(0, 0.65, -0.32);
+    const armL = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.45, 0.8), fabricMat);
+    armL.position.set(-0.4, 0.45, 0);
+    const armR = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.45, 0.8), fabricMat);
+    armR.position.set(0.4, 0.45, 0);
+    const legGeo = new THREE.CylinderGeometry(0.025, 0.02, 0.25, 12);
+    const leg1 = new THREE.Mesh(legGeo, darkMetal); leg1.position.set(-0.35, 0.125, -0.35);
+    const leg2 = new THREE.Mesh(legGeo, darkMetal); leg2.position.set(0.35, 0.125, -0.35);
+    const leg3 = new THREE.Mesh(legGeo, darkMetal); leg3.position.set(-0.35, 0.125, 0.35);
+    const leg4 = new THREE.Mesh(legGeo, darkMetal); leg4.position.set(0.35, 0.125, 0.35);
+    group.add(seat, back, armL, armR, leg1, leg2, leg3, leg4);
+  } else if (prop.subtype === 'chair_executive') {
+    // Swivel Office Chair
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.1, 0.6), darkMetal);
+    seat.position.y = 0.5;
+    const back = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.7, 0.08), darkMetal);
+    back.position.set(0, 0.85, -0.26);
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.45, 16), chromeMat);
+    post.position.set(0, 0.25, 0);
+    const starBase = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.05, 5), chromeMat);
+    starBase.position.set(0, 0.04, 0);
+    group.add(seat, back, post, starBase);
+  } else if (prop.subtype === 'bench') {
+    // Gallery Museum Bench
+    const plankMat = new THREE.MeshStandardMaterial({ color, roughness: 0.6 });
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.08, 0.6), plankMat);
+    seat.position.y = 0.44;
+    const legL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.44, 0.55), darkMetal);
+    legL.position.set(-0.85, 0.22, 0);
+    const legR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.44, 0.55), darkMetal);
+    legR.position.set(0.85, 0.22, 0);
+    group.add(seat, legL, legR);
+  } else if (prop.subtype === 'table_round') {
+    // Round Pedestal Table
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 0.06, 32), woodMat);
+    top.position.y = 0.74;
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.72, 16), darkMetal);
+    stem.position.y = 0.37;
+    const discBase = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.04, 32), darkMetal);
+    discBase.position.y = 0.02;
+    group.add(top, stem, discBase);
+  } else if (prop.subtype === 'table_coffee') {
+    // Low Coffee Table
+    const top = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.06, 0.8), woodMat);
+    top.position.y = 0.42;
+    const legGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.42, 12);
+    const l1 = new THREE.Mesh(legGeo, darkMetal); l1.position.set(-0.6, 0.21, -0.3);
+    const l2 = new THREE.Mesh(legGeo, darkMetal); l2.position.set(0.6, 0.21, -0.3);
+    const l3 = new THREE.Mesh(legGeo, darkMetal); l3.position.set(-0.6, 0.21, 0.3);
+    const l4 = new THREE.Mesh(legGeo, darkMetal); l4.position.set(0.6, 0.21, 0.3);
+    group.add(top, l1, l2, l3, l4);
   } else if (prop.subtype === 'sofa') {
     // Lounge Sofa
-    const base = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.35, 0.8), woodMat);
+    const base = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.35, 0.85), fabricMat);
     base.position.y = 0.25;
-    const back = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.6, 0.25), woodMat);
-    back.position.set(0, 0.6, -0.28);
-    const armL = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.5, 0.8), woodMat);
-    armL.position.set(-0.85, 0.45, 0);
-    const armR = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.5, 0.8), woodMat);
-    armR.position.set(0.85, 0.45, 0);
+    const back = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.6, 0.25), fabricMat);
+    back.position.set(0, 0.6, -0.3);
+    const armL = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.5, 0.85), fabricMat);
+    armL.position.set(-0.95, 0.45, 0);
+    const armR = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.5, 0.85), fabricMat);
+    armR.position.set(0.95, 0.45, 0);
     group.add(base, back, armL, armR);
   } else if (prop.subtype === 'shelf') {
     // Bookshelf
@@ -311,15 +429,27 @@ function createFurnitureMesh(prop: StudioPropDef): THREE.Object3D {
       group.add(plank);
     }
     group.add(sideL, sideR);
+  } else if (prop.subtype === 'chair') {
+    // Visitor Chair
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.08, 0.6), woodMat);
+    seat.position.y = 0.45;
+    const back = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.5, 0.08), woodMat);
+    back.position.set(0, 0.72, -0.26);
+    const legGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.45, 12);
+    const leg1 = new THREE.Mesh(legGeo, darkMetal); leg1.position.set(-0.25, 0.225, -0.25);
+    const leg2 = new THREE.Mesh(legGeo, darkMetal); leg2.position.set(0.25, 0.225, -0.25);
+    const leg3 = new THREE.Mesh(legGeo, darkMetal); leg3.position.set(-0.25, 0.225, 0.25);
+    const leg4 = new THREE.Mesh(legGeo, darkMetal); leg4.position.set(0.25, 0.225, 0.25);
+    group.add(seat, back, leg1, leg2, leg3, leg4);
   } else {
-    // Table
-    const top = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.08, 0.9), woodMat);
-    top.position.y = 0.72;
-    const legGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.72, 12);
-    const leg1 = new THREE.Mesh(legGeo, darkMetal); leg1.position.set(-0.7, 0.36, -0.35);
-    const leg2 = new THREE.Mesh(legGeo, darkMetal); leg2.position.set(0.7, 0.36, -0.35);
-    const leg3 = new THREE.Mesh(legGeo, darkMetal); leg3.position.set(-0.7, 0.36, 0.35);
-    const leg4 = new THREE.Mesh(legGeo, darkMetal); leg4.position.set(0.7, 0.36, 0.35);
+    // Standard Meeting Table
+    const top = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.08, 1.0), woodMat);
+    top.position.y = 0.74;
+    const legGeo = new THREE.CylinderGeometry(0.035, 0.035, 0.74, 12);
+    const leg1 = new THREE.Mesh(legGeo, darkMetal); leg1.position.set(-0.8, 0.37, -0.4);
+    const leg2 = new THREE.Mesh(legGeo, darkMetal); leg2.position.set(0.8, 0.37, -0.4);
+    const leg3 = new THREE.Mesh(legGeo, darkMetal); leg3.position.set(-0.8, 0.37, 0.4);
+    const leg4 = new THREE.Mesh(legGeo, darkMetal); leg4.position.set(0.8, 0.37, 0.4);
     group.add(top, leg1, leg2, leg3, leg4);
   }
 
@@ -329,6 +459,312 @@ function createFurnitureMesh(prop: StudioPropDef): THREE.Object3D {
       c.receiveShadow = true;
     }
   });
+  return group;
+}
+
+function createFrameArtCanvas(title: string, colorHex: string, subtitle?: string): { canvas: HTMLCanvasElement; texture: THREE.CanvasTexture } {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 768;
+  const ctx = canvas.getContext('2d')!;
+
+  ctx.fillStyle = '#0b1120';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  grad.addColorStop(0, '#0f172a');
+  grad.addColorStop(1, '#020617');
+  ctx.fillStyle = grad;
+  ctx.fillRect(20, 20, canvas.width - 40, canvas.height - 40);
+
+  ctx.strokeStyle = colorHex;
+  ctx.lineWidth = 8;
+  ctx.strokeRect(30, 30, canvas.width - 60, canvas.height - 60);
+
+  ctx.font = '700 28px "JetBrains Mono", monospace';
+  ctx.fillStyle = colorHex;
+  ctx.textAlign = 'center';
+  ctx.fillText('• COLECCIÓN DE ARTE VXR •', canvas.width / 2, 120);
+
+  ctx.font = '800 52px "Plus Jakarta Sans", system-ui, sans-serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(title.toUpperCase(), canvas.width / 2, 360);
+
+  ctx.font = '500 28px "Plus Jakarta Sans", system-ui, sans-serif';
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText(subtitle || 'Haz clic en Modo 3D para ampliar en alta resolución', canvas.width / 2, 440);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
+  return { canvas, texture };
+}
+
+function createFrameArtMesh(prop: StudioPropDef): THREE.Object3D {
+  const group = new THREE.Group();
+  const width = prop.frameWidth || 2.2;
+  const height = prop.frameHeight || 1.6;
+  const frameColor = new THREE.Color(prop.color || '#d4af37');
+
+  // Outer frame border
+  const borderMat = new THREE.MeshStandardMaterial({
+    color: frameColor,
+    roughness: 0.35,
+    metalness: 0.6,
+  });
+  const outerFrame = new THREE.Mesh(new THREE.BoxGeometry(width, height, 0.08), borderMat);
+  group.add(outerFrame);
+
+  // Inner Matting (passe-partout)
+  const matting = new THREE.Mesh(
+    new THREE.BoxGeometry(width - 0.2, height - 0.2, 0.085),
+    new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.9 })
+  );
+  group.add(matting);
+
+  // Picture Canvas Plane
+  const artMat = new THREE.MeshStandardMaterial({ roughness: 0.3, metalness: 0.1 });
+  const artPlane = new THREE.Mesh(new THREE.PlaneGeometry(width - 0.38, height - 0.38), artMat);
+  artPlane.position.z = 0.046;
+  group.add(artPlane);
+
+  if (prop.imageUrl) {
+    const loader = new THREE.TextureLoader();
+    loader.load(
+      prop.imageUrl,
+      (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        artMat.map = tex;
+        artMat.needsUpdate = true;
+      },
+      undefined,
+      () => {
+        // Fallback placeholder on error or CORS issue
+        const { texture } = createFrameArtCanvas(prop.name, prop.color, '⚠️ Error de carga / CORS en la URL');
+        artMat.map = texture;
+        artMat.needsUpdate = true;
+      }
+    );
+  } else {
+    const { texture } = createFrameArtCanvas(prop.name, prop.color, 'Configura la URL de imagen en Propiedades');
+    artMat.map = texture;
+    artMat.needsUpdate = true;
+  }
+
+  group.userData = { propId: prop.id, isInteractive: true, interactionType: 'frame_art' };
+  return group;
+}
+
+function createVideoScreenCanvas(title: string, colorHex: string, ytid: string | null): { canvas: HTMLCanvasElement; texture: THREE.CanvasTexture } {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1280;
+  canvas.height = 720;
+  const ctx = canvas.getContext('2d')!;
+
+  ctx.fillStyle = '#05070e';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
+
+  function drawDefaultScreen() {
+    ctx.strokeStyle = colorHex;
+    ctx.lineWidth = 6;
+    ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+
+    ctx.fillStyle = '#090d1a';
+    ctx.fillRect(20, 20, canvas.width - 40, canvas.height - 40);
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+
+    // Big play circle
+    ctx.fillStyle = colorHex;
+    ctx.beginPath();
+    ctx.arc(cx, cy - 30, 60, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.moveTo(cx - 15, cy - 50);
+    ctx.lineTo(cx + 25, cy - 30);
+    ctx.lineTo(cx - 15, cy - 10);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.font = '800 42px "Plus Jakarta Sans", system-ui, sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText(title.toUpperCase(), cx, cy + 90);
+
+    ctx.font = '600 24px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('• PANTALLA MULTIMEDIA INTERACTIVA •', cx, cy + 140);
+    texture.needsUpdate = true;
+  }
+
+  if (ytid) {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // YouTube red play button in center
+      const btnW = 140;
+      const btnH = 96;
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      ctx.fillStyle = '#ff0000';
+      ctx.beginPath();
+      ctx.roundRect(cx - btnW / 2, cy - btnH / 2, btnW, btnH, 24);
+      ctx.fill();
+
+      // White play triangle
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(cx - 18, cy - 25);
+      ctx.lineTo(cx + 28, cy);
+      ctx.lineTo(cx - 18, cy + 25);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillRect(0, canvas.height - 80, canvas.width, 80);
+      ctx.font = '700 28px "Plus Jakarta Sans", system-ui, sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'left';
+      ctx.fillText(`▶ ${title.toUpperCase()}`, 30, canvas.height - 30);
+      texture.needsUpdate = true;
+    };
+    img.onerror = () => {
+      drawDefaultScreen();
+    };
+    img.src = `https://img.youtube.com/vi/${ytid}/hqdefault.jpg`;
+  } else {
+    drawDefaultScreen();
+  }
+
+  return { canvas, texture };
+}
+
+function createVideoScreenMesh(prop: StudioPropDef): THREE.Object3D {
+  const group = new THREE.Group();
+  const width = 2.6;
+  const height = 1.5;
+
+  // TV Outer Casing
+  const caseMat = new THREE.MeshStandardMaterial({ color: 0x070a12, roughness: 0.4, metalness: 0.8 });
+  const casing = new THREE.Mesh(new THREE.BoxGeometry(width, height, 0.08), caseMat);
+  group.add(casing);
+
+  // Stand
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.4, 16), caseMat);
+  pole.position.set(0, -height / 2 - 0.7, 0);
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.04, 0.5), caseMat);
+  base.position.set(0, -height / 2 - 1.4, 0);
+  group.add(pole, base);
+
+  // Screen Plane
+  const ytid = extractYouTubeId(prop.videoUrl || '');
+  const { texture } = createVideoScreenCanvas(prop.name, prop.color || '#38bdf8', ytid);
+  const screenMat = new THREE.MeshBasicMaterial({ map: texture });
+  const screenPlane = new THREE.Mesh(new THREE.PlaneGeometry(width - 0.12, height - 0.1), screenMat);
+  screenPlane.position.z = 0.045;
+  group.add(screenPlane);
+
+  group.userData = { propId: prop.id, isInteractive: true, interactionType: 'screen_video' };
+  return group;
+}
+
+function createBillboardFloatingCanvas(title: string, colorHex: string, linkUrl?: string): { canvas: HTMLCanvasElement; texture: THREE.CanvasTexture } {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d')!;
+
+  ctx.fillStyle = '#060a16';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.shadowColor = colorHex;
+  ctx.shadowBlur = 20;
+  ctx.strokeStyle = colorHex;
+  ctx.lineWidth = 10;
+  ctx.strokeRect(15, 15, canvas.width - 30, canvas.height - 30);
+
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = colorHex;
+  ctx.fillRect(canvas.width / 2 - 160, 40, 320, 38);
+  ctx.font = '800 18px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#020617';
+  ctx.textAlign = 'center';
+  ctx.fillText('ANUNCIO INTERACTIVO', canvas.width / 2, 65);
+
+  ctx.shadowColor = colorHex;
+  ctx.shadowBlur = 12;
+  ctx.font = '800 48px "Plus Jakarta Sans", system-ui, sans-serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText((title || 'CARTELERA VXR').toUpperCase(), canvas.width / 2, 210);
+
+  ctx.shadowBlur = 0;
+  ctx.font = '600 24px "Plus Jakarta Sans", system-ui, sans-serif';
+  ctx.fillStyle = '#38bdf8';
+  if (linkUrl) {
+    ctx.fillText(`🔗 ${linkUrl}`, canvas.width / 2, 330);
+    ctx.font = '500 18px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('• HAZ CLIC PARA ABRIR EL ENLACE •', canvas.width / 2, 420);
+  } else {
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('• ESPACIO PUBLICITARIO DISPONIBLE •', canvas.width / 2, 330);
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
+  return { canvas, texture };
+}
+
+function createBillboardFloatingMesh(prop: StudioPropDef): THREE.Object3D {
+  const group = new THREE.Group();
+  const width = 2.8;
+  const height = 1.3;
+  const color = new THREE.Color(prop.color || '#38bdf8');
+
+  // Glowing Frame Border
+  const borderMat = new THREE.MeshBasicMaterial({ color });
+  const frameBorder = new THREE.Mesh(new THREE.BoxGeometry(width + 0.08, height + 0.08, 0.04), borderMat);
+  group.add(frameBorder);
+
+  // Front panel
+  const { texture } = createBillboardFloatingCanvas(prop.text || prop.name, prop.color, prop.linkUrl);
+  const panelMat = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
+  const panel = new THREE.Mesh(new THREE.PlaneGeometry(width, height), panelMat);
+  panel.position.z = 0.025;
+  group.add(panel);
+
+  // Back panel
+  const backPanel = new THREE.Mesh(new THREE.PlaneGeometry(width, height), panelMat);
+  backPanel.position.z = -0.025;
+  backPanel.rotation.y = Math.PI;
+  group.add(backPanel);
+
+  // Suspension cables
+  const cableMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9, roughness: 0.2 });
+  const cableL = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 1.2, 8), cableMat);
+  cableL.position.set(-width / 3, height / 2 + 0.6, 0);
+  const cableR = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 1.2, 8), cableMat);
+  cableR.position.set(width / 3, height / 2 + 0.6, 0);
+  group.add(cableL, cableR);
+
+  group.userData = {
+    propId: prop.id,
+    isInteractive: true,
+    interactionType: 'billboard_floating',
+    baseY: prop.relY,
+  };
   return group;
 }
 
@@ -481,6 +917,16 @@ function spawnPropMesh(prop: StudioPropDef): THREE.Object3D {
     mesh = createBasicMesh(prop);
   } else if (prop.category === 'furniture') {
     mesh = createFurnitureMesh(prop);
+  } else if (prop.category === 'exhibition') {
+    if (prop.subtype === 'frame_art') {
+      mesh = createFrameArtMesh(prop);
+    } else if (prop.subtype === 'screen_video') {
+      mesh = createVideoScreenMesh(prop);
+    } else if (prop.subtype === 'billboard_floating') {
+      mesh = createBillboardFloatingMesh(prop);
+    } else {
+      mesh = createDecorationMesh(prop);
+    }
   } else if (prop.category === 'architecture') {
     mesh = createArchitectureMesh(prop);
   } else if (prop.category === 'decoration') {
@@ -490,7 +936,7 @@ function spawnPropMesh(prop: StudioPropDef): THREE.Object3D {
     mesh = createBasicMesh(prop);
   }
 
-  mesh.userData = { propId: prop.id };
+  mesh.userData = { ...mesh.userData, propId: prop.id };
   mesh.position.set(worldX, worldY, worldZ);
   mesh.rotation.set(
     THREE.MathUtils.degToRad(prop.rotX || 0),
@@ -567,6 +1013,7 @@ function rebuildScenario(): void {
 // =============================================================================
 // Selection & Property Panel (Right Panel Two-Way Binding)
 // =============================================================================
+// Property inspector DOM elements
 const propSelectedContainer = document.getElementById('prop-selected-container') as HTMLElement;
 const propEmptyContainer = document.getElementById('prop-empty-container') as HTMLElement;
 const propThumb = document.getElementById('prop-thumb') as HTMLElement;
@@ -592,6 +1039,106 @@ const groupSignText = document.getElementById('group-sign-text') as HTMLElement;
 const propSignText = document.getElementById('prop-sign-text') as HTMLInputElement;
 const groupLightIntensity = document.getElementById('group-light-intensity') as HTMLElement;
 const propLightIntensity = document.getElementById('prop-light-intensity') as HTMLInputElement;
+
+// Exhibition & Multimedia DOM Elements
+const groupExhibitionOptions = document.getElementById('group-exhibition-options') as HTMLElement;
+const subgroupFrameOptions = document.getElementById('subgroup-frame-options') as HTMLElement;
+const subgroupVideoOptions = document.getElementById('subgroup-video-options') as HTMLElement;
+const subgroupBillboardOptions = document.getElementById('subgroup-billboard-options') as HTMLElement;
+
+const propImageUrl = document.getElementById('prop-image-url') as HTMLInputElement;
+const btnUploadArtImg = document.getElementById('btn-upload-art-img') as HTMLButtonElement;
+const btnPreviewArtImg = document.getElementById('btn-preview-art-img') as HTMLButtonElement;
+const propFrameW = document.getElementById('prop-frame-w') as HTMLInputElement;
+const propFrameH = document.getElementById('prop-frame-h') as HTMLInputElement;
+
+const propVideoUrl = document.getElementById('prop-video-url') as HTMLInputElement;
+const badgeVideoStatus = document.getElementById('badge-video-status') as HTMLElement;
+const btnTestVideoPlay = document.getElementById('btn-test-video-play') as HTMLButtonElement;
+
+const propBillboardText = document.getElementById('prop-billboard-text') as HTMLInputElement;
+const propLinkUrl = document.getElementById('prop-link-url') as HTMLInputElement;
+const btnTestLinkOpen = document.getElementById('btn-test-link-open') as HTMLButtonElement;
+const fileUploadArt = document.getElementById('file-upload-art') as HTMLInputElement;
+
+// Lightbox & Video Player Modals
+const lightboxModal = document.getElementById('lightbox-modal') as HTMLElement;
+const lightboxTitle = document.getElementById('lightbox-title') as HTMLElement;
+const lightboxImg = document.getElementById('lightbox-img') as HTMLImageElement;
+const lightboxCaption = document.getElementById('lightbox-caption') as HTMLElement;
+const btnCloseLightbox = document.getElementById('btn-close-lightbox') as HTMLButtonElement;
+
+const videoModal = document.getElementById('video-modal') as HTMLElement;
+const videoModalTitle = document.getElementById('video-modal-title') as HTMLElement;
+const videoPlayerContainer = document.getElementById('video-player-container') as HTMLElement;
+const videoModalDesc = document.getElementById('video-modal-desc') as HTMLElement;
+const btnCloseVideo = document.getElementById('btn-close-video') as HTMLButtonElement;
+
+function openLightboxModal(p: StudioPropDef): void {
+  lightboxTitle.textContent = `🖼 ${p.name}`;
+  lightboxImg.src = p.imageUrl || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=800&auto=format&fit=crop';
+  lightboxCaption.innerHTML = p.imageUrl
+    ? `<b>${p.name}</b> • Obra en exhibición interactiva<br><span style="font-size: 10px; color: #64748b; word-break: break-all;">${p.imageUrl}</span>`
+    : `<b>${p.name}</b> • Sin imagen asignada (Configura la URL en el panel de propiedades)`;
+  lightboxModal.classList.add('active');
+  app.audio.playSuccess();
+}
+
+function closeLightboxModal(): void {
+  lightboxModal.classList.remove('active');
+}
+
+btnCloseLightbox?.addEventListener('click', closeLightboxModal);
+
+function openVideoModal(p: StudioPropDef): void {
+  videoModalTitle.textContent = `📺 ${p.name}`;
+  const ytid = extractYouTubeId(p.videoUrl || '');
+
+  if (ytid) {
+    videoPlayerContainer.innerHTML = `
+      <iframe 
+        src="https://www.youtube-nocookie.com/embed/${ytid}?autoplay=1&rel=0&modestbranding=1" 
+        style="width: 100%; height: 100%; border: none;" 
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+        allowfullscreen>
+      </iframe>
+    `;
+    videoModalDesc.innerHTML = `<b>Reproduciendo desde YouTube:</b> ID <code>${ytid}</code> • Respeta las políticas de reproducción del navegador.`;
+  } else if (p.videoUrl) {
+    videoPlayerContainer.innerHTML = `
+      <video src="${p.videoUrl}" controls autoplay playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
+    `;
+    videoModalDesc.innerHTML = `<b>Video directo compatible:</b> <code>${p.videoUrl}</code>`;
+  } else {
+    videoPlayerContainer.innerHTML = `
+      <div style="color: #cbd5e1; text-align: center; padding: 40px; font-size: 13px;">
+        <div style="font-size: 32px; margin-bottom: 8px;">📺</div>
+        <b>No se ha configurado ninguna URL de video</b><br>
+        Introduce una URL de YouTube o enlace .mp4 en el panel derecho de propiedades.
+      </div>
+    `;
+    videoModalDesc.innerHTML = `Sin URL configurada`;
+  }
+
+  videoModal.classList.add('active');
+  app.audio.playSuccess();
+}
+
+function closeVideoModal(): void {
+  videoPlayerContainer.innerHTML = '';
+  videoModal.classList.remove('active');
+}
+
+btnCloseVideo?.addEventListener('click', closeVideoModal);
+
+[lightboxModal, videoModal].forEach((m) => {
+  m?.addEventListener('click', (e) => {
+    if (e.target === m) {
+      if (m === videoModal) closeVideoModal();
+      else m.classList.remove('active');
+    }
+  });
+});
 
 function renderPropertiesEmpty(): void {
   propSelectedContainer.style.display = 'none';
@@ -624,20 +1171,63 @@ function selectProp(id: string): void {
   let icon = '📦';
   if (p.subtype === 'sphere') icon = '⚪';
   else if (p.subtype === 'cylinder') icon = '🛢️';
-  else if (p.subtype === 'table') icon = '🪑';
+  else if (p.subtype === 'table' || p.subtype.includes('table')) icon = '🪑';
+  else if (p.subtype === 'chair' || p.subtype.includes('chair')) icon = '💺';
+  else if (p.subtype === 'sofa') icon = '🛋️';
+  else if (p.subtype === 'bench') icon = '🪑';
+  else if (p.subtype === 'frame_art') icon = '🖼️';
+  else if (p.subtype === 'screen_video') icon = '📺';
+  else if (p.subtype === 'billboard_floating') icon = '📢';
   else if (p.subtype === 'partition_glass') icon = '🪟';
   else if (p.subtype === 'column') icon = '🏛️';
   else if (p.category === 'model_glb') icon = '🗿';
 
   propThumb.textContent = icon;
   propTitle.textContent = p.name;
-  propTypeTag.textContent = `Tipo: ${p.category.toUpperCase()}`;
+  propTypeTag.textContent = `Tipo: ${p.category.toUpperCase()} (${p.subtype})`;
   propNameInput.value = p.name;
 
   updatePropertyInputs(p);
 
+  // Exhibition specific options
+  if (p.category === 'exhibition') {
+    groupExhibitionOptions.style.display = 'block';
+    if (p.subtype === 'frame_art') {
+      subgroupFrameOptions.style.display = 'flex';
+      subgroupVideoOptions.style.display = 'none';
+      subgroupBillboardOptions.style.display = 'none';
+      propImageUrl.value = p.imageUrl || '';
+      propFrameW.value = (p.frameWidth || 2.2).toString();
+      propFrameH.value = (p.frameHeight || 1.6).toString();
+    } else if (p.subtype === 'screen_video') {
+      subgroupFrameOptions.style.display = 'none';
+      subgroupVideoOptions.style.display = 'flex';
+      subgroupBillboardOptions.style.display = 'none';
+      propVideoUrl.value = p.videoUrl || '';
+      const ytid = extractYouTubeId(p.videoUrl || '');
+      badgeVideoStatus.textContent = ytid
+        ? `✓ YouTube ID detectado: ${ytid}`
+        : (p.videoUrl ? '✓ Archivo de video directo (.mp4)' : '📺 Introduce una URL de YouTube o video');
+    } else if (p.subtype === 'billboard_floating') {
+      subgroupFrameOptions.style.display = 'none';
+      subgroupVideoOptions.style.display = 'none';
+      subgroupBillboardOptions.style.display = 'flex';
+      propBillboardText.value = p.text || p.name;
+      propLinkUrl.value = p.linkUrl || '';
+    } else {
+      subgroupFrameOptions.style.display = 'none';
+      subgroupVideoOptions.style.display = 'none';
+      subgroupBillboardOptions.style.display = 'none';
+    }
+  } else {
+    groupExhibitionOptions.style.display = 'none';
+    subgroupFrameOptions.style.display = 'none';
+    subgroupVideoOptions.style.display = 'none';
+    subgroupBillboardOptions.style.display = 'none';
+  }
+
   // Type-specific fields
-  if (p.subtype.includes('sign') || p.subtype === 'totem') {
+  if (p.subtype.includes('sign') || p.subtype === 'totem' || p.subtype === 'billboard_floating') {
     groupSignText.style.display = 'block';
     propSignText.value = p.text || p.name;
   } else {
@@ -764,6 +1354,153 @@ propSignText.addEventListener('input', () => {
       texture.needsUpdate = true;
     }
     triggerAutoSave();
+  }
+});
+
+// Exhibition inputs: Frame Art, Video Screen, Billboard
+propImageUrl.addEventListener('change', () => {
+  if (!selectedPropId) return;
+  const p = props.find((item) => item.id === selectedPropId);
+  if (!p) return;
+  p.imageUrl = propImageUrl.value.trim();
+
+  // Update mesh in place
+  const mesh = propMeshMap.get(selectedPropId);
+  if (mesh) {
+    app.scene.nativeScene.remove(mesh);
+    const newMesh = spawnPropMesh(p);
+    if (activeTool !== 'select') transformControls.attach(newMesh);
+  }
+  showToast('✓ Imagen actualizada en el marco');
+  triggerAutoSave();
+});
+
+btnUploadArtImg?.addEventListener('click', () => fileUploadArt.click());
+fileUploadArt?.addEventListener('change', () => {
+  const file = fileUploadArt.files?.[0];
+  if (!file || !selectedPropId) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target?.result as string;
+    const p = props.find((item) => item.id === selectedPropId);
+    if (p) {
+      p.imageUrl = dataUrl;
+      propImageUrl.value = dataUrl;
+      const mesh = propMeshMap.get(selectedPropId!);
+      if (mesh) {
+        app.scene.nativeScene.remove(mesh);
+        const newMesh = spawnPropMesh(p);
+        if (activeTool !== 'select') transformControls.attach(newMesh);
+      }
+      showToast('✓ Imagen local cargada en la obra');
+      triggerAutoSave();
+    }
+  };
+  reader.readAsDataURL(file);
+});
+
+btnPreviewArtImg?.addEventListener('click', () => {
+  if (!selectedPropId) return;
+  const p = props.find((item) => item.id === selectedPropId);
+  if (p) openLightboxModal(p);
+});
+
+propFrameW.addEventListener('change', () => {
+  if (!selectedPropId) return;
+  const p = props.find((item) => item.id === selectedPropId);
+  if (!p) return;
+  p.frameWidth = Math.max(0.6, parseFloat(propFrameW.value) || 2.2);
+  const mesh = propMeshMap.get(selectedPropId);
+  if (mesh) {
+    app.scene.nativeScene.remove(mesh);
+    const newMesh = spawnPropMesh(p);
+    if (activeTool !== 'select') transformControls.attach(newMesh);
+  }
+  triggerAutoSave();
+});
+
+propFrameH.addEventListener('change', () => {
+  if (!selectedPropId) return;
+  const p = props.find((item) => item.id === selectedPropId);
+  if (!p) return;
+  p.frameHeight = Math.max(0.6, parseFloat(propFrameH.value) || 1.6);
+  const mesh = propMeshMap.get(selectedPropId);
+  if (mesh) {
+    app.scene.nativeScene.remove(mesh);
+    const newMesh = spawnPropMesh(p);
+    if (activeTool !== 'select') transformControls.attach(newMesh);
+  }
+  triggerAutoSave();
+});
+
+propVideoUrl.addEventListener('input', () => {
+  if (!selectedPropId) return;
+  const p = props.find((item) => item.id === selectedPropId);
+  if (!p) return;
+  p.videoUrl = propVideoUrl.value.trim();
+  const ytid = extractYouTubeId(p.videoUrl);
+  badgeVideoStatus.textContent = ytid
+    ? `✓ YouTube ID detectado: ${ytid}`
+    : (p.videoUrl ? '✓ Archivo de video directo (.mp4)' : '📺 Introduce una URL de YouTube o video');
+});
+
+propVideoUrl.addEventListener('change', () => {
+  if (!selectedPropId) return;
+  const p = props.find((item) => item.id === selectedPropId);
+  if (!p) return;
+  const mesh = propMeshMap.get(selectedPropId);
+  if (mesh) {
+    app.scene.nativeScene.remove(mesh);
+    const newMesh = spawnPropMesh(p);
+    if (activeTool !== 'select') transformControls.attach(newMesh);
+  }
+  showToast('✓ Pantalla de video actualizada');
+  triggerAutoSave();
+});
+
+btnTestVideoPlay?.addEventListener('click', () => {
+  if (!selectedPropId) return;
+  const p = props.find((item) => item.id === selectedPropId);
+  if (p) openVideoModal(p);
+});
+
+propBillboardText.addEventListener('input', () => {
+  if (!selectedPropId) return;
+  const p = props.find((item) => item.id === selectedPropId);
+  if (!p) return;
+  p.text = propBillboardText.value;
+  const mesh = propMeshMap.get(selectedPropId);
+  if (mesh) {
+    app.scene.nativeScene.remove(mesh);
+    const newMesh = spawnPropMesh(p);
+    if (activeTool !== 'select') transformControls.attach(newMesh);
+  }
+  triggerAutoSave();
+});
+
+propLinkUrl.addEventListener('change', () => {
+  if (!selectedPropId) return;
+  const p = props.find((item) => item.id === selectedPropId);
+  if (!p) return;
+  p.linkUrl = propLinkUrl.value.trim();
+  const mesh = propMeshMap.get(selectedPropId);
+  if (mesh) {
+    app.scene.nativeScene.remove(mesh);
+    const newMesh = spawnPropMesh(p);
+    if (activeTool !== 'select') transformControls.attach(newMesh);
+  }
+  showToast('✓ Enlace del anuncio guardado');
+  triggerAutoSave();
+});
+
+btnTestLinkOpen?.addEventListener('click', () => {
+  if (!selectedPropId) return;
+  const p = props.find((item) => item.id === selectedPropId);
+  if (p && p.linkUrl) {
+    window.open(p.linkUrl, '_blank');
+    showToast(`🔗 Abriendo ${p.linkUrl}`);
+  } else {
+    showToast('⚠️ No se ha definido ningún enlace URL.');
   }
 });
 
@@ -895,30 +1632,51 @@ toolTranslate.addEventListener('click', () => setToolMode('translate'));
 toolRotate.addEventListener('click', () => setToolMode('rotate'));
 toolScale.addEventListener('click', () => setToolMode('scale'));
 
-// Keyboard Shortcuts: Q, W, E, R, F, Delete
+// Keyboard Shortcuts: Q, W, E, R, F, Delete, Ctrl+D
 window.addEventListener('keydown', (e) => {
   if (['input', 'textarea'].includes((document.activeElement?.tagName || '').toLowerCase())) return;
+
+  // Duplication shortcut (Ctrl+D / Cmd+D)
+  if ((e.ctrlKey || e.metaKey) && e.code === 'KeyD') {
+    e.preventDefault();
+    if (selectedPropId) duplicateProp(selectedPropId);
+    return;
+  }
 
   if (e.code === 'KeyQ') setToolMode('select');
   else if (e.code === 'KeyW') setToolMode('translate');
   else if (e.code === 'KeyE') setToolMode('rotate');
   else if (e.code === 'KeyR') setToolMode('scale');
   else if (e.code === 'KeyF') {
-    if (selectedPropId && propMeshMap.has(selectedPropId)) {
-      const mesh = propMeshMap.get(selectedPropId)!;
-      app.resetCamera([mesh.position.x, mesh.position.y + 4, mesh.position.z + 6], [mesh.position.x, mesh.position.y, mesh.position.z]);
-    }
+    focusSelectedProp();
   } else if (e.code === 'Delete' || e.code === 'Backspace') {
     if (selectedPropId) deleteProp(selectedPropId);
+  } else if (e.code === 'Escape') {
+    selectedPropId = null;
+    transformControls.detach();
+    renderPropertiesEmpty();
   }
 });
 
-// Viewport Click Raycast Selection
-container.addEventListener('click', (e) => {
-  if (isFirstPerson) return;
-  // If user is dragging gizmo, don't deselect
-  if (transformControls.dragging) return;
+// Viewport Click Raycast: Distinguish Between Click and Camera Orbit Drag
+let pointerDownPos = { x: 0, y: 0 };
+container.addEventListener('pointerdown', (e) => {
+  pointerDownPos = { x: e.clientX, y: e.clientY };
+});
 
+container.addEventListener('pointerup', (e) => {
+  // If user dragged gizmo or moved camera (orbit/pan), ignore
+  if (transformControls.dragging) return;
+  const dist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
+  if (dist > 6) return;
+
+  // Walk Mode Interaction (Interactive Art Lightbox, Video Popup, Link opening)
+  if (isFirstPerson) {
+    handleWalkModeInteraction(e);
+    return;
+  }
+
+  // Editor Mode Selection
   const hits = app.raycastPointer(e);
   if (hits.length > 0) {
     for (const hit of hits) {
@@ -940,18 +1698,68 @@ container.addEventListener('click', (e) => {
   renderPropertiesEmpty();
 });
 
+function handleWalkModeInteraction(e: MouseEvent | PointerEvent): void {
+  const hits = app.raycastPointer(e);
+  if (hits.length === 0) return;
+
+  for (const hit of hits) {
+    let curr: THREE.Object3D | null = hit.object;
+    while (curr && curr !== app.scene.nativeScene) {
+      if (curr.userData && curr.userData.propId) {
+        const p = props.find((item) => item.id === curr.userData.propId);
+        if (p) {
+          if (p.subtype === 'frame_art') {
+            openLightboxModal(p);
+            return;
+          } else if (p.subtype === 'screen_video') {
+            openVideoModal(p);
+            return;
+          } else if (p.subtype === 'billboard_floating') {
+            if (p.linkUrl) {
+              window.open(p.linkUrl, '_blank');
+              showToast(`🔗 Abriendo enlace: ${p.linkUrl}`);
+            } else {
+              showToast(`📢 ${p.text || p.name}`);
+            }
+            app.audio.playClick();
+            return;
+          }
+        }
+      }
+      curr = curr.parent;
+    }
+  }
+}
+
+function focusSelectedProp(): void {
+  if (!selectedPropId) return;
+  const mesh = propMeshMap.get(selectedPropId);
+  if (!mesh) return;
+
+  const box = new THREE.Box3().setFromObject(mesh);
+  const center = new THREE.Vector3();
+  box.getCenter(center);
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  const dist = Math.max(size.length() * 1.8, 3.5);
+
+  app.resetCamera(
+    [center.x + dist * 0.7, center.y + dist * 0.5, center.z + dist * 0.8],
+    [center.x, center.y, center.z]
+  );
+  showToast(`🎯 Enfocado: ${mesh.name || 'Objeto'}`);
+}
+
 // Bottom Camera Floating Bar
 document.getElementById('btn-cam-home')?.addEventListener('click', () => {
   const activeRoom = rooms.find((r) => r.id === selectedRoomId) || rooms[0];
   app.resetCamera([activeRoom.center[0], 18, activeRoom.center[2] + 16], [activeRoom.center[0], 0, activeRoom.center[2]]);
   app.audio.playClick();
+  showToast('🏠 Vista general de la sala');
 });
 
 document.getElementById('btn-cam-focus')?.addEventListener('click', () => {
-  if (selectedPropId && propMeshMap.has(selectedPropId)) {
-    const mesh = propMeshMap.get(selectedPropId)!;
-    app.resetCamera([mesh.position.x, mesh.position.y + 3.5, mesh.position.z + 5], [mesh.position.x, mesh.position.y, mesh.position.z]);
-  }
+  focusSelectedProp();
 });
 
 document.getElementById('btn-cam-snapshot')?.addEventListener('click', () => {
@@ -970,8 +1778,9 @@ const btnProjOrtho = document.getElementById('btn-proj-ortho') as HTMLButtonElem
 btnProjPersp?.addEventListener('click', () => {
   btnProjPersp.classList.add('active');
   btnProjOrtho.classList.remove('active');
-  app.resetCamera([0, 22, 22], [0, 0, -4]);
-  showToast('Vista en Perspectiva 3D');
+  const activeRoom = rooms.find((r) => r.id === selectedRoomId) || rooms[0];
+  app.resetCamera([activeRoom.center[0], 18, activeRoom.center[2] + 16], [activeRoom.center[0], 0, activeRoom.center[2]]);
+  showToast('👁️ Vista en Perspectiva 3D');
 });
 
 btnProjOrtho?.addEventListener('click', () => {
@@ -979,8 +1788,8 @@ btnProjOrtho?.addEventListener('click', () => {
   btnProjPersp.classList.remove('active');
   // Position camera directly overhead for 2D top-down floor plan
   const activeRoom = rooms.find((r) => r.id === selectedRoomId) || rooms[0];
-  app.resetCamera([activeRoom.center[0], 32, activeRoom.center[2]], [activeRoom.center[0], 0, activeRoom.center[2]]);
-  showToast('Vista Cenital (Planta 2D)');
+  app.resetCamera([activeRoom.center[0], 28, activeRoom.center[2]], [activeRoom.center[0], 0, activeRoom.center[2]]);
+  showToast('📐 Vista Cenital (Planta 2D)');
 });
 
 // =============================================================================
@@ -995,20 +1804,33 @@ const ASSET_CATALOG: Array<{ category: StudioPropCategory; subtype: string; name
   { category: 'basic', subtype: 'sphere', name: 'Esfera', icon: '⚪' },
   { category: 'basic', subtype: 'cylinder', name: 'Cilindro', icon: '🛢️' },
   { category: 'basic', subtype: 'plane', name: 'Plano', icon: '⬜' },
-  // Mobiliario
-  { category: 'furniture', subtype: 'table', name: 'Mesa', icon: '🪑' },
-  { category: 'furniture', subtype: 'chair', name: 'Silla', icon: '💺' },
-  { category: 'furniture', subtype: 'sofa', name: 'Sofá', icon: '🛋️' },
+
+  // Mobiliario & Zonas de Asientos
+  { category: 'furniture', subtype: 'table', name: 'Mesa Rectangular', icon: '🪑' },
+  { category: 'furniture', subtype: 'table_round', name: 'Mesa Redonda', icon: '⭕' },
+  { category: 'furniture', subtype: 'table_coffee', name: 'Mesa de Centro', icon: '☕' },
+  { category: 'furniture', subtype: 'chair', name: 'Silla de Sala', icon: '💺' },
+  { category: 'furniture', subtype: 'chair_lounge', name: 'Sillón Lounge', icon: '🛋️' },
+  { category: 'furniture', subtype: 'chair_executive', name: 'Silla Ejecutiva', icon: '💼' },
+  { category: 'furniture', subtype: 'sofa', name: 'Sofá Modular', icon: '🛋️' },
+  { category: 'furniture', subtype: 'bench', name: 'Banco de Galería', icon: '🪑' },
   { category: 'furniture', subtype: 'shelf', name: 'Estante', icon: '📚' },
+
+  // Exposición & Multimedia
+  { category: 'exhibition', subtype: 'frame_art', name: 'Marco de Imagen', icon: '🖼️' },
+  { category: 'exhibition', subtype: 'screen_video', name: 'Pantalla de Video', icon: '📺' },
+  { category: 'exhibition', subtype: 'billboard_floating', name: 'Anuncio Flotante', icon: '📢' },
+  { category: 'exhibition', subtype: 'totem', name: 'Tótem Multimedia', icon: '🪧' },
+
   // Arquitectura
   { category: 'architecture', subtype: 'partition_glass', name: 'Mampara Cristal', icon: '🪟' },
   { category: 'architecture', subtype: 'partition_wood', name: 'Mampara Madera', icon: '🪵' },
   { category: 'architecture', subtype: 'partition_neon', name: 'Mampara Neón', icon: '⚡' },
   { category: 'architecture', subtype: 'column', name: 'Columna', icon: '🏛️' },
+
   // Decoración
   { category: 'decoration', subtype: 'sign_neon', name: 'Rótulo Neón', icon: '🏷️' },
   { category: 'decoration', subtype: 'sign_plaque', name: 'Placa Pared', icon: '📌' },
-  { category: 'decoration', subtype: 'totem', name: 'Tótem 3D', icon: '🪧' },
   { category: 'decoration', subtype: 'light_spot', name: 'Foco Spot', icon: '💡' },
   { category: 'decoration', subtype: 'light_point', name: 'Luz Neón', icon: '🏮' },
 ];
@@ -1048,10 +1870,38 @@ function insertObjectFromCatalog(item: { category: StudioPropCategory; subtype: 
   const relZ = parseFloat(((Math.random() - 0.5) * offset).toFixed(2));
   let relY = 0.6;
   let color = '#e0e0e0';
+  let imageUrl: string | undefined = undefined;
+  let videoUrl: string | undefined = undefined;
+  let linkUrl: string | undefined = undefined;
+  let frameWidth: number | undefined = undefined;
+  let frameHeight: number | undefined = undefined;
 
-  if (item.category === 'furniture') { relY = 0; color = '#78350f'; }
-  else if (item.category === 'architecture') { relY = 0; color = '#38bdf8'; }
-  else if (item.category === 'decoration') { relY = 1.8; color = '#38bdf8'; }
+  if (item.category === 'furniture') {
+    relY = 0;
+    color = item.subtype.includes('chair') ? '#1e293b' : '#78350f';
+  } else if (item.category === 'exhibition') {
+    if (item.subtype === 'frame_art') {
+      relY = 1.8;
+      color = '#d4af37';
+      imageUrl = 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=800&auto=format&fit=crop';
+      frameWidth = 2.2;
+      frameHeight = 1.6;
+    } else if (item.subtype === 'screen_video') {
+      relY = 1.6;
+      color = '#0f172a';
+      videoUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+    } else if (item.subtype === 'billboard_floating') {
+      relY = 2.4;
+      color = '#38bdf8';
+      linkUrl = 'https://github.com/Vickman123/Framework-XVR';
+    }
+  } else if (item.category === 'architecture') {
+    relY = 0;
+    color = '#38bdf8';
+  } else if (item.category === 'decoration') {
+    relY = 1.8;
+    color = '#38bdf8';
+  }
 
   const newProp: StudioPropDef = {
     id: `prop-${Date.now().toString(36)}`,
@@ -1069,8 +1919,13 @@ function insertObjectFromCatalog(item: { category: StudioPropCategory; subtype: 
     scaleY: 1,
     scaleZ: 1,
     color,
-    text: 'ZONA DE EXHIBICIÓN',
+    text: item.subtype === 'billboard_floating' ? 'EXPOSICIÓN XR 2026' : 'ZONA DE EXHIBICIÓN',
     intensity: 2.5,
+    imageUrl,
+    videoUrl,
+    linkUrl,
+    frameWidth,
+    frameHeight,
   };
 
   props.push(newProp);
@@ -1297,8 +2152,10 @@ document.addEventListener('mousemove', (e) => {
   playerPitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, playerPitch));
 });
 
-btnTest3D.addEventListener('click', () => {
-  isFirstPerson = !isFirstPerson;
+function toggleFirstPersonMode(forceState?: boolean): void {
+  const target = forceState !== undefined ? forceState : !isFirstPerson;
+  if (isFirstPerson === target) return;
+  isFirstPerson = target;
   app.audio.playWarp();
 
   if (isFirstPerson) {
@@ -1329,7 +2186,9 @@ btnTest3D.addEventListener('click', () => {
     }
     showToast('🛸 Modo Editor / Vista Aérea');
   }
-});
+}
+
+btnTest3D.addEventListener('click', () => toggleFirstPersonMode());
 
 // WebXR Immersive VR Session
 document.getElementById('btn-test-vr')?.addEventListener('click', async () => {
@@ -1344,7 +2203,18 @@ document.getElementById('btn-test-vr')?.addEventListener('click', async () => {
 });
 
 // Update Loop for Walk Navigation & Continuous Collision
+let billboardTimer = 0;
 app.onUpdate((delta) => {
+  billboardTimer += delta;
+  for (const p of props) {
+    if (p.subtype === 'billboard_floating') {
+      const mesh = propMeshMap.get(p.id);
+      if (mesh) {
+        mesh.position.y = p.relY + Math.sin(billboardTimer * 2.0 + (p.relX + p.relZ)) * 0.04;
+      }
+    }
+  }
+
   if (isFirstPerson) {
     const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), playerYaw);
     const right = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), playerYaw);
@@ -1565,13 +2435,67 @@ function generateTSCode(): string {
     const x = ((parentRoom?.center[0] || 0) + p.relX).toFixed(2);
     const y = p.relY.toFixed(2);
     const z = ((parentRoom?.center[2] || 0) + p.relZ).toFixed(2);
+    const varName = `obj_${p.id.replace(/-/g, '_')}`;
+
     code += `// Objeto: ${p.name} (${p.category} / ${p.subtype})\n`;
-    code += `const obj_${p.id.replace(/-/g, '_')} = new THREE.Mesh(\n`;
-    code += `  new THREE.BoxGeometry(1.2, 1.2, 1.2),\n`;
-    code += `  new THREE.MeshStandardMaterial({ color: '${p.color}' })\n`;
-    code += `);\n`;
-    code += `obj_${p.id.replace(/-/g, '_')}.position.set(${x}, ${y}, ${z});\n`;
-    code += `app.scene.nativeScene.add(obj_${p.id.replace(/-/g, '_')});\n\n`;
+    if (p.subtype === 'frame_art') {
+      const w = p.frameWidth || 2.2;
+      const h = p.frameHeight || 1.6;
+      code += `const ${varName} = new THREE.Group();\n`;
+      code += `const border_${varName} = new THREE.Mesh(\n`;
+      code += `  new THREE.BoxGeometry(${w}, ${h}, 0.08),\n`;
+      code += `  new THREE.MeshStandardMaterial({ color: '${p.color}', metalness: 0.6, roughness: 0.35 })\n`;
+      code += `);\n`;
+      code += `${varName}.add(border_${varName});\n`;
+      code += `const matting_${varName} = new THREE.Mesh(\n`;
+      code += `  new THREE.BoxGeometry(${(w - 0.2).toFixed(2)}, ${(h - 0.2).toFixed(2)}, 0.085),\n`;
+      code += `  new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.9 })\n`;
+      code += `);\n`;
+      code += `${varName}.add(matting_${varName});\n`;
+      code += `const artMat_${varName} = new THREE.MeshStandardMaterial({ roughness: 0.3 });\n`;
+      if (p.imageUrl) {
+        code += `new THREE.TextureLoader().load('${p.imageUrl}', (tex) => {\n`;
+        code += `  tex.colorSpace = THREE.SRGBColorSpace;\n`;
+        code += `  artMat_${varName}.map = tex;\n`;
+        code += `  artMat_${varName}.needsUpdate = true;\n`;
+        code += `});\n`;
+      }
+      code += `const artPlane_${varName} = new THREE.Mesh(\n`;
+      code += `  new THREE.PlaneGeometry(${(w - 0.38).toFixed(2)}, ${(h - 0.38).toFixed(2)}),\n`;
+      code += `  artMat_${varName}\n`;
+      code += `);\n`;
+      code += `artPlane_${varName}.position.z = 0.046;\n`;
+      code += `${varName}.add(artPlane_${varName});\n`;
+      code += `${varName}.position.set(${x}, ${y}, ${z});\n`;
+      code += `${varName}.rotation.set(${((p.rotX * Math.PI) / 180).toFixed(3)}, ${((p.rotY * Math.PI) / 180).toFixed(3)}, ${((p.rotZ * Math.PI) / 180).toFixed(3)});\n`;
+      code += `app.scene.nativeScene.add(${varName});\n\n`;
+    } else if (p.subtype === 'screen_video') {
+      code += `const ${varName} = new THREE.Mesh(\n`;
+      code += `  new THREE.BoxGeometry(2.6, 1.5, 0.08),\n`;
+      code += `  new THREE.MeshStandardMaterial({ color: 0x070a12, roughness: 0.4, metalness: 0.8 })\n`;
+      code += `);\n`;
+      code += `${varName}.position.set(${x}, ${y}, ${z});\n`;
+      code += `${varName}.rotation.set(${((p.rotX * Math.PI) / 180).toFixed(3)}, ${((p.rotY * Math.PI) / 180).toFixed(3)}, ${((p.rotZ * Math.PI) / 180).toFixed(3)});\n`;
+      code += `${varName}.userData = { videoUrl: '${p.videoUrl || ''}' };\n`;
+      code += `app.scene.nativeScene.add(${varName});\n\n`;
+    } else if (p.subtype === 'billboard_floating') {
+      code += `const ${varName} = new THREE.Mesh(\n`;
+      code += `  new THREE.BoxGeometry(2.8, 1.3, 0.04),\n`;
+      code += `  new THREE.MeshBasicMaterial({ color: '${p.color}' })\n`;
+      code += `);\n`;
+      code += `${varName}.position.set(${x}, ${y}, ${z});\n`;
+      code += `${varName}.rotation.set(${((p.rotX * Math.PI) / 180).toFixed(3)}, ${((p.rotY * Math.PI) / 180).toFixed(3)}, ${((p.rotZ * Math.PI) / 180).toFixed(3)});\n`;
+      code += `${varName}.userData = { linkUrl: '${p.linkUrl || ''}', text: '${p.text || p.name}' };\n`;
+      code += `app.scene.nativeScene.add(${varName});\n\n`;
+    } else {
+      code += `const ${varName} = new THREE.Mesh(\n`;
+      code += `  new THREE.BoxGeometry(1.2, 1.2, 1.2),\n`;
+      code += `  new THREE.MeshStandardMaterial({ color: '${p.color}' })\n`;
+      code += `);\n`;
+      code += `${varName}.position.set(${x}, ${y}, ${z});\n`;
+      code += `${varName}.rotation.set(${((p.rotX * Math.PI) / 180).toFixed(3)}, ${((p.rotY * Math.PI) / 180).toFixed(3)}, ${((p.rotZ * Math.PI) / 180).toFixed(3)});\n`;
+      code += `app.scene.nativeScene.add(${varName});\n\n`;
+    }
   }
 
   code += `app.start();\n`;
@@ -1647,9 +2571,364 @@ function showToast(msg: string): void {
 }
 
 // =============================================================================
-// App Startup (Restore auto-save if present, build initial scenario)
+// Welcome Modal Controller (2 Options: Learn vs Skip)
+// =============================================================================
+const welcomeModal = document.getElementById('welcome-modal') as HTMLElement;
+const btnCloseWelcome = document.getElementById('btn-close-welcome') as HTMLButtonElement;
+const btnWelcomeLearn = document.getElementById('btn-welcome-learn') as HTMLElement;
+const btnWelcomeSkip = document.getElementById('btn-welcome-skip') as HTMLElement;
+const chkWelcomeDismiss = document.getElementById('chk-welcome-dismiss') as HTMLInputElement;
+
+function showWelcomeIfNeeded(): void {
+  const dismissed = localStorage.getItem('vxr_studio_welcome_dismissed');
+  if (!dismissed && welcomeModal) {
+    welcomeModal.classList.add('active');
+  }
+}
+
+function dismissWelcome(): void {
+  if (chkWelcomeDismiss?.checked) {
+    localStorage.setItem('vxr_studio_welcome_dismissed', 'true');
+  }
+  welcomeModal?.classList.remove('active');
+}
+
+btnCloseWelcome?.addEventListener('click', dismissWelcome);
+welcomeModal?.addEventListener('click', (e) => {
+  if (e.target === welcomeModal) dismissWelcome();
+});
+
+btnWelcomeSkip?.addEventListener('click', () => {
+  dismissWelcome();
+  app.audio.playClick();
+  showToast('🚀 ¡Bienvenido al lienzo de diseño libre!');
+});
+
+btnWelcomeLearn?.addEventListener('click', () => {
+  dismissWelcome();
+  startTutorial();
+});
+
+// =============================================================================
+// Guided Interactive Tutorial Controller (6 Real Steps on Live 3D Scene)
+// =============================================================================
+const tutorialCard = document.getElementById('tutorial-card') as HTMLElement;
+const tutStepBadge = document.getElementById('tut-step-badge') as HTMLElement;
+const tutProgressFill = document.getElementById('tut-progress-fill') as HTMLElement;
+const tutHeadline = document.getElementById('tut-headline') as HTMLElement;
+const tutDescription = document.getElementById('tut-description') as HTMLElement;
+const btnTutPrev = document.getElementById('btn-tut-prev') as HTMLButtonElement;
+const btnTutAuto = document.getElementById('btn-tut-auto') as HTMLButtonElement;
+const btnTutNext = document.getElementById('btn-tut-next') as HTMLButtonElement;
+const btnTutRestart = document.getElementById('btn-tut-restart') as HTMLButtonElement;
+const btnTutClose = document.getElementById('btn-tut-close') as HTMLButtonElement;
+
+interface TutorialStep {
+  title: string;
+  headline: string;
+  description: string;
+  targetSelector?: string;
+  validate: () => boolean;
+  autoComplete: () => void;
+}
+
+let currentTutStepIndex = 0;
+let currentHighlightedEl: HTMLElement | null = null;
+
+function clearTutorialHighlight(): void {
+  if (currentHighlightedEl) {
+    currentHighlightedEl.classList.remove('tutorial-target-highlight');
+    currentHighlightedEl = null;
+  }
+}
+
+function setTutorialHighlight(selector?: string): void {
+  clearTutorialHighlight();
+  if (!selector) return;
+  const el = document.querySelector(selector) as HTMLElement;
+  if (el) {
+    el.classList.add('tutorial-target-highlight');
+    currentHighlightedEl = el;
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+const TUTORIAL_STEPS: TutorialStep[] = [
+  {
+    title: 'Paso 1 de 6',
+    headline: '1. Estructura y Espacio 3D',
+    description: 'VXR Studio organiza las experiencias en salas conectadas. Selecciona tu sala activa en la lista o añade una nueva para definir el espacio de tu exposición.',
+    targetSelector: '#rooms-list',
+    validate: () => rooms.length > 0 && selectedRoomId !== null,
+    autoComplete: () => {
+      if (rooms.length === 0) {
+        rooms.push({
+          id: 'room-main',
+          name: 'Sala Principal',
+          theme: 'gallery',
+          dimensions: { width: 14, depth: 10, height: 4 },
+          center: [0, 0, 0],
+          doors: [],
+          spawnPoint: [0, 1.6, 0],
+        });
+        rebuildScenario();
+      }
+      selectRoom(rooms[0].id);
+      showToast('✓ Sala seleccionada para la exposición');
+    },
+  },
+  {
+    title: 'Paso 2 de 6',
+    headline: '2. Navegación de Cámara 3D',
+    description: 'Aprende a moverte: Arrastra con clic izquierdo para orbitar, gira la rueda del ratón para zoom, y mantén el botón derecho para desplazamiento lateral (pan). Pulsa 🏠 en la barra inferior para centrar la cámara.',
+    targetSelector: '.viewport-bottom-bar',
+    validate: () => true,
+    autoComplete: () => {
+      const activeRoom = rooms.find((r) => r.id === selectedRoomId) || rooms[0];
+      app.resetCamera([activeRoom.center[0], 18, activeRoom.center[2] + 16], [activeRoom.center[0], 0, activeRoom.center[2]]);
+      showToast('🏠 Vista general de la sala centrada');
+    },
+  },
+  {
+    title: 'Paso 3 de 6',
+    headline: '3. Añadir Marco de Imagen',
+    description: 'Ve a la pestaña "Exposición" en el catálogo de objetos de la izquierda y haz clic en "Marco de Imagen". Se generará un marco tridimensional biselado con paspartú.',
+    targetSelector: '[data-category="exhibition"]',
+    validate: () => props.some((p) => p.subtype === 'frame_art'),
+    autoComplete: () => {
+      document.querySelectorAll('.category-pill').forEach((p) => p.classList.remove('active'));
+      const pill = document.querySelector('[data-category="exhibition"]') as HTMLElement;
+      if (pill) pill.classList.add('active');
+      activeCategory = 'exhibition';
+      renderAssetCatalog();
+
+      let art = props.find((p) => p.subtype === 'frame_art');
+      if (!art) {
+        const activeRoom = rooms.find((r) => r.id === selectedRoomId) || rooms[0];
+        art = {
+          id: `prop-${Date.now().toString(36)}`,
+          roomId: activeRoom.id,
+          category: 'exhibition',
+          subtype: 'frame_art',
+          name: 'Obra Maestra 01',
+          relX: 0,
+          relY: 2.0,
+          relZ: -activeRoom.dimensions.depth / 2 + 0.15,
+          rotX: 0,
+          rotY: 0,
+          rotZ: 0,
+          scaleX: 1,
+          scaleY: 1,
+          scaleZ: 1,
+          color: '#d4af37',
+          frameWidth: 2.4,
+          frameHeight: 1.8,
+        };
+        props.push(art);
+        spawnPropMesh(art);
+      }
+      selectProp(art.id);
+      focusSelectedProp();
+      showToast('🖼️ Marco de Imagen colocado en el muro principal');
+    },
+  },
+  {
+    title: 'Paso 4 de 6',
+    headline: '4. Configurar Imagen de la Obra',
+    description: 'En el panel derecho "Propiedades", introduce una URL de imagen o pulsa "📁 Subir Archivo" para mostrar tu fotografía o ilustración en el marco 3D.',
+    targetSelector: '#panel-properties',
+    validate: () => {
+      const art = props.find((p) => p.subtype === 'frame_art');
+      return !!(art && art.imageUrl);
+    },
+    autoComplete: () => {
+      let art = props.find((p) => p.subtype === 'frame_art');
+      if (!art) {
+        TUTORIAL_STEPS[2].autoComplete();
+        art = props.find((p) => p.subtype === 'frame_art')!;
+      }
+      art.imageUrl = 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=1000&auto=format&fit=crop';
+      art.name = 'Retrato Clásico en Óleo';
+      propImageUrl.value = art.imageUrl;
+      const mesh = propMeshMap.get(art.id);
+      if (mesh) {
+        app.scene.nativeScene.remove(mesh);
+        const newMesh = spawnPropMesh(art);
+        if (activeTool !== 'select') transformControls.attach(newMesh);
+      }
+      selectProp(art.id);
+      showToast('🎨 ¡Imagen de alta resolución cargada en el marco!');
+      triggerAutoSave();
+    },
+  },
+  {
+    title: 'Paso 5 de 6',
+    headline: '5. Pantalla de Video & Anuncios',
+    description: 'Enriquece tu nivel multimedia: añade una "Pantalla de Video" (con enlace a YouTube o MP4) o un "Anuncio Flotante" con efecto neón y enlace interactivo.',
+    targetSelector: '[data-category="exhibition"]',
+    validate: () => props.some((p) => p.subtype === 'screen_video' || p.subtype === 'billboard_floating'),
+    autoComplete: () => {
+      const activeRoom = rooms.find((r) => r.id === selectedRoomId) || rooms[0];
+      if (!props.some((p) => p.subtype === 'screen_video')) {
+        const videoProp: StudioPropDef = {
+          id: `prop-${Date.now().toString(36)}_vid`,
+          roomId: activeRoom.id,
+          category: 'exhibition',
+          subtype: 'screen_video',
+          name: 'Pantalla Principal XR',
+          relX: -3.5,
+          relY: 1.5,
+          relZ: -activeRoom.dimensions.depth / 2 + 0.8,
+          rotX: 0,
+          rotY: 15,
+          rotZ: 0,
+          scaleX: 1,
+          scaleY: 1,
+          scaleZ: 1,
+          color: '#0084ff',
+          videoUrl: 'https://www.youtube.com/watch?v=k1BneeJTDcU',
+        };
+        props.push(videoProp);
+        spawnPropMesh(videoProp);
+      }
+      if (!props.some((p) => p.subtype === 'billboard_floating')) {
+        const billboardProp: StudioPropDef = {
+          id: `prop-${Date.now().toString(36)}_bb`,
+          roomId: activeRoom.id,
+          category: 'exhibition',
+          subtype: 'billboard_floating',
+          name: 'Cartelera Holográfica',
+          text: 'VXR CORE EXPERIENCE 2026',
+          linkUrl: 'https://github.com/Vickman123/Framework-XVR',
+          relX: 3.2,
+          relY: 2.4,
+          relZ: -activeRoom.dimensions.depth / 2 + 0.8,
+          rotX: 0,
+          rotY: -15,
+          rotZ: 0,
+          scaleX: 1,
+          scaleY: 1,
+          scaleZ: 1,
+          color: '#38bdf8',
+        };
+        props.push(billboardProp);
+        spawnPropMesh(billboardProp);
+      }
+      showToast('📺 Pantalla de video y anuncio flotante colocados');
+      triggerAutoSave();
+    },
+  },
+  {
+    title: 'Paso 6 de 6',
+    headline: '6. Inmersión 3D & Meta Quest',
+    description: '¡Tu sala interactiva está lista! Pulsa "▷ Probar 3D" para caminar en primera persona con colisiones, o entra en WebXR si dispones de unas Meta Quest. Haz clic sobre las obras para abrirlas en Lightbox o reproducir el video.',
+    targetSelector: '#btn-test-3d',
+    validate: () => isFirstPerson,
+    autoComplete: () => {
+      toggleFirstPersonMode(true);
+      showToast('🚶 ¡Caminando por tu sala 3D! Haz clic en los cuadros para interactuar.');
+    },
+  },
+];
+
+function renderTutorialStep(): void {
+  const step = TUTORIAL_STEPS[currentTutStepIndex];
+  if (!step) return;
+
+  tutStepBadge.textContent = step.title;
+  tutProgressFill.style.width = `${((currentTutStepIndex + 1) / TUTORIAL_STEPS.length) * 100}%`;
+  tutHeadline.textContent = step.headline;
+  tutDescription.textContent = step.description;
+
+  btnTutPrev.disabled = currentTutStepIndex === 0;
+  btnTutPrev.style.opacity = currentTutStepIndex === 0 ? '0.4' : '1';
+
+  if (currentTutStepIndex === TUTORIAL_STEPS.length - 1) {
+    btnTutNext.textContent = '¡Finalizar Tutorial! 🎉';
+  } else {
+    btnTutNext.textContent = 'Validar & Continuar →';
+  }
+
+  setTutorialHighlight(step.targetSelector);
+}
+
+function startTutorial(): void {
+  currentTutStepIndex = 0;
+  tutorialCard.style.display = 'block';
+  renderTutorialStep();
+  app.audio.playClick();
+  showToast('🎓 Tutorial interactivo iniciado');
+}
+
+function closeTutorial(): void {
+  tutorialCard.style.display = 'none';
+  clearTutorialHighlight();
+  showToast('Tutorial cerrado. Puedes reabrirlo con el botón "Tutorial"');
+}
+
+btnTutRestart?.addEventListener('click', () => {
+  currentTutStepIndex = 0;
+  renderTutorialStep();
+  app.audio.playClick();
+  showToast('🔄 Tutorial reiniciado al paso 1');
+});
+
+btnTutClose?.addEventListener('click', closeTutorial);
+
+btnTutPrev?.addEventListener('click', () => {
+  if (currentTutStepIndex > 0) {
+    currentTutStepIndex--;
+    renderTutorialStep();
+    app.audio.playClick();
+  }
+});
+
+btnTutAuto?.addEventListener('click', () => {
+  const step = TUTORIAL_STEPS[currentTutStepIndex];
+  if (step) {
+    step.autoComplete();
+    app.audio.playSuccess();
+    if (currentTutStepIndex < TUTORIAL_STEPS.length - 1) {
+      setTimeout(() => {
+        currentTutStepIndex++;
+        renderTutorialStep();
+      }, 700);
+    }
+  }
+});
+
+btnTutNext?.addEventListener('click', () => {
+  if (currentTutStepIndex === TUTORIAL_STEPS.length - 1) {
+    closeTutorial();
+    app.audio.playSuccess();
+    showToast('🎉 ¡Felicitaciones! Has completado el tutorial de VXR Studio.');
+    return;
+  }
+
+  const step = TUTORIAL_STEPS[currentTutStepIndex];
+  const isValid = step.validate();
+  if (isValid) {
+    currentTutStepIndex++;
+    renderTutorialStep();
+    app.audio.playSuccess();
+  } else {
+    showToast('💡 Acción validada. Avanzando al siguiente paso...');
+    currentTutStepIndex++;
+    renderTutorialStep();
+  }
+});
+
+document.getElementById('btn-top-tutorial')?.addEventListener('click', startTutorial);
+document.getElementById('btn-menu-tutorial')?.addEventListener('click', () => {
+  dropdownMenu.classList.remove('show');
+  startTutorial();
+});
+
+// =============================================================================
+// App Startup (Restore auto-save if present, build initial scenario, show welcome)
 // =============================================================================
 restoreFromAutoSave();
 renderAssetCatalog();
 rebuildScenario();
 app.start();
+showWelcomeIfNeeded();
