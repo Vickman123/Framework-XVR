@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>VXR Studio — Editor Profesional de Escenas & Entornos 3D/XR</title>
+  <title>VXR Studio — Editor de Escenas & Entornos 3D/XR</title>
   <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="../favicon-180x180.png" />
@@ -14,15 +14,19 @@
   
   <style>
     :root {
-      --vxr-bg-dark: #050811;
-      --vxr-bg-surface: rgba(13, 19, 36, 0.88);
-      --vxr-bg-card: rgba(15, 23, 42, 0.75);
+      --vxr-bg-dark: #070a12;
+      --vxr-bg-panel: #0d121f;
+      --vxr-bg-panel-header: #090e18;
+      --vxr-bg-card: #131b2e;
+      --vxr-bg-card-hover: #182238;
+      --vxr-bg-input: #080d18;
       --vxr-border: rgba(255, 255, 255, 0.08);
-      --vxr-border-accent: rgba(56, 189, 248, 0.35);
+      --vxr-border-active: #0284c7;
       --vxr-cyan: #38bdf8;
-      --vxr-blue: #0284c7;
-      --vxr-indigo: #6366f1;
-      --vxr-purple: #a855f7;
+      --vxr-blue: #0084ff;
+      --vxr-purple: #7c3aed;
+      --vxr-red: #ef4444;
+      --vxr-green: #22c55e;
       --vxr-text-main: #f8fafc;
       --vxr-text-sub: #94a3b8;
       --vxr-text-dim: #64748b;
@@ -31,20 +35,34 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: var(--font-display); color: var(--vxr-text-main); user-select: none; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--vxr-bg-dark);
+      font-family: var(--font-display);
+      color: var(--vxr-text-main);
+      user-select: none;
+    }
 
-    #app { width: 100%; height: 100%; position: absolute; inset: 0; }
+    /* Main Grid Layout: Top Bar + (Left Panel | Center Viewport | Right Panel) */
+    #studio-layout {
+      display: grid;
+      grid-template-rows: 56px 1fr;
+      grid-template-columns: 320px 1fr 320px;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
 
-    /* Top Bar */
+    /* =========================================================================
+       1. Top Bar
+       ========================================================================= */
     .top-bar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
+      grid-column: 1 / -1;
       height: 56px;
-      background: rgba(5, 8, 17, 0.88);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      background: var(--vxr-bg-panel);
       border-bottom: 1px solid var(--vxr-border);
       display: flex;
       align-items: center;
@@ -59,23 +77,11 @@
       gap: 12px;
     }
 
-    .brand-link {
-      color: #38bdf8;
-      text-decoration: none;
-      font-size: 12px;
-      font-weight: 700;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 10px;
-      border-radius: 6px;
-      background: rgba(56, 189, 248, 0.1);
-      border: 1px solid rgba(56, 189, 248, 0.25);
-      transition: all 0.2s;
-    }
-    .brand-link:hover {
-      background: rgba(56, 189, 248, 0.2);
-      color: #fff;
+    .brand-logo {
+      height: 24px;
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.4));
     }
 
     .brand-title {
@@ -83,27 +89,56 @@
       font-weight: 800;
       letter-spacing: -0.02em;
       color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .brand-badge {
+
+    .badge-beta {
       font-size: 10px;
       font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 3px 8px;
+      padding: 2px 7px;
       border-radius: 9999px;
-      background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%);
-      border: 1px solid rgba(56, 189, 248, 0.4);
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.35);
       color: #38bdf8;
+    }
+
+    .project-dropdown {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      margin-left: 8px;
+    }
+
+    .project-select-btn {
+      background: transparent;
+      border: none;
+      color: var(--vxr-text-sub);
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .project-select-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
     }
 
     .top-actions {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
 
-    .top-btn {
-      padding: 7px 12px;
+    .btn-top {
+      padding: 7px 14px;
       border-radius: 8px;
       font-size: 12px;
       font-weight: 700;
@@ -112,500 +147,726 @@
       align-items: center;
       gap: 6px;
       border: 1px solid var(--vxr-border);
-      background: rgba(15, 23, 42, 0.8);
-      color: #cbd5e1;
+      background: rgba(255, 255, 255, 0.03);
+      color: #e2e8f0;
       font-family: inherit;
-      transition: all 0.2s;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .top-btn:hover {
-      background: rgba(30, 41, 59, 0.9);
-      border-color: rgba(56, 189, 248, 0.4);
+    .btn-top:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
       color: #fff;
     }
 
-    .top-btn-vr {
-      background: rgba(168, 85, 247, 0.15);
+    .btn-top-vr {
+      background: rgba(124, 58, 237, 0.2);
       border-color: rgba(168, 85, 247, 0.4);
-      color: #c084fc;
+      color: #d8b4fe;
     }
-    .top-btn-vr:hover {
-      background: rgba(168, 85, 247, 0.3);
+    .btn-top-vr:hover {
+      background: rgba(124, 58, 237, 0.35);
       border-color: #a855f7;
       color: #fff;
-      box-shadow: 0 0 16px rgba(168, 85, 247, 0.35);
+      box-shadow: 0 0 16px rgba(124, 58, 237, 0.4);
     }
 
-    .top-btn-primary {
-      background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%);
-      color: #fff;
-      border-color: rgba(56, 189, 248, 0.4);
-      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
-    }
-    .top-btn-primary:hover {
-      background: linear-gradient(135deg, #0369a1 0%, #4338ca 100%);
-      transform: translateY(-1px);
-    }
-
-    /* Left Drawer / Studio Sidebar */
-    .studio-sidebar {
-      position: fixed;
-      top: 68px;
-      left: 16px;
-      bottom: 80px;
-      width: 370px;
-      background: var(--vxr-bg-surface);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--vxr-border);
-      border-radius: 16px;
-      display: flex;
-      flex-direction: column;
-      z-index: 90;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
-      transition: transform 0.3s ease;
-      overflow: hidden;
-    }
-
-    .studio-sidebar.collapsed {
-      transform: translateX(-400px);
-    }
-
-    .sidebar-tabs {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      border-bottom: 1px solid var(--vxr-border);
-      background: rgba(15, 23, 42, 0.95);
-    }
-
-    .tab-btn {
-      padding: 10px 4px;
-      font-size: 10.5px;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      color: var(--vxr-text-dim);
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      transition: all 0.2s;
-      border-bottom: 2px solid transparent;
-    }
-    .tab-btn:hover {
-      color: #cbd5e1;
-      background: rgba(255, 255, 255, 0.03);
-    }
-    .tab-btn.active {
-      color: #38bdf8;
-      border-bottom-color: #38bdf8;
-      background: rgba(56, 189, 248, 0.08);
-    }
-    .tab-icon { font-size: 15px; }
-
-    .sidebar-body {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .section-title {
-      font-size: 11.5px;
-      font-weight: 800;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: #94a3b8;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 4px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .form-label {
-      font-size: 11.5px;
-      font-weight: 600;
-      color: #cbd5e1;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .form-label .val {
-      font-family: var(--font-mono);
-      color: #38bdf8;
-      font-size: 11px;
-    }
-    .form-input, .form-select, .form-textarea {
-      width: 100%;
-      background: rgba(15, 23, 42, 0.7);
-      border: 1px solid var(--vxr-border);
-      border-radius: 8px;
-      padding: 8px 12px;
-      color: #f8fafc;
-      font-family: inherit;
-      font-size: 12.5px;
-      outline: none;
-      transition: all 0.2s;
-    }
-    .form-input:focus, .form-select:focus, .form-textarea:focus {
-      border-color: #38bdf8;
-      box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
-    }
-    .form-range {
-      width: 100%;
-      accent-color: #38bdf8;
-      cursor: pointer;
-    }
-
-    .btn-action {
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 12.5px;
-      font-weight: 700;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      border: 1px solid rgba(56, 189, 248, 0.4);
-      background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
-      color: #fff;
-      font-family: inherit;
-      transition: all 0.2s;
-    }
-    .btn-action:hover {
-      filter: brightness(1.1);
-      transform: translateY(-1px);
-    }
-    .btn-secondary {
-      background: rgba(15, 23, 42, 0.8);
-      border-color: var(--vxr-border);
-      color: #cbd5e1;
-    }
-    .btn-secondary:hover {
-      background: rgba(30, 41, 59, 0.9);
-      color: #fff;
-    }
-
-    .items-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      max-height: 180px;
-      overflow-y: auto;
-      padding-right: 4px;
-    }
-
-    .item-card {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid var(--vxr-border);
-      border-radius: 8px;
-      padding: 8px 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .item-card:hover {
-      background: rgba(56, 189, 248, 0.08);
-      border-color: rgba(56, 189, 248, 0.3);
-    }
-    .item-card.active {
-      background: rgba(56, 189, 248, 0.15);
-      border-color: #38bdf8;
-      box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
-    }
-
-    .item-info {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      overflow: hidden;
-    }
-    .item-name {
-      font-size: 12px;
-      font-weight: 700;
-      color: #f8fafc;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
-    }
-    .item-sub {
-      font-size: 10.5px;
-      color: var(--vxr-text-dim);
-      font-family: var(--font-mono);
-    }
-
-    .placement-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 6px;
-    }
-    .placement-btn {
-      padding: 8px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 700;
-      background: rgba(15, 23, 42, 0.7);
-      border: 1px solid var(--vxr-border);
-      color: #cbd5e1;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .placement-btn:hover {
-      background: rgba(56, 189, 248, 0.15);
+    .btn-top-export {
+      background: var(--vxr-blue);
       border-color: #38bdf8;
       color: #fff;
+      box-shadow: 0 4px 14px rgba(0, 132, 255, 0.35);
+    }
+    .btn-top-export:hover {
+      background: #0070d8;
+      box-shadow: 0 6px 20px rgba(0, 132, 255, 0.5);
     }
 
-    /* Floating Stats Bar */
-    .stats-bar {
-      position: fixed;
-      bottom: 85px;
-      right: 20px;
-      background: rgba(13, 19, 36, 0.85);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--vxr-border);
-      border-radius: 12px;
-      padding: 8px 16px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      z-index: 80;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-    }
-    .stat-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-    }
-    .stat-val {
-      font-family: var(--font-mono);
-      font-size: 13px;
-      font-weight: 800;
-      color: #38bdf8;
-    }
-    .stat-lbl {
-      font-size: 9.5px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      color: var(--vxr-text-dim);
-    }
-
-    /* Floating Controls Hint */
-    .controls-hint {
-      position: fixed;
-      top: 68px;
-      right: 20px;
-      background: rgba(13, 19, 36, 0.8);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--vxr-border);
-      border-radius: 10px;
-      padding: 6px 14px;
-      font-size: 11.5px;
-      color: #94a3b8;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      z-index: 70;
-    }
-    .controls-hint kbd {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 4px;
-      padding: 2px 6px;
-      font-family: var(--font-mono);
-      font-size: 10px;
-      color: #fff;
-    }
-
-    /* Toggle Drawer Button */
-    .toggle-drawer-btn {
-      position: fixed;
-      top: 76px;
-      left: 396px;
+    .btn-icon-menu {
       width: 32px;
       height: 32px;
       border-radius: 8px;
-      background: rgba(13, 19, 36, 0.85);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--vxr-border);
-      color: #cbd5e1;
       display: flex;
       align-items: center;
       justify-content: center;
+      background: transparent;
+      border: 1px solid var(--vxr-border);
+      color: var(--vxr-text-sub);
       cursor: pointer;
-      z-index: 95;
-      transition: all 0.3s ease;
-      font-size: 12px;
+      font-size: 16px;
     }
-    .toggle-drawer-btn:hover {
-      background: rgba(56, 189, 248, 0.2);
-      border-color: #38bdf8;
+    .btn-icon-menu:hover {
+      background: rgba(255, 255, 255, 0.06);
       color: #fff;
     }
-    .toggle-drawer-btn.collapsed {
-      left: 16px;
+
+    /* Dropdown Menu for 3-dots */
+    .dropdown-menu {
+      position: absolute;
+      top: 52px;
+      right: 16px;
+      background: var(--vxr-bg-panel);
+      border: 1px solid var(--vxr-border);
+      border-radius: 12px;
+      padding: 6px;
+      min-width: 220px;
+      display: none;
+      flex-direction: column;
+      gap: 2px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.8);
+      z-index: 200;
+    }
+    .dropdown-menu.show { display: flex; }
+    .dropdown-item {
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #cbd5e1;
+      background: none;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-align: left;
+      font-family: inherit;
+    }
+    .dropdown-item:hover {
+      background: rgba(56, 189, 248, 0.1);
+      color: #38bdf8;
     }
 
-    /* Bottom Quick Shelf - Asset Palette */
-    .quick-shelf {
-      position: fixed;
-      bottom: 16px;
-      left: 396px;
-      right: 20px;
-      background: rgba(13, 19, 36, 0.9);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--vxr-border);
-      border-radius: 14px;
-      padding: 8px 14px;
-      z-index: 85;
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+    /* =========================================================================
+       2. Left Panel: Objetos & Biblioteca
+       ========================================================================= */
+    #panel-objects {
+      background: var(--vxr-bg-panel);
+      border-right: 1px solid var(--vxr-border);
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      transition: all 0.3s ease;
+      overflow: hidden;
+      z-index: 20;
     }
-    .quick-shelf.sidebar-collapsed {
-      left: 56px;
-    }
-    .quick-shelf-header {
+
+    .panel-header {
+      padding: 14px 16px 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 10px;
+      border-bottom: 1px solid var(--vxr-border);
+    }
+
+    .panel-title {
+      font-size: 14px;
       font-weight: 800;
-      letter-spacing: 0.08em;
-      color: #94a3b8;
+      letter-spacing: -0.01em;
+      color: #fff;
     }
-    .shelf-hint {
+
+    .btn-panel-action {
+      background: none;
+      border: none;
       color: var(--vxr-text-dim);
-      font-weight: 500;
-      font-size: 10px;
-    }
-    .quick-shelf-scroll {
+      font-size: 14px;
+      cursor: pointer;
       display: flex;
       align-items: center;
+      justify-content: center;
+      padding: 4px;
+      border-radius: 4px;
+    }
+    .btn-panel-action:hover { color: #fff; }
+
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Search Box */
+    .search-box {
+      position: relative;
+      width: 100%;
+    }
+    .search-input {
+      width: 100%;
+      background: var(--vxr-bg-input);
+      border: 1px solid var(--vxr-border);
+      border-radius: 8px;
+      padding: 8px 12px 8px 32px;
+      font-size: 12px;
+      color: #fff;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: var(--vxr-border-active); }
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      color: var(--vxr-text-dim);
+      pointer-events: none;
+    }
+
+    /* Category Pills */
+    .category-pills {
+      display: flex;
       gap: 6px;
       overflow-x: auto;
       padding-bottom: 2px;
     }
-    .quick-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 11px;
-      background: rgba(15, 23, 42, 0.75);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      color: #e2e8f0;
+    .category-pill {
+      padding: 5px 12px;
+      border-radius: 9999px;
       font-size: 11px;
       font-weight: 700;
+      border: 1px solid var(--vxr-border);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--vxr-text-sub);
       cursor: pointer;
       white-space: nowrap;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      font-family: inherit;
-    }
-    .quick-chip:hover {
-      background: rgba(56, 189, 248, 0.15);
-      border-color: rgba(56, 189, 248, 0.5);
-      color: #38bdf8;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(56, 189, 248, 0.25);
-    }
-    .chip-icon { font-size: 14px; }
-    .shelf-separator {
-      width: 1px;
-      height: 20px;
-      background: var(--vxr-border);
-      margin: 0 4px;
-      flex-shrink: 0;
-    }
-
-    /* Object Cards & Badges */
-    .prop-item-card {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid var(--vxr-border);
-      border-radius: 8px;
-      padding: 8px 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      cursor: pointer;
       transition: all 0.2s;
     }
-    .prop-item-card:hover {
-      background: rgba(56, 189, 248, 0.08);
-      border-color: rgba(56, 189, 248, 0.3);
+    .category-pill:hover {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.2);
     }
-    .prop-item-card.selected {
-      background: rgba(56, 189, 248, 0.15);
-      border-color: #38bdf8;
-      box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
-    }
-    .prop-info-col {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      overflow: hidden;
-    }
-    .prop-title {
-      font-size: 12px;
-      font-weight: 700;
-      color: #f8fafc;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
-    }
-    .prop-meta {
-      font-size: 10px;
-      color: var(--vxr-text-dim);
-      font-family: var(--font-mono);
-    }
-    .badge-sub {
-      font-size: 9px;
-      font-weight: 800;
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: rgba(56, 189, 248, 0.15);
-      color: #38bdf8;
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      text-transform: uppercase;
-    }
-    .btn-rot-preset {
-      padding: 5px 6px;
-      font-size: 11px;
-      font-weight: 700;
-      text-align: center;
-      border-radius: 6px;
-      background: rgba(15, 23, 42, 0.8);
-      border: 1px solid var(--vxr-border);
-      color: #cbd5e1;
-      cursor: pointer;
-    }
-    .btn-rot-preset:hover {
+    .category-pill.active {
+      background: var(--vxr-blue);
       border-color: #38bdf8;
       color: #fff;
     }
 
-    /* Modal Overlay */
+    /* Grid of Asset Cards */
+    .asset-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .asset-card {
+      background: var(--vxr-bg-card);
+      border: 1px solid var(--vxr-border);
+      border-radius: 10px;
+      padding: 10px 4px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .asset-card:hover {
+      background: var(--vxr-bg-card-hover);
+      border-color: rgba(56, 189, 248, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+    }
+    .asset-icon-box {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+    .asset-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #cbd5e1;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+      padding: 0 2px;
+    }
+
+    /* Section Subheadings */
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .btn-text-action {
+      background: none;
+      border: none;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--vxr-cyan);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-text-action:hover { text-decoration: underline; }
+
+    /* Room Cards */
+    .rooms-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .room-card {
+      background: var(--vxr-bg-card);
+      border: 1px solid var(--vxr-border);
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .room-card:hover {
+      border-color: rgba(56, 189, 248, 0.3);
+      background: var(--vxr-bg-card-hover);
+    }
+    .room-card.selected {
+      border-color: var(--vxr-blue);
+      background: rgba(0, 132, 255, 0.08);
+      box-shadow: 0 0 12px rgba(0, 132, 255, 0.2);
+    }
+    .room-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      background: #090e1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      border: 1px solid var(--vxr-border);
+      flex-shrink: 0;
+    }
+    .room-meta {
+      flex: 1;
+      overflow: hidden;
+    }
+    .room-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .room-sub {
+      font-size: 10px;
+      color: var(--vxr-text-dim);
+      margin-top: 2px;
+    }
+    .btn-room-del {
+      background: none;
+      border: none;
+      color: var(--vxr-text-dim);
+      font-size: 13px;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .btn-room-del:hover { color: var(--vxr-red); }
+
+    .btn-add-room-big {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      background: var(--vxr-blue);
+      border: 1px solid #38bdf8;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-add-room-big:hover {
+      background: #0070d8;
+      box-shadow: 0 4px 16px rgba(0, 132, 255, 0.4);
+    }
+
+    /* =========================================================================
+       3. Central Viewport (Visor 3D)
+       ========================================================================= */
+    #center-viewport {
+      position: relative;
+      background: #000;
+      overflow: hidden;
+    }
+
+    #app {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      inset: 0;
+    }
+
+    /* Top Floating Toolbar (Select, Move, Rotate, Scale) */
+    .viewport-top-toolbar {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      background: rgba(13, 18, 31, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--vxr-border);
+      border-radius: 10px;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      z-index: 10;
+    }
+
+    .tool-btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .tool-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+    .tool-btn.active {
+      background: var(--vxr-blue);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0, 132, 255, 0.35);
+    }
+
+    /* Viewcube / Compass placeholder */
+    .viewcube-compass {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(13, 18, 31, 0.8);
+      border: 1px solid var(--vxr-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      font-size: 18px;
+      pointer-events: none;
+    }
+
+    /* Bottom Floating Bar (Camera & Projection) */
+    .viewport-bottom-bar {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(13, 18, 31, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--vxr-border);
+      border-radius: 10px;
+      padding: 4px 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 10;
+    }
+
+    .btn-cam-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: transparent;
+      border: none;
+      color: #cbd5e1;
+      font-size: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .btn-cam-icon:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .v-sep {
+      width: 1px;
+      height: 20px;
+      background: var(--vxr-border);
+      margin: 0 2px;
+    }
+
+    .btn-proj {
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--vxr-text-sub);
+      font-size: 11px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-proj:hover { color: #fff; }
+    .btn-proj.active {
+      background: var(--vxr-blue);
+      color: #fff;
+    }
+
+    /* =========================================================================
+       4. Right Panel: Propiedades (Inspector)
+       ========================================================================= */
+    #panel-properties {
+      background: var(--vxr-bg-panel);
+      border-left: 1px solid var(--vxr-border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 20;
+    }
+
+    .prop-group {
+      border-bottom: 1px solid var(--vxr-border);
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+    }
+
+    .prop-group-head {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--vxr-text-dim);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Selected Object Card */
+    .selected-hero-card {
+      background: var(--vxr-bg-card);
+      border: 1px solid var(--vxr-border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .hero-thumb-box {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: #060a14;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      border: 1px solid var(--vxr-border);
+    }
+    .hero-info { flex: 1; overflow: hidden; }
+    .hero-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .hero-type {
+      font-size: 10.5px;
+      color: var(--vxr-text-dim);
+      margin-top: 1px;
+    }
+
+    /* Axis Input Row: X (Red), Y (Green), Z (Blue) */
+    .axis-row-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--vxr-text-sub);
+      margin-bottom: 6px;
+    }
+    .axis-inputs-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .axis-field {
+      background: var(--vxr-bg-input);
+      border: 1px solid var(--vxr-border);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+    .axis-field:focus-within {
+      border-color: var(--vxr-border-active);
+    }
+    .axis-badge {
+      width: 20px;
+      height: 100%;
+      font-size: 10px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+    .axis-badge-x { background: rgba(239, 68, 68, 0.2); color: var(--vxr-red); }
+    .axis-badge-y { background: rgba(34, 197, 94, 0.2); color: var(--vxr-green); }
+    .axis-badge-z { background: rgba(59, 130, 246, 0.2); color: var(--vxr-cyan); }
+
+    .axis-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 6px 4px;
+      outline: none;
+    }
+
+    /* Material Controls */
+    .material-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .color-swatch-box {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1px solid var(--vxr-border);
+      background: #e0e0e0;
+      flex-shrink: 0;
+    }
+    .color-hex-input {
+      flex: 1;
+      background: var(--vxr-bg-input);
+      border: 1px solid var(--vxr-border);
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #fff;
+      outline: none;
+    }
+    .color-wheel-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1px solid var(--vxr-border);
+      background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .color-wheel-btn input[type="color"] {
+      position: absolute;
+      inset: -10px;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .btn-upload-tex {
+      padding: 6px 10px;
+      background: var(--vxr-bg-card);
+      border: 1px solid var(--vxr-border);
+      border-radius: 6px;
+      color: #cbd5e1;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-upload-tex:hover {
+      background: var(--vxr-bg-card-hover);
+      color: #fff;
+    }
+
+    /* Action Buttons in Properties */
+    .actions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .btn-act {
+      padding: 9px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-act-dup {
+      background: var(--vxr-bg-card);
+      border: 1px solid var(--vxr-border);
+      color: #cbd5e1;
+    }
+    .btn-act-dup:hover {
+      background: var(--vxr-bg-card-hover);
+      color: #fff;
+    }
+    .btn-act-del {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: var(--vxr-red);
+    }
+    .btn-act-del:hover {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fff;
+    }
+
+    /* Empty state in properties */
+    .empty-state {
+      padding: 30px 16px;
+      text-align: center;
+      color: var(--vxr-text-dim);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .empty-state-icon {
+      font-size: 32px;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    /* Modal Overlay (Export & Add Room) */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -618,128 +879,56 @@
       z-index: 2000;
       padding: 20px;
     }
+    .modal-overlay.active { display: flex; }
     .modal-box {
       width: 100%;
-      max-width: 760px;
-      max-height: 85vh;
-      background: var(--vxr-bg-surface);
-      border: 1px solid var(--vxr-border-accent);
-      border-radius: 18px;
+      max-width: 680px;
+      background: var(--vxr-bg-panel);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 16px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
       box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
     }
-    .modal-header {
+    .modal-head {
       padding: 16px 20px;
       border-bottom: 1px solid var(--vxr-border);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: rgba(15, 23, 42, 0.9);
+      background: var(--vxr-bg-panel-header);
     }
-    .modal-title {
-      font-size: 15px;
-      font-weight: 800;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .modal-close {
-      background: none;
-      border: none;
-      color: var(--vxr-text-dim);
-      font-size: 18px;
-      cursor: pointer;
-    }
+    .modal-title { font-size: 15px; font-weight: 800; color: #fff; }
+    .modal-close { background: none; border: none; color: var(--vxr-text-dim); font-size: 18px; cursor: pointer; }
     .modal-close:hover { color: #fff; }
-
-    .modal-tabs {
-      display: flex;
-      align-items: center;
-      background: rgba(15, 23, 42, 0.6);
-      border-bottom: 1px solid var(--vxr-border);
-      padding: 0 16px;
-    }
-    .modal-tab-btn {
-      padding: 10px 16px;
-      background: none;
-      border: none;
-      border-bottom: 2px solid transparent;
-      color: var(--vxr-text-dim);
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      font-family: inherit;
-    }
-    .modal-tab-btn.active {
-      color: #38bdf8;
-      border-bottom-color: #38bdf8;
-    }
-
-    .modal-body {
-      padding: 16px 20px;
-      overflow-y: auto;
-      flex: 1;
-    }
-
-    .code-box {
+    .modal-body { padding: 18px 20px; overflow-y: auto; max-height: 70vh; }
+    .code-display {
       background: #040711;
-      border: 1px solid rgba(56, 189, 248, 0.2);
+      border: 1px solid var(--vxr-border);
       border-radius: 10px;
-      padding: 16px;
+      padding: 14px;
       font-family: var(--font-mono);
-      font-size: 12px;
-      color: #a5f3fc;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      max-height: 380px;
+      font-size: 11.5px;
+      color: #38bdf8;
+      max-height: 320px;
       overflow-y: auto;
+      white-space: pre-wrap;
     }
-
-    .modal-footer {
+    .modal-foot {
       padding: 14px 20px;
       border-top: 1px solid var(--vxr-border);
-      background: rgba(15, 23, 42, 0.9);
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    /* Mobile Joystick */
-    #mobile-joystick {
-      position: fixed;
-      bottom: 90px;
-      left: 30px;
-      width: 100px;
-      height: 100px;
-      background: rgba(15, 23, 42, 0.5);
-      border: 2px solid rgba(56, 189, 248, 0.3);
-      border-radius: 50%;
-      touch-action: none;
-      z-index: 40;
-      display: none;
-    }
-    #joystick-knob {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 40px;
-      height: 40px;
-      background: radial-gradient(circle, #38bdf8 0%, #0284c7 100%);
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
-      pointer-events: none;
+      justify-content: flex-end;
+      gap: 10px;
+      background: var(--vxr-bg-panel-header);
     }
 
     /* Toast */
     #toast {
       position: fixed;
-      bottom: 85px;
+      bottom: 24px;
       left: 50%;
       transform: translateX(-50%);
       background: #0f172a;
@@ -756,11 +945,21 @@
       z-index: 10000;
     }
 
-    @media (max-width: 900px) {
-      .studio-sidebar { width: calc(100vw - 32px); max-height: 45vh; bottom: 85px; }
-      .quick-shelf { left: 16px; right: 16px; }
-      .controls-hint { display: none; }
-      .stats-bar { display: none; }
+    /* Responsive */
+    @media (max-width: 960px) {
+      #studio-layout {
+        grid-template-columns: 280px 1fr;
+      }
+      #panel-properties {
+        position: absolute;
+        right: 0;
+        top: 56px;
+        bottom: 0;
+        width: 300px;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+      }
+      #panel-properties.open { transform: translateX(0); }
     }
   </style>
 </head>
@@ -772,113 +971,407 @@
     <span id="toast-msg">Mensaje</span>
   </div>
 
-  <!-- Top Bar -->
-  <header class="top-bar">
-    <div class="brand-group">
-      <a href="../" class="brand-link" style="display: inline-flex; align-items: center; gap: 8px;">
-        <img src="../vxr-logo.png" alt="VXR" style="height: 22px; width: auto; object-fit: contain; filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.45));" />
-        <span>Inicio</span>
-      </a>
-      <span class="brand-title">VXR Studio</span>
-      <span class="brand-badge">Studio XR</span>
-    </div>
+  <div id="studio-layout">
 
-    <div class="top-actions">
-      <!-- Camera Toggle -->
-      <button id="btn-camera-mode" class="top-btn" title="Alternar entre modo Editor Orbital y Primera Persona">
-        <span>🚶</span>
-        <span id="cam-mode-text">Modo Paseo (FPS)</span>
-      </button>
+    <!-- =======================================================================
+         1. TOP BAR
+         ======================================================================= -->
+    <header class="top-bar">
+      <div class="brand-group">
+        <a href="../" title="Volver al Portal VXR" style="display: flex; align-items: center; text-decoration: none;">
+          <img src="../vxr-logo.png" alt="VXR" class="brand-logo" />
+        </a>
+        <span class="brand-title">
+          VXR Studio
+          <span class="badge-beta">Beta</span>
+        </span>
 
-      <!-- WebXR VR Test -->
-      <button id="btn-vr-mode" class="top-btn top-btn-vr" title="Probar experiencia inmersiva en Meta Quest (WebXR)">
-        <span>🥽</span>
-        <span>Probar en VR</span>
-      </button>
-
-      <!-- Preset Templates -->
-      <select id="select-preset" class="form-select" style="width: auto; padding: 6px 10px;" title="Cargar plantilla de ejemplo">
-        <option value="museum">🏛️ Plantilla: Museo Interdisciplinario</option>
-        <option value="scifi">🔬 Plantilla: Laboratorio de Ciencias</option>
-        <option value="bim">🏢 Plantilla: Showroom Arquitectónico</option>
-        <option value="empty">➕ Plantilla: Lienzo en Blanco</option>
-      </select>
-
-      <!-- Import JSON -->
-      <button id="btn-import-project" class="top-btn" title="Importar escenario desde archivo JSON">
-        <span>📂</span>
-        <span>Importar JSON</span>
-      </button>
-      <input type="file" id="file-import-json" accept=".json" style="display: none;" />
-
-      <!-- Export Project Button -->
-      <button id="btn-export-project" class="top-btn top-btn-primary" title="Exportar código y proyecto">
-        <span>🚀 Exportar Código</span>
-      </button>
-
-      <!-- Sound Toggle -->
-      <button id="btn-sound-toggle" class="top-btn" title="Alternar audio procedural">
-        🔊 ON
-      </button>
-    </div>
-  </header>
-
-  <!-- 3D Canvas -->
-  <div id="app"></div>
-
-  <!-- Studio Sidebar -->
-  <aside id="sidebar" class="studio-sidebar">
-    <div class="sidebar-tabs">
-      <button class="tab-btn active" data-tab="rooms">
-        <span class="tab-icon">🏛️</span>
-        <span>Salas</span>
-      </button>
-      <button class="tab-btn" data-tab="doors">
-        <span class="tab-icon">🚪</span>
-        <span>Pasillos</span>
-      </button>
-      <button class="tab-btn" data-tab="objects">
-        <span class="tab-icon">📦</span>
-        <span>Objetos</span>
-      </button>
-      <button class="tab-btn" data-tab="inspector">
-        <span class="tab-icon">🛠️</span>
-        <span>Inspector</span>
-      </button>
-      <button class="tab-btn" data-tab="environment">
-        <span class="tab-icon">🎨</span>
-        <span>Entorno</span>
-      </button>
-      <button class="tab-btn" data-tab="audio">
-        <span class="tab-icon">🎵</span>
-        <span>Audio</span>
-      </button>
-    </div>
-
-    <!-- TAB 1: SALAS -->
-    <div id="tab-content-rooms" class="sidebar-body">
-      <div class="section-title">
-        <span>Salas del Escenario</span>
-        <span id="rooms-counter-badge" style="color: #38bdf8; font-family: var(--font-mono);">3</span>
+        <div class="project-dropdown">
+          <button id="btn-project-select" class="project-select-btn" title="Cambiar o gestionar proyecto">
+            <span id="lbl-project-name">Proyecto: Museo Interdisciplinario</span>
+            <span>⌵</span>
+          </button>
+        </div>
       </div>
 
-      <div id="rooms-list" class="items-list">
-        <!-- Rendered dynamically -->
+      <div class="top-actions">
+        <!-- Probar 3D (FPS Walk) -->
+        <button id="btn-test-3d" class="btn-top" title="Entrar en modo paseo en primera persona con colisiones">
+          <span>▷</span>
+          <span id="lbl-btn-3d">Probar 3D</span>
+        </button>
+
+        <!-- Probar en VR (Meta Quest WebXR) -->
+        <button id="btn-test-vr" class="btn-top btn-top-vr" title="Probar experiencia inmersiva en Meta Quest (WebXR)">
+          <span>🥽</span>
+          <span>Probar en VR</span>
+        </button>
+
+        <!-- Exportar -->
+        <button id="btn-export" class="btn-top btn-top-export" title="Exportar código y proyecto">
+          <span>↑</span>
+          <span>Exportar</span>
+        </button>
+
+        <!-- 3-Dots Menu -->
+        <div style="position: relative;">
+          <button id="btn-more-options" class="btn-icon-menu" title="Opciones adicionales">
+            ⋮
+          </button>
+          <div id="dropdown-menu" class="dropdown-menu">
+            <button id="btn-menu-save" class="dropdown-item">
+              <span>💾</span> Guardar en Navegador (Local)
+            </button>
+            <button id="btn-menu-import" class="dropdown-item">
+              <span>📂</span> Importar Proyecto JSON
+            </button>
+            <button id="btn-menu-empty" class="dropdown-item">
+              <span>✨</span> Reiniciar Escena (Lienzo en Blanco)
+            </button>
+            <button id="btn-menu-sound" class="dropdown-item">
+              <span>🔊</span> Alternar Sonido: <b id="lbl-sound-status">ON</b>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hidden file inputs -->
+    <input type="file" id="file-import-json" accept=".json" style="display: none;" />
+    <input type="file" id="file-import-glb" accept=".glb,.gltf" style="display: none;" />
+    <input type="file" id="file-upload-texture" accept="image/png,image/jpeg,image/webp" style="display: none;" />
+
+    <!-- =======================================================================
+         2. LEFT PANEL: OBJETOS & BIBLIOTECA
+         ======================================================================= -->
+    <aside id="panel-objects">
+      <div class="panel-header">
+        <span class="panel-title">Objetos</span>
+        <button id="btn-collapse-left" class="btn-panel-action" title="Colapsar panel">
+          ⤢
+        </button>
       </div>
 
-      <div style="border-top: 1px solid var(--vxr-border); padding-top: 10px; display: flex; flex-direction: column; gap: 10px;">
-        <div class="section-title">
-          <span id="room-editor-title">Añadir Nueva Sala</span>
+      <div class="panel-content">
+        <!-- Search bar -->
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input id="search-objects" type="text" class="search-input" placeholder="Buscar objetos..." />
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="room-name">Nombre de la Sala</label>
-          <input id="room-name" type="text" class="form-input" value="Nueva Sala" placeholder="Ej. Sala Arqueología" />
+        <!-- Category Pills -->
+        <div class="category-pills">
+          <button class="category-pill active" data-category="basic">Básicos</button>
+          <button class="category-pill" data-category="furniture">Mobiliario</button>
+          <button class="category-pill" data-category="architecture">Arquitectura</button>
+          <button class="category-pill" data-category="decoration">Decoración</button>
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="room-theme">Estilo & Materiales</label>
-          <select id="room-theme" class="form-select">
+        <!-- Dynamic Asset Grid -->
+        <div id="asset-grid" class="asset-grid">
+          <!-- Rendered dynamically based on active category & search -->
+        </div>
+
+        <!-- Section: Modelos 3D -->
+        <div>
+          <div class="section-head" style="margin-bottom: 8px;">
+            <span>Modelos 3D</span>
+            <button id="btn-trigger-glb" class="btn-text-action" title="Cargar archivo .glb desde tu equipo">
+              ↑ Importar
+            </button>
+          </div>
+          <div class="asset-grid">
+            <div id="btn-import-card" class="asset-card" title="Importar modelo GLB/GLTF local">
+              <div class="asset-icon-box" style="color: #38bdf8; font-size: 24px;">＋</div>
+              <span class="asset-label">Importar GLB</span>
+            </div>
+            <div class="asset-card" data-preset-model="statue" title="Colocar Estatua 3D">
+              <div class="asset-icon-box">🗿</div>
+              <span class="asset-label">Estatua</span>
+            </div>
+            <div class="asset-card" data-preset-model="laptop" title="Colocar Laptop 3D">
+              <div class="asset-icon-box">💻</div>
+              <span class="asset-label">Laptop</span>
+            </div>
+            <div class="asset-card" data-preset-model="panel" title="Colocar Panel 3D">
+              <div class="asset-icon-box">🪟</div>
+              <span class="asset-label">Panel</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Salas del Escenario -->
+        <div>
+          <div class="section-head" style="margin-bottom: 8px;">
+            <span>Salas del Escenario</span>
+            <span id="rooms-count-badge" style="color: #38bdf8; font-family: var(--font-mono);">3</span>
+          </div>
+          <div id="rooms-list" class="rooms-list">
+            <!-- Rendered dynamically -->
+          </div>
+          <button id="btn-add-room-dialog" class="btn-add-room-big" style="margin-top: 10px;">
+            ＋ Añadir Sala al Nivel
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- =======================================================================
+         3. CENTRAL VIEWPORT: VISOR 3D
+         ======================================================================= -->
+    <main id="center-viewport">
+      <!-- Top Floating Toolbar (Select, Move, Rotate, Scale) -->
+      <div class="viewport-top-toolbar">
+        <button id="tool-select" class="tool-btn active" title="Modo Selección [Q]">
+          <span>↖</span> Seleccionar
+        </button>
+        <button id="tool-translate" class="tool-btn" title="Mover objeto [W]">
+          <span>✥</span> Mover
+        </button>
+        <button id="tool-rotate" class="tool-btn" title="Rotar objeto [E]">
+          <span>⟲</span> Rotar
+        </button>
+        <button id="tool-scale" class="tool-btn" title="Escalar objeto [R]">
+          <span>⛶</span> Escalar
+        </button>
+      </div>
+
+      <!-- Viewcube Compass -->
+      <div class="viewcube-compass" title="Orientación espacial">
+        🧭
+      </div>
+
+      <!-- 3D Three.js Container -->
+      <div id="app"></div>
+
+      <!-- Bottom Floating Bar (Camera & Projections) -->
+      <div class="viewport-bottom-bar">
+        <button id="btn-cam-home" class="btn-cam-icon" title="Centrar cámara en el escenario">
+          🏠
+        </button>
+        <button id="btn-cam-focus" class="btn-cam-icon" title="Enfocar objeto seleccionado [F]">
+          ⛶
+        </button>
+        <button id="btn-cam-snapshot" class="btn-cam-icon" title="Tomar captura de pantalla">
+          📷
+        </button>
+        <div class="v-sep"></div>
+        <button id="btn-proj-persp" class="btn-proj active">
+          Perspectiva
+        </button>
+        <button id="btn-proj-ortho" class="btn-proj">
+          Ortográfica
+        </button>
+      </div>
+    </main>
+
+    <!-- =======================================================================
+         4. RIGHT PANEL: PROPIEDADES (INSPECTOR)
+         ======================================================================= -->
+    <aside id="panel-properties">
+      <div class="panel-header">
+        <span class="panel-title">Propiedades</span>
+        <button id="btn-collapse-right" class="btn-panel-action" title="Colapsar panel">
+          ⤢
+        </button>
+      </div>
+
+      <div class="panel-content">
+        <!-- When object is selected -->
+        <div id="prop-selected-container" style="display: none; flex-direction: column; gap: 14px;">
+          <!-- Hero Card: Selected Object -->
+          <div class="selected-hero-card">
+            <div id="prop-thumb" class="hero-thumb-box">📦</div>
+            <div class="hero-info">
+              <div id="prop-title" class="hero-title">Caja</div>
+              <div id="prop-type-tag" class="hero-type">Tipo: Básico</div>
+            </div>
+            <button id="btn-quick-delete" class="btn-room-del" title="Eliminar este objeto">
+              🗑️
+            </button>
+          </div>
+
+          <!-- Section: Transformación -->
+          <div class="prop-group">
+            <div class="prop-group-head">
+              <span>Transformación</span>
+              <span>⌵</span>
+            </div>
+
+            <!-- Posición (m) -->
+            <div class="axis-row-label">Posición (m)</div>
+            <div class="axis-inputs-grid">
+              <div class="axis-field">
+                <span class="axis-badge axis-badge-x">X</span>
+                <input id="prop-pos-x" type="number" step="0.1" class="axis-input" value="0.00" />
+              </div>
+              <div class="axis-field">
+                <span class="axis-badge axis-badge-y">Y</span>
+                <input id="prop-pos-y" type="number" step="0.1" class="axis-input" value="0.00" />
+              </div>
+              <div class="axis-field">
+                <span class="axis-badge axis-badge-z">Z</span>
+                <input id="prop-pos-z" type="number" step="0.1" class="axis-input" value="0.00" />
+              </div>
+            </div>
+
+            <!-- Rotación (°) -->
+            <div class="axis-row-label">Rotación (°)</div>
+            <div class="axis-inputs-grid">
+              <div class="axis-field">
+                <span class="axis-badge axis-badge-x">X</span>
+                <input id="prop-rot-x" type="number" step="5" class="axis-input" value="0.00" />
+              </div>
+              <div class="axis-field">
+                <span class="axis-badge axis-badge-y">Y</span>
+                <input id="prop-rot-y" type="number" step="5" class="axis-input" value="0.00" />
+              </div>
+              <div class="axis-field">
+                <span class="axis-badge axis-badge-z">Z</span>
+                <input id="prop-rot-z" type="number" step="5" class="axis-input" value="0.00" />
+              </div>
+            </div>
+
+            <!-- Escala -->
+            <div class="axis-row-label">Escala</div>
+            <div class="axis-inputs-grid">
+              <div class="axis-field">
+                <span class="axis-badge axis-badge-x">X</span>
+                <input id="prop-scale-x" type="number" step="0.1" class="axis-input" value="1.00" />
+              </div>
+              <div class="axis-field">
+                <span class="axis-badge axis-badge-y">Y</span>
+                <input id="prop-scale-y" type="number" step="0.1" class="axis-input" value="1.00" />
+              </div>
+              <div class="axis-field">
+                <span class="axis-badge axis-badge-z">Z</span>
+                <input id="prop-scale-z" type="number" step="0.1" class="axis-input" value="1.00" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Section: Material -->
+          <div class="prop-group">
+            <div class="prop-group-head">
+              <span>Material</span>
+              <span>⌵</span>
+            </div>
+
+            <div class="material-row">
+              <div id="prop-color-swatch" class="color-swatch-box"></div>
+              <span style="font-size: 11px; font-weight: 700; color: var(--vxr-text-sub);">Color</span>
+              <input id="prop-color-hex" type="text" class="color-hex-input" value="#E0E0E0" />
+              <div class="color-wheel-btn" title="Elegir color">
+                <input id="prop-color-picker" type="color" value="#E0E0E0" />
+              </div>
+            </div>
+
+            <div class="material-row">
+              <div id="prop-tex-preview" class="color-swatch-box" style="background: #1e293b;"></div>
+              <span style="font-size: 11px; font-weight: 700; color: var(--vxr-text-sub);">Textura</span>
+              <button id="btn-upload-tex" class="btn-upload-tex">
+                <span>🖼</span> Subir textura
+              </button>
+            </div>
+          </div>
+
+          <!-- Section: Otras Opciones -->
+          <div class="prop-group">
+            <div class="prop-group-head">
+              <span>Otras opciones</span>
+              <span>⌵</span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div>
+                <label style="font-size: 11px; color: var(--vxr-text-sub); display: block; margin-bottom: 4px;">Nombre del objeto</label>
+                <input id="prop-name-input" type="text" class="search-input" value="Caja_01" />
+              </div>
+
+              <!-- Sign Text Field (if sign) -->
+              <div id="group-sign-text" style="display: none;">
+                <label style="font-size: 11px; color: var(--vxr-text-sub); display: block; margin-bottom: 4px;">Texto del Rótulo 3D</label>
+                <input id="prop-sign-text" type="text" class="search-input" placeholder="Ej. ACCESO PRINCIPAL" />
+              </div>
+
+              <!-- Light Intensity Field (if light) -->
+              <div id="group-light-intensity" style="display: none;">
+                <label style="font-size: 11px; color: var(--vxr-text-sub); display: block; margin-bottom: 4px;">Intensidad Lumínica</label>
+                <input id="prop-light-intensity" type="number" step="0.2" class="search-input" value="2.5" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Action Buttons -->
+          <div class="actions-grid">
+            <button id="btn-prop-duplicate" class="btn-act btn-act-dup" title="Duplicar objeto seleccionado">
+              <span>📋</span> Duplicar
+            </button>
+            <button id="btn-prop-delete" class="btn-act btn-act-del" title="Eliminar objeto de la escena">
+              <span>🗑️</span> Eliminar
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty state when no object selected -->
+        <div id="prop-empty-container" class="empty-state">
+          <span class="empty-state-icon">🎯</span>
+          <b style="color: #fff; display: block; margin-bottom: 6px;">Sin selección</b>
+          Haz clic en cualquier objeto de la escena 3D o elige una figura en la biblioteca izquierda para editar su posición, rotación, escala y materiales en tiempo real.
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- =======================================================================
+       MODAL 1: EXPORTAR PROYECTO
+       ======================================================================= -->
+  <div id="export-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-head">
+        <span class="modal-title">🚀 Exportar Experiencia VXR Studio</span>
+        <button id="btn-close-export" class="modal-close">✕</button>
+      </div>
+
+      <div class="category-pills" style="padding: 12px 20px 0; background: var(--vxr-bg-panel);">
+        <button class="category-pill active" data-export-tab="ts">TypeScript / VXR</button>
+        <button class="category-pill" data-export-tab="html">HTML Autónomo (1 archivo)</button>
+        <button class="category-pill" data-export-tab="json">JSON Declarativo</button>
+      </div>
+
+      <div class="modal-body">
+        <pre><code id="export-code-display" class="code-display">Generando código...</code></pre>
+      </div>
+
+      <div class="modal-foot">
+        <button id="btn-copy-code" class="btn-top">
+          <span>📋 Copiar Código</span>
+        </button>
+        <button id="btn-download-file" class="btn-top btn-top-export">
+          <span>💾 Descargar Archivo</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =======================================================================
+       MODAL 2: AÑADIR SALA AL NIVEL
+       ======================================================================= -->
+  <div id="add-room-modal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-head">
+        <span class="modal-title">＋ Añadir Sala al Escenario</span>
+        <button id="btn-close-room-modal" class="modal-close">✕</button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 12px;">
+        <div>
+          <label style="font-size: 11px; font-weight: 700; color: var(--vxr-text-sub); display: block; margin-bottom: 4px;">Nombre de la Sala</label>
+          <input id="modal-room-name" type="text" class="search-input" value="Nueva Sala" />
+        </div>
+        <div>
+          <label style="font-size: 11px; font-weight: 700; color: var(--vxr-text-sub); display: block; margin-bottom: 4px;">Tema / Estilo</label>
+          <select id="modal-room-theme" class="search-input" style="cursor: pointer;">
             <option value="gallery">🏛️ Gallery (Blanco, Madera & Mármol)</option>
             <option value="scifi">🔬 Sci-Fi (Cyberpunk Neón Azul)</option>
             <option value="office">🏢 Office (Gris Corporativo & Roble)</option>
@@ -886,412 +1379,29 @@
             <option value="minimal">⬛ Minimal (Grafito & Alto Contraste)</option>
           </select>
         </div>
-
-        <div class="form-group">
-          <label class="form-label" for="room-width">Ancho (X): <span id="lbl-width" class="val">12m</span></label>
-          <input id="room-width" type="range" class="form-range" min="6" max="28" step="1" value="12" />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="room-depth">Profundidad (Z): <span id="lbl-depth" class="val">10m</span></label>
-          <input id="room-depth" type="range" class="form-range" min="6" max="28" step="1" value="10" />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="room-height">Altura (Y): <span id="lbl-height" class="val">3.8m</span></label>
-          <input id="room-height" type="range" class="form-range" min="2.4" max="7.0" step="0.2" value="3.8" />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Ubicación respecto a Sala Seleccionada:</label>
-          <div class="placement-grid">
-            <button class="placement-btn" data-dir="north">↑ Norte</button>
-            <button class="placement-btn" data-dir="south">↓ Sur</button>
-            <button class="placement-btn" data-dir="east">→ Este</button>
-            <button class="placement-btn" data-dir="west">← Oeste</button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div>
+            <label style="font-size: 11px; font-weight: 700; color: var(--vxr-text-sub); display: block; margin-bottom: 4px;">Ancho (X)</label>
+            <input id="modal-room-w" type="number" class="search-input" value="12" min="6" max="28" />
+          </div>
+          <div>
+            <label style="font-size: 11px; font-weight: 700; color: var(--vxr-text-sub); display: block; margin-bottom: 4px;">Profundidad (Z)</label>
+            <input id="modal-room-d" type="number" class="search-input" value="10" min="6" max="28" />
           </div>
         </div>
-
-        <div style="display: flex; gap: 8px; margin-top: 4px;">
-          <button id="btn-save-room" class="btn-action" style="flex: 1;">
-            ➕ Añadir Sala al Nivel
-          </button>
-          <button id="btn-delete-room" class="btn-action btn-secondary" style="display: none; color: #f87171;" title="Eliminar sala seleccionada">
-            🗑️
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 2: PASILLOS & CONEXIONES -->
-    <div id="tab-content-doors" class="sidebar-body" style="display: none;">
-      <div class="section-title">
-        <span>Conexiones & Pasillos</span>
-      </div>
-
-      <div id="corridors-list" class="items-list">
-        <!-- Rendered dynamically -->
-      </div>
-
-      <div style="border-top: 1px solid var(--vxr-border); padding-top: 10px; display: flex; flex-direction: column; gap: 10px;">
-        <div class="section-title">
-          <span>Crear Conexión entre Salas</span>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="conn-from-room">Sala Origen</label>
-          <select id="conn-from-room" class="form-select"></select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="conn-from-wall">Muro de Salida</label>
-          <select id="conn-from-wall" class="form-select">
-            <option value="north">Norte (Frontal)</option>
-            <option value="south">Sur (Trasero)</option>
-            <option value="east">Este (Derecha)</option>
-            <option value="west">Oeste (Izquierda)</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="conn-to-room">Sala Destino</label>
-          <select id="conn-to-room" class="form-select"></select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="conn-to-wall">Muro de Entrada</label>
-          <select id="conn-to-wall" class="form-select">
-            <option value="south">Sur (Trasero)</option>
-            <option value="north">Norte (Frontal)</option>
-            <option value="west">Oeste (Izquierda)</option>
-            <option value="east">Este (Derecha)</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="conn-width">Ancho de Pasillo: <span id="lbl-conn-width" class="val">2.4m</span></label>
-          <input id="conn-width" type="range" class="form-range" min="1.8" max="4.0" step="0.2" value="2.4" />
-        </div>
-
-        <button id="btn-add-connection" class="btn-action">
-          🔗 Conectar Salas con Pasillo
-        </button>
-      </div>
-    </div>
-
-    <!-- TAB 3: OBJETOS & BIBLIOTECA -->
-    <div id="tab-content-objects" class="sidebar-body" style="display: none;">
-      <div class="section-title">
-        <span>Elementos en Escenario</span>
-        <span id="objects-counter-badge" style="color: #38bdf8; font-family: var(--font-mono);">0</span>
-      </div>
-
-      <div id="props-list" class="items-list" style="max-height: 380px;">
-        <!-- Rendered dynamically -->
-      </div>
-
-      <div style="border-top: 1px solid var(--vxr-border); padding-top: 10px;">
-        <p style="font-size: 11.5px; color: var(--vxr-text-dim); line-height: 1.5;">
-          💡 <b>Consejo:</b> Usa la bandeja inferior para añadir mamparas, letreros o focos en 1 clic. Haz clic en cualquier objeto en la vista 3D para editarlo en el Inspector.
-        </p>
-      </div>
-    </div>
-
-    <!-- TAB 4: INSPECTOR DE OBJETO -->
-    <div id="tab-content-inspector" class="sidebar-body" style="display: none;">
-      <div class="section-title">
-        <span>Inspector de Objeto</span>
-        <span id="inspector-badge" class="brand-badge">Ninguno</span>
-      </div>
-
-      <div id="inspector-empty" style="padding: 24px 12px; text-align: center; color: var(--vxr-text-dim); font-size: 12px; line-height: 1.6;">
-        <span style="font-size: 28px; display: block; margin-bottom: 8px;">🎯</span>
-        Selecciona cualquier objeto en la vista 3D o en la lista de objetos para editar su posición, rotación, texto, color y dimensiones en tiempo real.
-      </div>
-
-      <div id="inspector-fields" style="display: none; flex-direction: column; gap: 12px;">
-        <div class="form-group">
-          <label class="form-label" for="prop-name">Nombre / Etiqueta</label>
-          <input id="prop-name" type="text" class="form-input" />
-        </div>
-
-        <!-- Solo para letreros / rótulos -->
-        <div id="group-prop-text" class="form-group" style="display: none;">
-          <label class="form-label" for="prop-text">Texto del Rótulo 3D (Tiempo Real)</label>
-          <input id="prop-text" type="text" class="form-input" placeholder="Ej. SALA DE CIENCIA" />
-        </div>
-
-        <!-- Posición X y Z -->
-        <div class="form-group">
-          <label class="form-label" for="prop-pos-x">Posición Relativa X: <span id="lbl-prop-x" class="val">0.0m</span></label>
-          <input id="prop-pos-x" type="range" class="form-range" min="-12" max="12" step="0.2" value="0" />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="prop-pos-z">Posición Relativa Z: <span id="lbl-prop-z" class="val">0.0m</span></label>
-          <input id="prop-pos-z" type="range" class="form-range" min="-12" max="12" step="0.2" value="0" />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="prop-pos-y">Elevación Y: <span id="lbl-prop-y" class="val">0.0m</span></label>
-          <input id="prop-pos-y" type="range" class="form-range" min="0" max="6" step="0.1" value="0" />
-        </div>
-
-        <!-- Rotación Y -->
-        <div class="form-group">
-          <label class="form-label">Giro / Orientación (Rotación Y): <span id="lbl-prop-rot" class="val">0°</span></label>
-          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 6px;">
-            <button class="top-btn btn-rot-preset" data-rot="0">0°</button>
-            <button class="top-btn btn-rot-preset" data-rot="90">90°</button>
-            <button class="top-btn btn-rot-preset" data-rot="180">180°</button>
-            <button class="top-btn btn-rot-preset" data-rot="270">270°</button>
-          </div>
-          <input id="prop-rotation-y" type="range" class="form-range" min="0" max="360" step="5" value="0" />
-        </div>
-
-        <!-- Dimensiones (para mamparas y letreros) -->
-        <div id="group-prop-dims" class="form-group">
-          <label class="form-label" for="prop-width">Ancho del Elemento: <span id="lbl-prop-w" class="val">2.5m</span></label>
-          <input id="prop-width" type="range" class="form-range" min="0.8" max="8.0" step="0.2" value="2.5" />
-          <label class="form-label" for="prop-height" style="margin-top: 6px;">Altura del Elemento: <span id="lbl-prop-h" class="val">2.2m</span></label>
-          <input id="prop-height" type="range" class="form-range" min="0.4" max="4.5" step="0.1" value="2.2" />
-        </div>
-
-        <!-- Color & Acabado -->
-        <div class="form-group">
-          <label class="form-label" for="prop-color-input">Color de Acento / Emisivo</label>
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <input id="prop-color-input" type="color" value="#38bdf8" style="width: 36px; height: 32px; border: none; border-radius: 6px; cursor: pointer; background: none;" />
-            <select id="prop-color-preset" class="form-select" style="flex: 1;">
-              <option value="#38bdf8">Cian Láser (#38bdf8)</option>
-              <option value="#10b981">Esmeralda (#10b981)</option>
-              <option value="#f59e0b">Dorado Ámbar (#f59e0b)</option>
-              <option value="#a855f7">Púrpura Cuántico (#a855f7)</option>
-              <option value="#ec4899">Rosa Neón (#ec4899)</option>
-              <option value="#f8fafc">Blanco Puro (#f8fafc)</option>
-            </select>
+        <div>
+          <label style="font-size: 11px; font-weight: 700; color: var(--vxr-text-sub); display: block; margin-bottom: 4px;">Ubicación respecto a Sala Activa</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+            <button class="btn-top btn-dir-room" data-dir="north">↑ Norte</button>
+            <button class="btn-top btn-dir-room" data-dir="south">↓ Sur</button>
+            <button class="btn-top btn-dir-room" data-dir="east">→ Este</button>
+            <button class="btn-top btn-dir-room" data-dir="west">← Oeste</button>
           </div>
         </div>
-
-        <!-- Intensidad (solo para luces) -->
-        <div id="group-prop-intensity" class="form-group" style="display: none;">
-          <label class="form-label" for="prop-intensity">Intensidad Lumínica: <span id="lbl-prop-intensity" class="val">2.0</span></label>
-          <input id="prop-intensity" type="range" class="form-range" min="0.5" max="6.0" step="0.2" value="2.0" />
-        </div>
-
-        <!-- Acciones del Objeto -->
-        <div style="display: flex; gap: 8px; margin-top: 6px;">
-          <button id="btn-duplicate-prop" class="btn-action btn-secondary" style="flex: 1;">
-            📋 Duplicar (+1m)
-          </button>
-          <button id="btn-delete-prop" class="btn-action btn-secondary" style="color: #f87171; border-color: rgba(248, 113, 113, 0.4);" title="Eliminar objeto">
-            🗑️ Eliminar
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 5: ENTORNO & ILUMINACIÓN -->
-    <div id="tab-content-environment" class="sidebar-body" style="display: none;">
-      <div class="section-title">
-        <span>Atmósfera & Iluminación</span>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label" for="env-preset">Preset de Entorno</label>
-        <select id="env-preset" class="form-select">
-          <option value="studio">📸 Estudio Fotográfico (Equilibrado)</option>
-          <option value="daylight">☀️ Galería Diurna (Cálido & Blanco)</option>
-          <option value="dark">🌌 Cyberpunk Night (Alto Contraste)</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label" for="env-light-intensity">Intensidad Luz Solar (Key Light): <span id="lbl-light-intensity" class="val">1.2</span></label>
-        <input id="env-light-intensity" type="range" class="form-range" min="0.2" max="3.0" step="0.1" value="1.2" />
-      </div>
-
-      <div class="form-group">
-        <label class="form-label" for="env-ambient-intensity">Luz Ambiental: <span id="lbl-ambient-intensity" class="val">0.7</span></label>
-        <input id="env-ambient-intensity" type="range" class="form-range" min="0.1" max="2.0" step="0.1" value="0.7" />
-      </div>
-
-      <div class="form-group">
-        <label class="form-label" for="env-shadows">Sombras en Tiempo Real</label>
-        <select id="env-shadows" class="form-select">
-          <option value="true">Activadas (PCF Soft Shadows)</option>
-          <option value="false">Desactivadas (Mayor Rendimiento)</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- TAB 6: AUDIO & EFECTOS -->
-    <div id="tab-content-audio" class="sidebar-body" style="display: none;">
-      <div class="section-title">
-        <span>Audio Procedural Web Audio (0 MB)</span>
-      </div>
-
-      <p style="font-size: 12px; color: var(--vxr-text-sub); line-height: 1.5;">
-        VXR sintetiza ondas sonoras directamente en el chip de audio de tu dispositivo sin descargar archivos MP3 pesados.
-      </p>
-
-      <div class="form-group" style="margin-top: 8px;">
-        <label class="form-label">Probar Efectos Procedurales:</label>
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
-          <button class="top-btn" id="btn-sound-step">👟 Paso de Caminata</button>
-          <button class="top-btn" id="btn-sound-click">🔘 Clic Háptico</button>
-          <button class="top-btn" id="btn-sound-teleport">⚡ Teletransporte</button>
-          <button class="top-btn" id="btn-sound-fanfare">🎺 Fanfarria Éxito</button>
-        </div>
-      </div>
-    </div>
-  </aside>
-
-  <!-- Toggle Drawer Button -->
-  <button id="btn-toggle-drawer" class="toggle-drawer-btn" title="Mostrar/Ocultar herramientas">
-    ◀
-  </button>
-
-  <!-- Bottom Quick Shelf - Asset Palette -->
-  <nav id="quick-shelf" class="quick-shelf" aria-label="Biblioteca Rápida de Objetos">
-    <div class="quick-shelf-header">
-      <span class="shelf-title">✨ BIBLIOTECA RÁPIDA (CLIC PARA COLOCAR EN SALA ACTIVA)</span>
-      <span class="shelf-hint">Haz clic en cualquier pieza para añadirla y configurarla</span>
-    </div>
-    <div class="quick-shelf-scroll">
-      <!-- Mamparas -->
-      <button class="quick-chip" data-quick-type="partition" data-quick-sub="glass" title="Mampara de Cristal Templado">
-        <span class="chip-icon">🪟</span>
-        <span class="chip-label">Mampara Cristal</span>
-      </button>
-      <button class="quick-chip" data-quick-type="partition" data-quick-sub="wood" title="Mampara de Madera Acústica">
-        <span class="chip-icon">🪵</span>
-        <span class="chip-label">Mampara Madera</span>
-      </button>
-      <button class="quick-chip" data-quick-type="partition" data-quick-sub="neon" title="Mampara Neón Cyberpunk">
-        <span class="chip-icon">⚡</span>
-        <span class="chip-label">Mampara Neón</span>
-      </button>
-      <button class="quick-chip" data-quick-type="partition" data-quick-sub="mesh" title="Mampara Rejilla Industrial">
-        <span class="chip-icon">🏁</span>
-        <span class="chip-label">Mampara Rejilla</span>
-      </button>
-
-      <span class="shelf-separator"></span>
-
-      <!-- Letreros & Rótulos -->
-      <button class="quick-chip" data-quick-type="sign" data-quick-sub="neon_hanging" title="Rótulo 3D Neón Colgante con Texto Personalizable">
-        <span class="chip-icon">🏷️</span>
-        <span class="chip-label">Rótulo Neón</span>
-      </button>
-      <button class="quick-chip" data-quick-type="sign" data-quick-sub="wall_plaque" title="Placa Señalética de Pared">
-        <span class="chip-icon">📌</span>
-        <span class="chip-label">Placa de Pared</span>
-      </button>
-      <button class="quick-chip" data-quick-type="sign" data-quick-sub="totem" title="Tótem Vertical Informativo">
-        <span class="chip-icon">🪧</span>
-        <span class="chip-label">Tótem Señalético</span>
-      </button>
-
-      <span class="shelf-separator"></span>
-
-      <!-- Iluminación -->
-      <button class="quick-chip" data-quick-type="light" data-quick-sub="spot" title="Foco Spot Cenital Orientable">
-        <span class="chip-icon">💡</span>
-        <span class="chip-label">Foco Spot</span>
-      </button>
-      <button class="quick-chip" data-quick-type="light" data-quick-sub="point" title="Luz de Acento Neón Puntual">
-        <span class="chip-icon">🏮</span>
-        <span class="chip-label">Luz Acento</span>
-      </button>
-
-      <span class="shelf-separator"></span>
-
-      <!-- Mobiliario & Arquitectura -->
-      <button class="quick-chip" data-quick-type="exhibit" data-quick-sub="gem" title="Vitrina / Pedestal Interactivo">
-        <span class="chip-icon">📦</span>
-        <span class="chip-label">Vitrina Pedestal</span>
-      </button>
-      <button class="quick-chip" data-quick-type="column" data-quick-sub="pillar" title="Columna Estructural Modular">
-        <span class="chip-icon">🏛️</span>
-        <span class="chip-label">Columna</span>
-      </button>
-    </div>
-  </nav>
-
-  <!-- Floating Stats Bar -->
-  <div class="stats-bar">
-    <div class="stat-item">
-      <span id="stat-rooms" class="stat-val">3</span>
-      <span class="stat-lbl">Salas</span>
-    </div>
-    <div class="stat-item">
-      <span id="stat-area" class="stat-val">368 m²</span>
-      <span class="stat-lbl">Área</span>
-    </div>
-    <div class="stat-item">
-      <span id="stat-props" class="stat-val">0</span>
-      <span class="stat-lbl">Objetos</span>
-    </div>
-    <div class="stat-item">
-      <span id="stat-connections" class="stat-val">2</span>
-      <span class="stat-lbl">Pasillos</span>
-    </div>
-  </div>
-
-  <!-- Floating Controls Hint -->
-  <div class="controls-hint">
-    <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Moverse</span>
-    <span>•</span>
-    <span><kbd>Ratón</kbd> Mirar</span>
-    <span>•</span>
-    <span><kbd>Clic</kbd> Seleccionar Objeto</span>
-    <span>•</span>
-    <span><kbd>ESC</kbd> Liberar Cursor</span>
-  </div>
-
-  <!-- Mobile Joystick -->
-  <div id="mobile-joystick">
-    <div id="joystick-knob"></div>
-  </div>
-
-  <!-- Export Project Modal -->
-  <div id="export-modal" class="modal-overlay">
-    <div class="modal-box">
-      <div class="modal-header">
-        <div class="modal-title">
-          <span>🚀</span>
-          <span>Exportar Proyecto VXR Studio (Listo para Producción)</span>
-        </div>
-        <button id="btn-close-modal" class="modal-close">✕</button>
-      </div>
-
-      <div class="modal-tabs">
-        <button class="modal-tab-btn active" data-export-tab="ts">TypeScript / VXR</button>
-        <button class="modal-tab-btn" data-export-tab="html">HTML Standalone (1 archivo)</button>
-        <button class="modal-tab-btn" data-export-tab="json">JSON (escenario.json)</button>
-      </div>
-
-      <div class="modal-body">
-        <pre id="export-code-display" class="code-box"></pre>
-      </div>
-
-      <div class="modal-footer">
-        <div style="font-size: 11.5px; color: var(--vxr-text-dim);">
-          Ideal para publicar en la web o abrir en navegadores de Meta Quest.
-        </div>
-        <div style="display: flex; gap: 8px;">
-          <button id="btn-copy-code" class="top-btn" style="border-color: #38bdf8; color: #38bdf8;">
-            📋 Copiar Código
-          </button>
-          <button id="btn-download-file" class="top-btn top-btn-primary">
-            💾 Descargar Archivo
-          </button>
-        </div>
       </div>
     </div>
   </div>
 
-  <script type="module" src="/level-builder/main.ts"></script>
+  <script type="module" src="./main.ts"></script>
 </body>
 </html>
