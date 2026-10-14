@@ -111,27 +111,40 @@ const app = new XRApp({
   container,
   enableShadows: true,
   enableGrid: false,
-  enableVR: true,
   autoVRButton: false, // Handled by top bar #btn-test-vr
-  cameraPosition: [0, 22, 22],
+  cameraPosition: [0, 16, 20],
   fov: 50,
 });
 
 app.scene.setEnvironmentPreset('studio');
-app.scene.setBackground(0x060912);
+app.scene.setBackground(0x080d1a);
 
-// Add architectural grid floor
-const gridFloor = new THREE.GridHelper(70, 70, 0x1e293b, 0x0f172a);
-gridFloor.position.y = -0.01;
+// High-contrast clean architectural grid floor
+const gridFloor = new THREE.GridHelper(60, 60, 0x38bdf8, 0x334155);
+gridFloor.position.y = 0;
 app.scene.nativeScene.add(gridFloor);
+
+// 3D Spatial Reference Axes (X: Red, Y: Green, Z: Blue)
+const axesHelper = new THREE.AxesHelper(6);
+axesHelper.position.set(0, 0.01, 0);
+app.scene.nativeScene.add(axesHelper);
+
+// Subtle origin ring marker
+const originRingGeo = new THREE.RingGeometry(0.45, 0.52, 32);
+const originRingMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide });
+const originRing = new THREE.Mesh(originRingGeo, originRingMat);
+originRing.rotation.x = -Math.PI / 2;
+originRing.position.y = 0.005;
+app.scene.nativeScene.add(originRing);
 
 // Configure Editor Camera & OrbitControls
 if (app.controls) {
   app.controls.enableDamping = true;
   app.controls.dampingFactor = 0.08;
   app.controls.minDistance = 1.0;
-  app.controls.maxDistance = 120.0;
+  app.controls.maxDistance = 150.0;
   app.controls.screenSpacePanning = true;
+  app.controls.target.set(0, 0, 0);
   app.controls.mouseButtons = {
     LEFT: THREE.MOUSE.ROTATE,
     MIDDLE: THREE.MOUSE.DOLLY,
@@ -651,7 +664,7 @@ function rebuildScenario(): void {
   scenario.clear();
   scenario = app.createScenario('VXR Studio Level');
 
-  // Build rooms
+  // Build rooms (open-top ceiling: false for editor visibility)
   for (const r of rooms) {
     scenario.addRoom({
       id: r.id,
@@ -661,22 +674,20 @@ function rebuildScenario(): void {
       center: r.center,
       doors: r.doors,
       spawnPoint: r.spawnPoint,
+      ceiling: { enabled: false },
     });
   }
 
   // Connect rooms
   for (const c of connections) {
-    scenario.connectRooms({
-      fromRoomId: c.fromRoomId,
-      fromWall: c.fromWall,
-      toRoomId: c.toRoomId,
-      toWall: c.toWall,
-      width: c.width,
-      height: c.height,
-    });
+    scenario.connectRooms(
+      c.fromRoomId,
+      c.fromWall,
+      c.toRoomId,
+      c.toWall,
+      { width: c.width, height: c.height }
+    );
   }
-
-  scenario.build();
 
   // Respawn all props
   for (const p of props) {
@@ -684,6 +695,7 @@ function rebuildScenario(): void {
   }
 
   renderRoomsList();
+  updateRoomPropertiesUI();
   updateSceneStats();
 }
 
@@ -940,6 +952,11 @@ window.addEventListener('keydown', (e) => {
   if (['input', 'textarea'].includes((document.activeElement?.tagName || '').toLowerCase())) return;
   if (flyKeys.hasOwnProperty(e.code)) flyKeys[e.code] = true;
   keys[e.code] = true;
+
+  if (e.code === 'KeyF') {
+    e.preventDefault();
+    focusSelection();
+  }
 
   if (e.code === 'Escape') {
     if (activeNavMode === 'fly' || isFirstPerson) {
@@ -1277,7 +1294,7 @@ document.querySelectorAll('[data-apply-tex]').forEach((btn) => {
             m.needsUpdate = true;
           }
         });
-        showToast(`✓ Textura ${texKey.toUpperCase()} aplicada`);
+        showToast(`✓ Textura ${(texKey || '').toUpperCase()} aplicada`);
         triggerAutoSave();
       });
     }
@@ -1330,7 +1347,7 @@ btnThemeToggle?.addEventListener('click', () => {
     showToast('🌙 Modo Cyberpunk Noche');
   } else {
     app.scene.setBackground(0x1e293b);
-    app.scene.setEnvironmentPreset('city');
+    app.scene.setEnvironmentPreset('daylight');
     showToast('☀️ Modo Estudio Fotográfico Día');
   }
 });
@@ -1411,11 +1428,7 @@ document.getElementById('btn-fullscreen-toggle')?.addEventListener('click', () =
   }
 });
 document.getElementById('btn-cam-home')?.addEventListener('click', () => {
-  const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : (rooms.length > 0 ? rooms[0] : null);
-  const cx = activeRoom ? activeRoom.center[0] : 0;
-  const cz = activeRoom ? activeRoom.center[2] : 0;
-  app.resetCamera([cx, 18, cz + 16], [cx, 0, cz]);
-  showToast('🏠 Vista de cámara centrada');
+  focusSelection();
 });
 document.getElementById('btn-cam-snapshot')?.addEventListener('click', () => {
   const dataUrl = app.renderer.nativeRenderer.domElement.toDataURL('image/png');
@@ -1563,9 +1576,9 @@ fileGlbInput?.addEventListener('change', async () => {
     };
 
     props.push(newProp);
-    loaded.userData = { ...loaded.userData, propId: newProp.id };
-    app.scene.nativeScene.add(loaded);
-    propMeshMap.set(newProp.id, loaded);
+    loaded.group.userData = { ...loaded.group.userData, propId: newProp.id };
+    app.scene.nativeScene.add(loaded.group);
+    propMeshMap.set(newProp.id, loaded.group);
 
     selectProp(newProp.id);
     showToast(`✓ Modelo 3D "${file.name}" cargado con éxito`);
@@ -1794,6 +1807,15 @@ container.addEventListener('pointerup', (e) => {
           app.audio.playClick();
           return;
         }
+        if (curr.name && (curr.name.includes('_floor') || curr.name.startsWith('XRRoom_'))) {
+          const rawId = curr.name.startsWith('XRRoom_') ? curr.name.replace('XRRoom_', '') : curr.name.replace('_floor', '');
+          const r = rooms.find((item) => item.id === rawId);
+          if (r) {
+            selectRoom(r.id);
+            app.audio.playClick();
+            return;
+          }
+        }
         curr = curr.parent;
       }
     }
@@ -1801,7 +1823,11 @@ container.addEventListener('pointerup', (e) => {
 
   selectedPropId = null;
   transformControls.detach();
-  renderPropertiesEmpty();
+  if (selectedRoomId) {
+    updateRoomPropertiesUI();
+  } else {
+    renderPropertiesEmpty();
+  }
 });
 
 function handleWalkModeInteraction(e: MouseEvent | PointerEvent): void {
@@ -1812,7 +1838,8 @@ function handleWalkModeInteraction(e: MouseEvent | PointerEvent): void {
     let curr: THREE.Object3D | null = hit.object;
     while (curr && curr !== app.scene.nativeScene) {
       if (curr.userData && curr.userData.propId) {
-        const p = props.find((item) => item.id === curr.userData.propId);
+        const propId = curr.userData.propId;
+        const p = props.find((item) => item.id === propId);
         if (p) {
           if (p.subtype === 'frame_art' && p.imageUrl) {
             const lb = document.getElementById('lightbox-modal');
@@ -1862,6 +1889,31 @@ function focusSelectedProp(): void {
   showToast(`🎯 Enfocado: ${mesh.name || 'Objeto'}`);
 }
 
+function focusSelectedRoom(): void {
+  if (!selectedRoomId) return;
+  const r = rooms.find((item) => item.id === selectedRoomId);
+  if (!r) return;
+  const dist = Math.max(r.dimensions.width, r.dimensions.depth) * 1.35;
+  app.resetCamera(
+    [r.center[0], Math.max(dist * 0.9, 14), r.center[2] + Math.max(dist * 0.85, 12)],
+    [r.center[0], 0, r.center[2]]
+  );
+  showToast(`🎯 Enfocada: ${r.name}`);
+}
+
+function focusSelection(): void {
+  if (selectedPropId) {
+    focusSelectedProp();
+    return;
+  }
+  if (selectedRoomId) {
+    focusSelectedRoom();
+    return;
+  }
+  app.resetCamera([0, 16, 20], [0, 0, 0]);
+  showToast('🎯 Vista centrada en el origen');
+}
+
 // Rooms List UI
 function renderRoomsList(): void {
   const roomsListEl = document.getElementById('rooms-list') as HTMLElement;
@@ -1873,11 +1925,16 @@ function renderRoomsList(): void {
 
   if (rooms.length === 0) {
     roomsListEl.innerHTML = `
-      <div style="padding: 16px; border: 1px dashed var(--vxr-border); border-radius: 10px; text-align: center; color: var(--vxr-text-dim); font-size: 11.5px;">
-        No hay salas creadas aún.<br>
-        <span style="color: var(--vxr-cyan); font-weight: 700;">Haz clic en el botón de abajo para empezar.</span>
+      <div style="padding: 16px; border: 1px dashed var(--vxr-border); border-radius: 10px; text-align: center; color: var(--vxr-text-dim); font-size: 11.5px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+        <span>No hay salas creadas aún.</span>
+        <button id="btn-empty-create-room" class="btn-top btn-top-export" style="padding: 6px 14px; font-size: 11.5px; cursor: pointer;">
+          ✨ Crear Primera Sala
+        </button>
       </div>
     `;
+    document.getElementById('btn-empty-create-room')?.addEventListener('click', () => {
+      openAddRoomModal();
+    });
     return;
   }
 
@@ -1905,16 +1962,139 @@ function renderRoomsList(): void {
   }
 }
 
+// Room Property Inspector DOM elements
+const roomSelectedContainer = document.getElementById('room-selected-container') as HTMLElement;
+const roomHeroTitle = document.getElementById('room-hero-title') as HTMLElement;
+const roomHeroTheme = document.getElementById('room-hero-theme') as HTMLElement;
+const roomPropName = document.getElementById('room-prop-name') as HTMLInputElement;
+const roomPropTheme = document.getElementById('room-prop-theme') as HTMLSelectElement;
+const roomPropW = document.getElementById('room-prop-w') as HTMLInputElement;
+const roomPropH = document.getElementById('room-prop-h') as HTMLInputElement;
+const roomPropD = document.getElementById('room-prop-d') as HTMLInputElement;
+const roomPropX = document.getElementById('room-prop-x') as HTMLInputElement;
+const roomPropZ = document.getElementById('room-prop-z') as HTMLInputElement;
+
+function updateRoomPropertiesUI(): void {
+  if (!roomSelectedContainer) return;
+  if (selectedPropId) {
+    roomSelectedContainer.style.display = 'none';
+    return;
+  }
+  if (!selectedRoomId) {
+    roomSelectedContainer.style.display = 'none';
+    renderPropertiesEmpty();
+    return;
+  }
+
+  const r = rooms.find((item) => item.id === selectedRoomId);
+  if (!r) {
+    roomSelectedContainer.style.display = 'none';
+    renderPropertiesEmpty();
+    return;
+  }
+
+  // Display room properties and hide prop containers
+  propSelectedContainer.style.display = 'none';
+  propEmptyContainer.style.display = 'none';
+  roomSelectedContainer.style.display = 'flex';
+  lblPanelRightTitle.textContent = `Sala: ${r.name}`;
+
+  if (roomHeroTitle) roomHeroTitle.textContent = r.name;
+  if (roomHeroTheme) roomHeroTheme.textContent = `Tema: ${r.theme} · [${r.center[0]}, ${r.center[2]}]`;
+  if (roomPropName) roomPropName.value = r.name;
+  if (roomPropTheme) roomPropTheme.value = r.theme;
+  if (roomPropW) roomPropW.value = r.dimensions.width.toString();
+  if (roomPropH) roomPropH.value = (r.dimensions.height || 4).toString();
+  if (roomPropD) roomPropD.value = r.dimensions.depth.toString();
+  if (roomPropX) roomPropX.value = r.center[0].toString();
+  if (roomPropZ) roomPropZ.value = r.center[2].toString();
+}
+
 function selectRoom(roomId: string | null): void {
   selectedRoomId = roomId;
+  if (roomId) {
+    selectedPropId = null;
+    transformControls.detach();
+  }
   renderRoomsList();
+  updateRoomPropertiesUI();
   if (roomId) {
     const r = rooms.find((item) => item.id === roomId);
     if (r) {
-      app.resetCamera([r.center[0], 18, r.center[2] + 16], [r.center[0], 0, r.center[2]]);
+      focusSelectedRoom();
+      setDockTab('props');
     }
   }
 }
+
+// Room Inspector Input Listeners
+roomPropName?.addEventListener('input', () => {
+  if (!selectedRoomId) return;
+  const r = rooms.find((item) => item.id === selectedRoomId);
+  if (r) {
+    r.name = roomPropName.value || 'Sala';
+    if (roomHeroTitle) roomHeroTitle.textContent = r.name;
+    lblPanelRightTitle.textContent = `Sala: ${r.name}`;
+    renderRoomsList();
+    triggerAutoSave();
+  }
+});
+
+roomPropTheme?.addEventListener('change', () => {
+  if (!selectedRoomId) return;
+  const r = rooms.find((item) => item.id === selectedRoomId);
+  if (r) {
+    r.theme = roomPropTheme.value as RoomTheme;
+    rebuildScenario();
+    triggerAutoSave();
+  }
+});
+
+function handleRoomDimensionChange(): void {
+  if (!selectedRoomId) return;
+  const r = rooms.find((item) => item.id === selectedRoomId);
+  if (r) {
+    r.dimensions.width = Math.max(4, parseInt(roomPropW.value) || 10);
+    r.dimensions.height = Math.max(2.4, parseFloat(roomPropH.value) || 4);
+    r.dimensions.depth = Math.max(4, parseInt(roomPropD.value) || 10);
+    rebuildScenario();
+    triggerAutoSave();
+  }
+}
+roomPropW?.addEventListener('change', handleRoomDimensionChange);
+roomPropH?.addEventListener('change', handleRoomDimensionChange);
+roomPropD?.addEventListener('change', handleRoomDimensionChange);
+
+function handleRoomPositionChange(): void {
+  if (!selectedRoomId) return;
+  const r = rooms.find((item) => item.id === selectedRoomId);
+  if (r) {
+    const newX = parseFloat(roomPropX.value) || 0;
+    const newZ = parseFloat(roomPropZ.value) || 0;
+    const dx = newX - r.center[0];
+    const dz = newZ - r.center[2];
+    r.center[0] = newX;
+    r.center[2] = newZ;
+    if (r.spawnPoint) {
+      r.spawnPoint[0] += dx;
+      r.spawnPoint[2] += dz;
+    }
+    rebuildScenario();
+    triggerAutoSave();
+  }
+}
+roomPropX?.addEventListener('change', handleRoomPositionChange);
+roomPropZ?.addEventListener('change', handleRoomPositionChange);
+
+document.getElementById('btn-prop-room-focus')?.addEventListener('click', () => {
+  focusSelectedRoom();
+});
+document.getElementById('btn-prop-room-del')?.addEventListener('click', () => {
+  if (selectedRoomId) deleteRoom(selectedRoomId);
+});
+document.getElementById('btn-quick-del-room')?.addEventListener('click', () => {
+  if (selectedRoomId) deleteRoom(selectedRoomId);
+});
 
 function deleteRoom(roomId: string): void {
   const idx = rooms.findIndex((r) => r.id === roomId);
@@ -1933,7 +2113,7 @@ function deleteRoom(roomId: string): void {
   triggerAutoSave();
 }
 
-// Add Room Modal
+// Add Room Modal & Creation Flow
 const addRoomModal = document.getElementById('add-room-modal') as HTMLElement;
 const btnAddRoomDialog = document.getElementById('btn-add-room-dialog') as HTMLButtonElement;
 const btnCloseRoomModal = document.getElementById('btn-close-room-modal') as HTMLButtonElement;
@@ -1941,7 +2121,11 @@ const groupInitialRoom = document.getElementById('group-initial-room') as HTMLEl
 const groupConnectedRoom = document.getElementById('group-connected-room') as HTMLElement;
 const btnCreateInitialRoom = document.getElementById('btn-create-initial-room') as HTMLButtonElement;
 
-btnAddRoomDialog?.addEventListener('click', () => {
+function openAddRoomModal(): void {
+  const nameInput = document.getElementById('modal-room-name') as HTMLInputElement;
+  if (nameInput) {
+    nameInput.value = rooms.length === 0 ? 'Sala Central' : `Sala ${rooms.length + 1}`;
+  }
   if (rooms.length === 0) {
     groupInitialRoom.style.display = 'block';
     groupConnectedRoom.style.display = 'none';
@@ -1950,8 +2134,9 @@ btnAddRoomDialog?.addEventListener('click', () => {
     groupConnectedRoom.style.display = 'block';
   }
   addRoomModal.classList.add('active');
-});
+}
 
+btnAddRoomDialog?.addEventListener('click', openAddRoomModal);
 btnCloseRoomModal?.addEventListener('click', () => addRoomModal.classList.remove('active'));
 
 btnCreateInitialRoom?.addEventListener('click', () => {
@@ -1972,9 +2157,10 @@ btnCreateInitialRoom?.addEventListener('click', () => {
 
   rooms.push(newRoom);
   selectedRoomId = newRoom.id;
+  selectedPropId = null;
   addRoomModal.classList.remove('active');
   rebuildScenario();
-  app.resetCamera([0, 18, 16], [0, 0, 0]);
+  focusSelectedRoom();
   showToast(`¡${newRoom.name} creada en el centro!`);
   triggerAutoSave();
 });
@@ -1983,9 +2169,12 @@ document.querySelectorAll('.btn-dir-room').forEach((btn) => {
   btn.addEventListener('click', () => {
     const dir = btn.getAttribute('data-dir') as WallDirection;
     const activeRoom = selectedRoomId ? rooms.find((r) => r.id === selectedRoomId) : rooms[0];
-    if (!activeRoom) return;
+    if (!activeRoom) {
+      btnCreateInitialRoom?.click();
+      return;
+    }
 
-    const name = (document.getElementById('modal-room-name') as HTMLInputElement).value || 'Nueva Sala';
+    const name = (document.getElementById('modal-room-name') as HTMLInputElement).value || `Sala ${rooms.length + 1}`;
     const theme = (document.getElementById('modal-room-theme') as HTMLSelectElement).value as RoomTheme;
     const w = parseInt((document.getElementById('modal-room-w') as HTMLInputElement).value) || 12;
     const d = parseInt((document.getElementById('modal-room-d') as HTMLInputElement).value) || 10;
@@ -2004,9 +2193,9 @@ document.querySelectorAll('.btn-dir-room').forEach((btn) => {
       name,
       theme,
       dimensions: { width: w, depth: d, height: 4 },
-      center: [cx, 0, cz],
+      center: [Math.round(cx), 0, Math.round(cz)],
       doors: [],
-      spawnPoint: [cx, 1.6, cz],
+      spawnPoint: [Math.round(cx), 1.6, Math.round(cz)],
     };
 
     rooms.push(newRoom);
@@ -2021,11 +2210,46 @@ document.querySelectorAll('.btn-dir-room').forEach((btn) => {
     });
 
     selectedRoomId = newRoom.id;
+    selectedPropId = null;
     addRoomModal.classList.remove('active');
     rebuildScenario();
+    focusSelectedRoom();
     showToast(`¡${newRoom.name} conectada al ${dir}!`);
     triggerAutoSave();
   });
+});
+
+document.getElementById('btn-create-free-room')?.addEventListener('click', () => {
+  const name = (document.getElementById('modal-room-name') as HTMLInputElement).value || `Sala ${rooms.length + 1}`;
+  const theme = (document.getElementById('modal-room-theme') as HTMLSelectElement).value as RoomTheme;
+  const w = parseInt((document.getElementById('modal-room-w') as HTMLInputElement).value) || 12;
+  const d = parseInt((document.getElementById('modal-room-d') as HTMLInputElement).value) || 10;
+
+  let maxOffsetX = 0;
+  for (const r of rooms) {
+    maxOffsetX = Math.max(maxOffsetX, r.center[0] + r.dimensions.width / 2);
+  }
+  const cx = rooms.length > 0 ? maxOffsetX + w / 2 + 6 : 0;
+  const cz = 0;
+
+  const newRoom: RoomDef = {
+    id: `room-${Date.now().toString(36)}`,
+    name,
+    theme,
+    dimensions: { width: w, depth: d, height: 4 },
+    center: [Math.round(cx), 0, cz],
+    doors: [],
+    spawnPoint: [Math.round(cx), 1.6, cz],
+  };
+
+  rooms.push(newRoom);
+  selectedRoomId = newRoom.id;
+  selectedPropId = null;
+  addRoomModal.classList.remove('active');
+  rebuildScenario();
+  focusSelectedRoom();
+  showToast(`¡${newRoom.name} añadida al nivel!`);
+  triggerAutoSave();
 });
 
 // First Person Walk Mode
@@ -2149,7 +2373,7 @@ document.querySelectorAll('[data-export-tab]').forEach((btn) => {
 });
 
 function generateTSCode(): string {
-  return `import { XRApp } from '@vxr/core';\n\nconst app = new XRApp({ container: document.body, enableVR: true });\nconst scenario = app.createScenario('VXR Experience');\n\n${JSON.stringify({ rooms, props }, null, 2)}\n\nscenario.build();\napp.start();`;
+  return `import { XRApp } from '@vxr/core';\n\nconst app = new XRApp({ container: document.body, enableVR: true });\nconst scenario = app.createScenario('VXR Experience');\n\n${JSON.stringify({ rooms, props }, null, 2)}\n\napp.start();`;
 }
 
 function generateHTMLCode(): string {
@@ -2385,8 +2609,15 @@ restoreFromAutoSave();
 rebuildScenario();
 app.start();
 
-// Show welcome dialog on first visit
-const dismissed = localStorage.getItem('vxr_studio_welcome_dismissed');
-if (!dismissed && welcomeModal) {
-  welcomeModal.classList.add('active');
+// Ensure renderer canvas matches container dimensions immediately
+requestAnimationFrame(() => {
+  app.renderer.handleResize();
+});
+
+// Observe container resize to automatically update WebGL size
+if (typeof ResizeObserver !== 'undefined' && container) {
+  const ro = new ResizeObserver(() => {
+    app.renderer.handleResize();
+  });
+  ro.observe(container);
 }

@@ -7,7 +7,6 @@ const app = new XRApp({
   container,
   enableShadows: true,
   enableGrid: false,
-  enableVR: true,
   autoVRButton: true,
   cameraPosition: [0, 16, 18],
   fov: 50,

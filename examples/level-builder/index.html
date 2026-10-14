@@ -615,17 +615,27 @@
        ========================================================================= */
     #center-viewport {
       position: relative;
-      background: #000;
+      background: #080d1a;
       overflow: hidden;
       width: 100%;
       height: 100%;
+      min-width: 0;
+      min-height: 0;
     }
 
     #app {
-      width: 100%;
-      height: 100%;
       position: absolute;
       inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #app canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+      outline: none;
     }
 
     /* Top Left Mode Switcher */
@@ -2085,11 +2095,91 @@
               </div>
             </div>
 
+            <!-- When room is selected -->
+            <div id="room-selected-container" style="display: none; flex-direction: column; gap: 14px;">
+              <!-- Hero Card: Selected Room -->
+              <div class="selected-hero-card">
+                <div class="hero-thumb-box" style="font-size: 20px;">🏛️</div>
+                <div class="hero-info">
+                  <div id="room-hero-title" class="hero-title">Sala Central</div>
+                  <div id="room-hero-theme" class="hero-type">Tema: gallery</div>
+                </div>
+                <button id="btn-quick-del-room" class="btn-room-del" title="Eliminar esta sala">
+                  🗑️
+                </button>
+              </div>
+
+              <!-- Section: Nombre y Tema -->
+              <div class="prop-group">
+                <div class="prop-group-head"><span>Identidad de la Sala</span></div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <div>
+                    <label style="font-size: 11px; color: var(--vxr-text-sub); display: block; margin-bottom: 4px;">Nombre de la sala</label>
+                    <input id="room-prop-name" type="text" class="search-input" value="Sala Central" />
+                  </div>
+                  <div>
+                    <label style="font-size: 11px; color: var(--vxr-text-sub); display: block; margin-bottom: 4px;">Estilo / Tema</label>
+                    <select id="room-prop-theme" class="search-input" style="cursor: pointer;">
+                      <option value="gallery">🏛️ Gallery (Blanco, Madera & Mármol)</option>
+                      <option value="scifi">🔬 Sci-Fi (Cyberpunk Neón Azul)</option>
+                      <option value="office">🏢 Office (Gris Corporativo & Roble)</option>
+                      <option value="cozy">🛋️ Cozy (Madera Cálida & Ámbar)</option>
+                      <option value="minimal">⬛ Minimal (Grafito & Alto Contraste)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section: Dimensiones de la Sala -->
+              <div class="prop-group">
+                <div class="prop-group-head"><span>Dimensiones (Metros)</span></div>
+                <div class="axis-inputs-grid">
+                  <div class="axis-field">
+                    <span class="axis-badge axis-badge-x">W</span>
+                    <input id="room-prop-w" type="number" step="1" min="4" max="50" class="axis-input" value="12" title="Ancho (X)" />
+                  </div>
+                  <div class="axis-field">
+                    <span class="axis-badge axis-badge-y">H</span>
+                    <input id="room-prop-h" type="number" step="0.5" min="2.4" max="12" class="axis-input" value="4.0" title="Altura (Y)" />
+                  </div>
+                  <div class="axis-field">
+                    <span class="axis-badge axis-badge-z">D</span>
+                    <input id="room-prop-d" type="number" step="1" min="4" max="50" class="axis-input" value="10" title="Profundidad (Z)" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section: Posición / Centro -->
+              <div class="prop-group">
+                <div class="prop-group-head"><span>Posición en el Nivel</span></div>
+                <div class="axis-inputs-grid" style="grid-template-columns: 1fr 1fr;">
+                  <div class="axis-field">
+                    <span class="axis-badge axis-badge-x">X</span>
+                    <input id="room-prop-x" type="number" step="1" class="axis-input" value="0" />
+                  </div>
+                  <div class="axis-field">
+                    <span class="axis-badge axis-badge-z">Z</span>
+                    <input id="room-prop-z" type="number" step="1" class="axis-input" value="0" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Actions -->
+              <div class="actions-grid">
+                <button id="btn-prop-room-focus" class="btn-act btn-act-dup" title="Enfocar cámara en la sala [F]">
+                  <span>🎯</span> Enfocar
+                </button>
+                <button id="btn-prop-room-del" class="btn-act btn-act-del" title="Eliminar sala">
+                  <span>🗑️</span> Eliminar
+                </button>
+              </div>
+            </div>
+
             <!-- Empty state when no object selected -->
             <div id="prop-empty-container" class="empty-state">
               <span class="empty-state-icon">⬡</span>
               <b style="color: #fff; display: block; margin-bottom: 6px; font-size: 13px;">Sin selección</b>
-              Selecciona un objeto en la escena para editar sus propiedades, materiales y comportamiento.
+              Selecciona una sala o un objeto en la escena para editar sus propiedades, materiales y comportamiento.
             </div>
           </div>
 
@@ -2309,6 +2399,9 @@
             <button class="btn-top btn-dir-room" data-dir="east">→ Este</button>
             <button class="btn-top btn-dir-room" data-dir="west">← Oeste</button>
           </div>
+          <button id="btn-create-free-room" class="btn-top" style="width: 100%; justify-content: center; margin-top: 8px;">
+            <span>➕ Añadir Sala Independiente (Separada)</span>
+          </button>
         </div>
       </div>
     </div>
