@@ -4,7 +4,11 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@vxr/core": ["../packages/core/src/index.ts"],
+      "@vxr/ar": ["../packages/ar/src/index.ts"]
+    }
   },
   "include": [
     "src/**/*",
@@ -12,6 +16,7 @@
     "architecture-viewer/**/*",
     "interaction-lab/**/*",
     "scenario-builder/**/*",
-    "level-builder/**/*"
+    "level-builder/**/*",
+    "ar-viewer/**/*"
   ]
 }

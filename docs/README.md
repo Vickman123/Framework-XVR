@@ -11,6 +11,7 @@ VXR es una capa/framework de alto nivel construida en **TypeScript sobre Three.j
 ### 1. Introducción y Comienzo Rápido
 - **[Guía de Inicio Rápido (Getting Started)](./getting-started.md)**: Configura tu primera escena VXR y carga un modelo 3D en menos de 5 minutos.
 - **[Referencia Completa de la API v0.1.0](./api-reference.md)**: Documentación exhaustiva de todas las clases, métodos, propiedades y firmas de tipo de `@vxr/core`.
+- **[VXR AR — Realidad Aumentada Web](./vxr-ar.md)**: Guía completa de arquitectura, API pública, tracking 6-DoF de imágenes, QR scan-to-launch y marcadores fiduciarios con `@vxr/ar`.
 
 ### 2. Fundamentos de Arquitectura y Decisiones (ADRs)
 - **[Especificación de Arquitectura de VXR](./architecture.md)**: Capas del sistema, responsabilidades y flujo de ejecución.
@@ -50,13 +51,18 @@ Guías pedagógicas que explican qué hace cada clase interna, el porqué de cad
 ```
 Framework VCXR/
 ├── packages/
-│   └── core/                 # Código fuente de @vxr/core v0.1.0
-│       ├── src/              # Implementación TypeScript
+│   ├── core/                 # Código fuente de @vxr/core
+│   │   ├── src/              # Implementación TypeScript
+│   │   └── dist/             # Bundle compilado CJS/ESM
+│   └── ar/                   # Módulo independiente @vxr/ar (Web AR & Computer Vision)
+│       ├── src/              # Tracking 6-DoF, QR, MindAR, marcadores, gestos
 │       └── dist/             # Bundle compilado CJS/ESM
 ├── examples/                 # VXR Playground (Vite multi-página)
 │   ├── basic-viewer/         # Validador de carga de modelos e iluminación
 │   ├── architecture-viewer/  # Validador de inspección espacial y métricas
-│   └── interaction-lab/      # Validador de raycasting y controladores WebXR
+│   ├── interaction-lab/      # Validador de raycasting y controladores WebXR
+│   ├── level-builder/        # VXR Studio (Editor visual 3D/XR)
+│   └── ar-viewer/            # Visor de Realidad Aumentada Web multi-modo
 ├── docs/                     # Documentación técnica, ADRs y Learning Mode
 ├── projects/                 # Proyectos de referencia de laboratorio (intactos)
 │   ├── visor-xr/

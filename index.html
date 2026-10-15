@@ -1815,6 +1815,7 @@
         <li><a href="#viaje" class="nav-item-link">El Viaje XR</a></li>
         <li><a href="#caracteristicas" class="nav-item-link">Aprende & Crea</a></li>
         <li><a href="./level-builder/" target="_blank" class="nav-item-link" style="color: #38bdf8; font-weight: 700;">🛠️ VXR Studio</a></li>
+        <li><a href="./ar-viewer/" target="_blank" class="nav-item-link" style="color: #34d399; font-weight: 700;">📱 VXR AR</a></li>
         <li><a href="#catalogo" class="nav-item-link">Demos en Vivo</a></li>
         <li><a href="#comunidad" class="nav-item-link">Ecosistema LatAm</a></li>
         <li><a href="#documentacion" class="nav-item-link">Docs</a></li>
@@ -1859,6 +1860,9 @@
           </a>
           <a href="./level-builder/" target="_blank" class="btn-cta-secondary" style="border-color: rgba(56, 189, 248, 0.45); color: #38bdf8; background: rgba(14, 165, 233, 0.12);">
             🛠️ VXR Studio (Editor 3D/XR) ↗
+          </a>
+          <a href="./ar-viewer/" target="_blank" class="btn-cta-secondary" style="border-color: rgba(16, 185, 129, 0.45); color: #34d399; background: rgba(16, 185, 129, 0.12);">
+            📱 VXR AR (Web AR) ↗
           </a>
           <a href="#catalogo" class="btn-cta-secondary">
             🥽 Explorar Demos en Vivo
@@ -2115,6 +2119,7 @@
             <div class="code-tabs">
               <button class="code-tab-btn active" data-tab="ts">TypeScript Rápido</button>
               <button class="code-tab-btn" data-tab="room">Salas & Museo 3D</button>
+              <button class="code-tab-btn" data-tab="ar">VXR AR</button>
               <button class="code-tab-btn" data-tab="quest">Meta Quest CLI</button>
               <button class="code-tab-btn" data-tab="install">Instalación</button>
             </div>
@@ -2171,11 +2176,11 @@ app.<span class="fn">start</span>();</code></pre>
         <div class="filter-tabs">
           <button class="tab-filter-btn active" data-filter="all">
             <span>Todos</span>
-            <span class="tab-counter">8</span>
+            <span class="tab-counter">9</span>
           </button>
           <button class="tab-filter-btn" data-filter="vxr-core">
-            <span>Demos Core</span>
-            <span class="tab-counter">5</span>
+            <span>Demos Core & AR</span>
+            <span class="tab-counter">6</span>
           </button>
           <button class="tab-filter-btn" data-filter="reference">
             <span>Casos de Estudio</span>
@@ -2211,6 +2216,37 @@ app.<span class="fn">start</span>();</code></pre>
                 ⚡ Probar en Catálogo
               </button>
               <a href="./level-builder/" target="_blank" class="btn-open-tab" title="Abrir en pestaña independiente">
+                ↗
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <!-- 0.5. VXR AR (Augmented Reality Viewer) -->
+        <article class="exp-card" data-category="vxr-core" style="border-color: rgba(16, 185, 129, 0.4); box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.25);">
+          <div class="card-banner" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(56, 189, 248, 0.25) 100%);">
+            <div class="card-icon">📱</div>
+            <div class="card-badge-group">
+              <span class="tech-badge badge-core" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.4);">@vxr/ar</span>
+              <span class="tech-badge" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border-color: rgba(56, 189, 248, 0.4);">Web AR & Visión 6-DoF</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-tagline" style="color: #34d399;">Realidad Aumentada Web con Cámara y Marcadores</div>
+            <h3 class="card-title">VXR AR — Visor de Realidad Aumentada</h3>
+            <p class="card-desc">
+              Experimenta AR directamente en el navegador de tu móvil o laptop sin apps nativas. Soporta escaneo de Códigos QR para lanzamiento instantáneo, seguimiento 6-DoF de imágenes naturales con MindAR, marcadores fiduciarios procedimentales y fichas museísticas interactivas.
+            </p>
+            <ul class="feature-list">
+              <li class="feature-item"><span class="feature-dot" style="background: #34d399;"></span>Escaneo QR instantáneo con BarcodeDetector y fallback Canvas</li>
+              <li class="feature-item"><span class="feature-dot" style="background: #34d399;"></span>Tracking de imágenes 6-DoF con filtro de suavizado anti-jitter (Lerp/Slerp)</li>
+              <li class="feature-item"><span class="feature-dot" style="background: #34d399;"></span>Gestos táctiles (rotar, pellizcar para escalar) y generador de marcadores SVG</li>
+            </ul>
+            <div class="card-actions">
+              <button class="btn-test" data-launch="./ar-viewer/" data-title="VXR AR — Visor de Realidad Aumentada Web">
+                ⚡ Probar en Catálogo
+              </button>
+              <a href="./ar-viewer/" target="_blank" class="btn-open-tab" title="Abrir en pestaña independiente">
                 ↗
               </a>
             </div>
@@ -3018,6 +3054,24 @@ app.scene.<span class="fn">add</span>(room);
 audio.<span class="fn">playExhibitFanfare</span>();
 
 app.<span class="fn">start</span>();`,
+
+      ar: `<span class="kw">import</span> { <span class="fn">ARExperience</span>, <span class="fn">ARMode</span> } <span class="kw">from</span> <span class="str">'@vxr/ar'</span>;
+
+<span class="cmt">// 1. Inicializa AR con cámara web y seguimiento de imágenes 6-DoF</span>
+<span class="kw">const</span> ar = <span class="kw">new</span> <span class="fn">ARExperience</span>({
+  <span class="prop">container</span>: <span class="str">'#ar-viewport'</span>,
+  <span class="prop">mode</span>: <span class="fn">ARMode</span>.IMAGE_TRACKING,
+  <span class="prop">enableGestures</span>: <span class="num">true</span>
+});
+
+<span class="cmt">// 2. Enciende la cámara y carga tu modelo 3D sobre el marcador</span>
+<span class="kw">await</span> ar.<span class="fn">init</span>();
+<span class="kw">await</span> ar.<span class="fn">loadModel</span>(<span class="str">'./models/robot.glb'</span>, {
+  <span class="prop">scale</span>: <span class="num">0.6</span>,
+  <span class="prop">autoPlayAnimation</span>: <span class="num">true</span>
+});
+
+ar.<span class="fn">start</span>();`,
 
       quest: `<span class="cmt"># 1. Auditar salud del proyecto para Meta Quest Browser</span>
 npx vxr doctor

@@ -96,6 +96,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@vxr/core': path.resolve(__dirname, '../packages/core/src/index.ts'),
+      '@vxr/ar': path.resolve(__dirname, '../packages/ar/src/index.ts'),
     },
   },
   build: {
@@ -107,6 +108,7 @@ export default defineConfig({
         interactionLab: path.resolve(__dirname, 'interaction-lab/index.html'),
         scenarioBuilder: path.resolve(__dirname, 'scenario-builder/index.html'),
         levelBuilder: path.resolve(__dirname, 'level-builder/index.html'),
+        arViewer: path.resolve(__dirname, 'ar-viewer/index.html'),
       },
     },
   },

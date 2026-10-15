@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>VXR AR — Realidad Aumentada Web Universal</title>
+  <link rel="icon" type="image/png" href="../favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --vxr-bg-dark: #050811;
+      --vxr-bg-panel: rgba(13, 19, 36, 0.88);
+      --vxr-bg-card: rgba(15, 23, 42, 0.75);
+      --vxr-border: rgba(255, 255, 255, 0.1);
+      --vxr-border-accent: rgba(56, 189, 248, 0.4);
+      --vxr-cyan: #38bdf8;
+      --vxr-blue: #0284c7;
+      --vxr-green: #10b981;
+      --vxr-amber: #f59e0b;
+      --vxr-red: #ef4444;
+      --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--vxr-bg-dark);
+      font-family: var(--font-main);
+      color: #fff;
+    }
+
+    /* Fullscreen AR Viewport Container */
+    #ar-viewport-container {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Top Navigation HUD */
+    .ar-top-hud {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 100;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(to bottom, rgba(5, 8, 17, 0.95) 0%, rgba(5, 8, 17, 0.4) 75%, transparent 100%);
+      pointer-events: none;
+    }
+    .ar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: auto;
+    }
+    .ar-logo-badge {
+      background: linear-gradient(135deg, var(--vxr-cyan), var(--vxr-blue));
+      color: #000;
+      font-weight: 800;
+      font-size: 13px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+    .ar-title {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .ar-hud-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      pointer-events: auto;
+    }
+    .btn-hud {
+      background: var(--vxr-bg-card);
+      border: 1px solid var(--vxr-border);
+      color: #cbd5e1;
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-hud:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--vxr-cyan);
+      color: #fff;
+    }
+    .btn-hud-danger {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+    }
+    .btn-hud-danger:hover {
+      background: rgba(239, 68, 68, 0.3);
+      color: #fff;
+    }
+
+    /* Mode Selection Tabs */
+    .ar-mode-tabs {
+      position: absolute;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      display: flex;
+      gap: 6px;
+      background: rgba(8, 13, 26, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 5px;
+      border-radius: 12px;
+      border: 1px solid var(--vxr-border);
+      max-width: 94vw;
+      overflow-x: auto;
+    }
+    .ar-mode-tab {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ar-mode-tab:hover { color: #fff; }
+    .ar-mode-tab.active {
+      background: var(--vxr-blue);
+      color: #fff;
+      box-shadow: 0 0 14px rgba(2, 132, 199, 0.5);
+    }
+
+    /* Status Banner / Reticle */
+    .ar-reticle-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .ar-reticle-frame {
+      width: 260px;
+      height: 260px;
+      border: 2px dashed rgba(56, 189, 248, 0.6);
+      border-radius: 20px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulseReticle 2.5s infinite ease-in-out;
+    }
+    @keyframes pulseReticle {
+      0%, 100% { border-color: rgba(56, 189, 248, 0.4); transform: scale(1); }
+      50% { border-color: rgba(56, 189, 248, 0.9); transform: scale(1.02); }
+    }
+    .ar-state-badge {
+      margin-top: 24px;
+      background: rgba(8, 13, 26, 0.88);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--vxr-border);
+      padding: 8px 18px;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--vxr-amber);
+    }
+    .status-dot.active { background: var(--vxr-green); box-shadow: 0 0 8px var(--vxr-green); }
+    .status-dot.scanning { background: var(--vxr-cyan); animation: blink 1s infinite alternate; }
+    .status-dot.error { background: var(--vxr-red); }
+    @keyframes blink { from { opacity: 0.3; } to { opacity: 1; } }
+
+    /* Interactive Bottom Tray */
+    .ar-bottom-tray {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      width: 92%;
+      max-width: 600px;
+      background: var(--vxr-bg-panel);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--vxr-border-accent);
+      border-radius: 16px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    }
+    .tray-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .tray-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tray-controls {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-tray {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--vxr-border);
+      color: #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-tray:hover {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: var(--vxr-cyan);
+      color: #fff;
+    }
+
+    /* Model Selector Carousel */
+    .model-pills {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 2px;
+    }
+    .model-pills::-webkit-scrollbar { display: none; }
+    .model-pill {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--vxr-border);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #94a3b8;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .model-pill:hover { color: #fff; border-color: rgba(255, 255, 255, 0.3); }
+    .model-pill.active {
+      background: var(--vxr-cyan);
+      color: #040711;
+      border-color: var(--vxr-cyan);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+    }
+
+    /* Modal / Drawer for Target Downloads & Info */
+    .ar-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .ar-modal.active { display: flex; }
+    .ar-modal-box {
+      width: 100%;
+      max-width: 480px;
+      background: #090e1a;
+      border: 1px solid var(--vxr-border-accent);
+      border-radius: 16px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
+    }
+    .ar-modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .ar-modal-close {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .target-preview-img {
+      width: 100%;
+      max-height: 220px;
+      object-fit: contain;
+      background: #040711;
+      border-radius: 10px;
+      border: 1px solid var(--vxr-border);
+      padding: 10px;
+    }
+    .btn-action-primary {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      background: var(--vxr-blue);
+      border: 1px solid var(--vxr-cyan);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-action-primary:hover {
+      background: #0369a1;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
+    }
+
+    /* Toast */
+    .ar-toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 300;
+      background: #0f172a;
+      border: 1px solid var(--vxr-cyan);
+      padding: 8px 18px;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 700;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+    }
+  </style>
+  <script type="module" crossorigin src="../assets/arViewer-FJouXp2Y.js"></script>
+  <link rel="modulepreload" crossorigin href="../assets/DRACOLoader-CJupnwR8.js">
+</head>
+<body>
+
+  <!-- Fullscreen AR Viewport Container -->
+  <div id="ar-viewport-container">
+    <!-- Camera Video is appended here automatically by ARCamera -->
+    <!-- WebGL Canvas is appended here automatically by ARExperience -->
+  </div>
+
+  <!-- Top Navigation HUD -->
+  <header class="ar-top-hud">
+    <div class="ar-brand">
+      <span class="ar-logo-badge">VXR AR</span>
+      <span class="ar-title">Visor de Realidad Aumentada</span>
+    </div>
+    <div class="ar-hud-actions">
+      <button id="btn-capabilities" class="btn-hud" title="Ver diagnóstico de compatibilidad">
+        <span>⚡ Compatibilidad</span>
+      </button>
+      <button id="btn-targets" class="btn-hud" title="Ver y descargar marcadores / objetivos">
+        <span>🎯 Objetivos</span>
+      </button>
+      <button id="btn-exit" class="btn-hud btn-hud-danger" title="Cerrar experiencia y liberar cámara">
+        <span>✕ Salir</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- AR Mode Selection Tabs -->
+  <nav class="ar-mode-tabs">
+    <button class="ar-mode-tab active" data-ar-mode="qr">
+      <span>📱 Modo QR & URL</span>
+    </button>
+    <button class="ar-mode-tab" data-ar-mode="image">
+      <span>🖼️ Image Tracking</span>
+    </button>
+    <button class="ar-mode-tab" data-ar-mode="marker">
+      <span>🎯 Marcador Personalizado</span>
+    </button>
+    <button class="ar-mode-tab" data-ar-mode="educational">
+      <span>🏛️ Museo & Ficha Educativa</span>
+    </button>
+  </nav>
+
+  <!-- Reticle & Detection Status Badge -->
+  <div class="ar-reticle-overlay">
+    <div id="ar-reticle" class="ar-reticle-frame"></div>
+    <div class="ar-state-badge">
+      <span id="status-dot" class="status-dot scanning"></span>
+      <span id="status-text">Escaneando entorno con cámara...</span>
+    </div>
+  </div>
+
+  <!-- Interactive Bottom Tray -->
+  <section class="ar-bottom-tray">
+    <div class="tray-header">
+      <div class="tray-title">
+        <span id="tray-icon">🤖</span>
+        <span id="tray-headline">Experiencia 3D Interactiva</span>
+      </div>
+      <div class="tray-controls">
+        <button id="btn-reset-transform" class="btn-tray" title="Restablecer rotación y escala">
+          <span>↺ Reset</span>
+        </button>
+        <button id="btn-toggle-anim" class="btn-tray" title="Pausar o reanudar animación">
+          <span>⏯ Animación</span>
+        </button>
+        <button id="btn-toggle-audio" class="btn-tray" title="Activar o silenciar audio">
+          <span>🔊 Audio</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Model Switcher Carousel -->
+    <div class="model-pills">
+      <button class="model-pill active" data-model-id="robot">🤖 Robot Explorador</button>
+      <button class="model-pill" data-model-id="building">🏢 Sede Corporativa</button>
+      <button class="model-pill" data-model-id="lab">🔬 Laboratorio Tecnológico</button>
+    </div>
+
+    <div style="font-size: 11px; color: #94a3b8; display: flex; align-items: center; justify-content: space-between;">
+      <span>Gestos táctiles: <b>Arrastrar</b> para rotar · <b>Pellizco</b> para escalar</span>
+      <span id="lbl-scale-factor" style="font-family: var(--font-mono); color: var(--vxr-cyan);">1.00x</span>
+    </div>
+  </section>
+
+  <!-- Modal 1: Target Downloads (QR, Image Target, Marker Pattern) -->
+  <div id="modal-targets" class="ar-modal">
+    <div class="ar-modal-box">
+      <div class="ar-modal-head">
+        <h3 style="font-size: 16px; font-weight: 800;">🎯 Objetivos Imprimibles y QR</h3>
+        <button id="btn-close-targets-modal" class="ar-modal-close">✕</button>
+      </div>
+      <p style="font-size: 12px; color: #94a3b8; line-height: 1.5;">
+        Apunta la cámara a cualquiera de estos objetivos impresos en papel o muéstralos en la pantalla de otro teléfono o tablet:
+      </p>
+
+      <!-- Target Preview -->
+      <div id="target-preview-container" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+        <img id="target-preview-img" class="target-preview-img" src="../vxr-logo.png" alt="Target Preview" />
+        <span id="target-preview-desc" style="font-size: 11.5px; font-weight: 700; color: #cbd5e1;">Imagen Objetivo de Seguimiento</span>
+      </div>
+
+      <a id="btn-download-target" href="#" download="vxr-target.png" class="btn-action-primary">
+        💾 Descargar Imagen Objetivo
+      </a>
+    </div>
+  </div>
+
+  <!-- Modal 2: Diagnostics & Capabilities -->
+  <div id="modal-caps" class="ar-modal">
+    <div class="ar-modal-box">
+      <div class="ar-modal-head">
+        <h3 style="font-size: 16px; font-weight: 800;">⚡ Diagnóstico de Compatibilidad</h3>
+        <button id="btn-close-caps-modal" class="ar-modal-close">✕</button>
+      </div>
+      <div id="caps-list" style="display: flex; flex-direction: column; gap: 10px; font-size: 12px;">
+        <!-- Filled dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Educational Info Card Overlay -->
+  <div id="modal-infocard" class="ar-modal">
+    <div class="ar-modal-box">
+      <div class="ar-modal-head">
+        <h3 id="infocard-title" style="font-size: 16px; font-weight: 800;">🏛️ Ficha de Museo Virtual</h3>
+        <button id="btn-close-infocard" class="ar-modal-close">✕</button>
+      </div>
+      <p id="infocard-subtitle" style="font-size: 12px; color: var(--vxr-cyan); font-weight: 700;"></p>
+      <p id="infocard-body" style="font-size: 12.5px; color: #cbd5e1; line-height: 1.6;"></p>
+      <button id="btn-infocard-action" class="btn-action-primary">Entendido</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="ar-toast" class="ar-toast">
+    <span id="ar-toast-msg">Mensaje</span>
+  </div>
+
+</body>
+</html>
