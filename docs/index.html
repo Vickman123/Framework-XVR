@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Documentación Oficial — VXR Core</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png" />
+  <link rel="shortcut icon" href="../favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --vxr-bg-dark: #060913;
+      --vxr-bg-surface: rgba(13, 19, 36, 0.85);
+      --vxr-border: rgba(255, 255, 255, 0.08);
+      --vxr-border-accent: rgba(56, 189, 248, 0.35);
+      --vxr-cyan: #38bdf8;
+      --vxr-blue: #0284c7;
+      --vxr-indigo: #6366f1;
+      --vxr-purple: #a855f7;
+      --vxr-emerald: #10b981;
+      --vxr-text-main: #f8fafc;
+      --vxr-text-sub: #94a3b8;
+      --vxr-text-dim: #64748b;
+      --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --max-width: 1320px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--vxr-bg-dark);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(14, 165, 233, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 25%, rgba(99, 102, 241, 0.07) 0%, transparent 45%);
+      background-attachment: fixed;
+      color: var(--vxr-text-main);
+      font-family: var(--font-display);
+      min-height: 100vh;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* Top Nav */
+    .doc-nav {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      z-index: 1000;
+      background: rgba(6, 9, 19, 0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--vxr-border);
+    }
+
+    .nav-inner {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 16px;
+    }
+
+    .nav-brand img {
+      height: 36px;
+      width: auto;
+    }
+
+    .nav-brand-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--vxr-cyan);
+      border: 1px solid var(--vxr-border-accent);
+    }
+
+    .nav-links-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--vxr-text-sub);
+    }
+
+    .nav-links-right a:hover {
+      color: var(--vxr-cyan);
+    }
+
+    /* Portal Layout */
+    .portal-layout {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 32px 24px 64px;
+      display: grid;
+      grid-template-columns: 290px 1fr;
+      gap: 40px;
+      align-items: start;
+    }
+
+    /* Sidebar */
+    .doc-sidebar {
+      position: sticky;
+      top: 80px;
+      background: var(--vxr-bg-surface);
+      border: 1px solid var(--vxr-border);
+      border-radius: 14px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-height: calc(100vh - 110px);
+      overflow-y: auto;
+    }
+
+    .sidebar-title {
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--vxr-cyan);
+    }
+
+    .search-input {
+      width: 100%;
+      background: #040711;
+      border: 1px solid var(--vxr-border);
+      border-radius: 8px;
+      padding: 9px 12px 9px 32px;
+      color: #ffffff;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: var(--vxr-cyan);
+    }
+
+    .search-wrapper {
+      position: relative;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      color: var(--vxr-text-dim);
+    }
+
+    .doc-menu {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .doc-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: 7px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--vxr-text-sub);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .doc-menu-item:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .doc-menu-item.active {
+      color: var(--vxr-cyan);
+      background: rgba(56, 189, 248, 0.12);
+      border-left: 3px solid var(--vxr-cyan);
+      padding-left: 9px;
+    }
+
+    /* Main Doc Content */
+    .doc-main {
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+    }
+
+    .doc-article {
+      background: var(--vxr-bg-surface);
+      border: 1px solid var(--vxr-border);
+      border-radius: 14px;
+      padding: 36px;
+      scroll-margin-top: 90px;
+    }
+
+    .article-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--vxr-cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    .article-title {
+      font-size: 26px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 16px;
+    }
+
+    .article-p {
+      font-size: 15px;
+      color: var(--vxr-text-sub);
+      line-height: 1.7;
+      margin-bottom: 18px;
+    }
+
+    .code-box {
+      background: #040711;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.55;
+      color: #e2e8f0;
+      overflow-x: auto;
+      margin-bottom: 22px;
+    }
+
+    .doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 22px;
+      font-size: 13.5px;
+    }
+
+    .doc-table th {
+      text-align: left;
+      padding: 11px 12px;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--vxr-cyan);
+      border-bottom: 1px solid var(--vxr-border);
+      font-weight: 700;
+    }
+
+    .doc-table td {
+      padding: 11px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--vxr-text-sub);
+    }
+
+    .crosslinks-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding-top: 18px;
+      border-top: 1px solid var(--vxr-border);
+    }
+
+    .crosslink-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--vxr-cyan);
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid var(--vxr-border-accent);
+      padding: 6px 12px;
+      border-radius: 6px;
+    }
+
+    .crosslink-btn:hover {
+      background: rgba(56, 189, 248, 0.2);
+    }
+
+    /* Syntax Highlighting */
+    .kw { color: #f43f5e; font-weight: 600; }
+    .fn { color: #38bdf8; }
+    .str { color: #a3e635; }
+    .prop { color: #e2e8f0; }
+    .num { color: #fbbf24; }
+    .cmt { color: #64748b; font-style: italic; }
+
+    @media (max-width: 992px) {
+      .portal-layout {
+        grid-template-columns: 1fr;
+      }
+      .doc-sidebar {
+        position: static;
+        max-height: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header class="doc-nav">
+    <div class="nav-inner">
+      <a href="../#inicio" class="nav-brand">
+        <img src="../vxr-logo.png" alt="VXR Core" />
+        <span>VXR Core</span>
+        <span class="nav-brand-badge">Documentación Oficial</span>
+      </a>
+
+      <div class="nav-links-right">
+        <a href="../#inicio">← Volver al Inicio</a>
+        <a href="../#ejemplos">Ejemplos</a>
+        <a href="../#playground">Playground</a>
+        <a href="../level-builder/" target="_blank">VXR Studio ↗</a>
+        <a href="../ar-viewer/" target="_blank">VXR AR ↗</a>
+        <a href="https://github.com/Vickman123/Framework-XVR" target="_blank">GitHub ↗</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="portal-layout">
+    <!-- Sidebar -->
+    <aside class="doc-sidebar">
+      <span class="sidebar-title">Índice Temático</span>
+
+      <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="doc-search" class="search-input" placeholder="Buscar concepto o clase..." />
+      </div>
+
+      <ul class="doc-menu">
+        <li class="doc-menu-item active" data-target="art-getting-started">🚀 1. Primeros pasos</li>
+        <li class="doc-menu-item" data-target="art-architecture">🏗️ 2. Arquitectura</li>
+        <li class="doc-menu-item" data-target="art-scene-rendering">🎨 3. Escenas y renderizado</li>
+        <li class="doc-menu-item" data-target="art-assets">📦 4. Recursos 3D</li>
+        <li class="doc-menu-item" data-target="art-interaction">🕹️ 5. Interacción</li>
+        <li class="doc-menu-item" data-target="art-webxr">🥽 6. WebXR</li>
+        <li class="doc-menu-item" data-target="art-scenarios">🏛️ 7. Escenarios y salas</li>
+        <li class="doc-menu-item" data-target="art-api">📚 8. Referencia de API</li>
+        <li class="doc-menu-item" data-target="art-examples">💡 9. Ejemplos prácticos</li>
+        <li class="doc-menu-item" data-target="art-troubleshooting">🔧 10. Solución de problemas</li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="doc-main">
+      <!-- 1. Primeros pasos -->
+      <article id="art-getting-started" class="doc-article">
+        <span class="article-badge">Comenzando</span>
+        <h2 class="article-title">1. Primeros Pasos con VXR Core</h2>
+        <p class="article-p">
+          VXR Core es un framework de alto nivel en TypeScript sobre Three.js y WebXR Device API. Para comenzar, agrega la biblioteca y sus tipos a tu proyecto de Node/Vite:
+        </p>
+        <div class="code-box">
+npm install github:Vickman123/Framework-XVR three @types/three
+        </div>
+        <p class="article-p">
+          Instancia la fachada maestra <code style="color: #38bdf8;">XRApp</code> para configurar canvas, cámara, luces y bucle de animación automáticamente:
+        </p>
+        <div class="code-box">
+<span class="kw">import</span> { <span class="fn">XRApp</span> } <span class="kw">from</span> <span class="str">'vxr'</span>;
+
+<span class="kw">const</span> app = <span class="kw">new</span> <span class="fn">XRApp</span>({
+  <span class="prop">container</span>: <span class="str">'#app'</span>,
+  <span class="prop">autoVRButton</span>: <span class="num">true</span>,
+  <span class="prop">enableShadows</span>: <span class="num">true</span>,
+  <span class="prop">pixelRatioCap</span>: <span class="num">1.5</span>
+});
+
+<span class="kw">await</span> app.<span class="fn">loadModel</span>(<span class="str">'./models/artefacto.glb'</span>, { <span class="prop">autoGround</span>: <span class="num">true</span> });
+app.<span class="fn">start</span>();
+        </div>
+        <div class="crosslinks-row">
+          <a href="#art-architecture" class="crosslink-btn">Ver Arquitectura →</a>
+          <a href="#art-assets" class="crosslink-btn">Carga de Modelos 3D →</a>
+        </div>
+      </article>
+
+      <!-- 2. Arquitectura -->
+      <article id="art-architecture" class="doc-article">
+        <span class="article-badge">Diseño y Filosofía</span>
+        <h2 class="article-title">2. Arquitectura del Sistema</h2>
+        <p class="article-p">
+          VXR Core sigue el patrón <strong>Fachada Abierta (Open Facade)</strong>: resuelve tareas repetitivas pero te permite acceder a <code style="color: #38bdf8;">app.scene</code>, <code style="color: #38bdf8;">app.camera</code> y <code style="color: #38bdf8;">app.renderer</code> en cualquier momento sin restricciones.
+        </p>
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th>Capa</th>
+              <th>Módulo</th>
+              <th>Propósito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Fachada</td>
+              <td><code style="color: #38bdf8;">XRApp</code></td>
+              <td>Control de ciclo de vida y orquestación unificada.</td>
+            </tr>
+            <tr>
+              <td>Escena</td>
+              <td><code style="color: #38bdf8;">XRScene</code></td>
+              <td>Presets de iluminación y fondo equilibrados.</td>
+            </tr>
+            <tr>
+              <td>Render</td>
+              <td><code style="color: #38bdf8;">XRRenderer</code></td>
+              <td>WebGL2, pixelRatioCap adaptativo y WebXR loop.</td>
+            </tr>
+            <tr>
+              <td>Assets</td>
+              <td><code style="color: #38bdf8;">XRAssetManager</code></td>
+              <td>GLTF/GLB, DRACO, auto-grounding y dispose GPU.</td>
+            </tr>
+            <tr>
+              <td>Inmersión</td>
+              <td><code style="color: #38bdf8;">XRSession</code></td>
+              <td>Detección WebXR, mandos VR y emulación Desktop.</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="crosslinks-row">
+          <a href="#art-scene-rendering" class="crosslink-btn">Escenas y Renderizado →</a>
+          <a href="#art-api" class="crosslink-btn">Referencia de API →</a>
+        </div>
+      </article>
+
+      <!-- 3. Escenas y renderizado -->
+      <article id="art-scene-rendering" class="doc-article">
+        <span class="article-badge">Gráficos y WebGL2</span>
+        <h2 class="article-title">3. Escenas y Renderizado</h2>
+        <p class="article-p">
+          El módulo <code style="color: #38bdf8;">XRScene</code> ofrece presets de iluminación fotométricos listos para usar:
+        </p>
+        <div class="code-box">
+app.sceneManager.<span class="fn">applyLightingPreset</span>(<span class="str">'studio'</span>); <span class="cmt">// 'studio' | 'outdoor' | 'sunset' | 'cyber'</span>
+        </div>
+        <p class="article-p">
+          <code style="color: #38bdf8;">XRRenderer</code> restringe el <code style="color: #38bdf8;">pixelRatio</code> a un máximo de 1.5x (<code style="color: #38bdf8;">pixelRatioCap: 1.5</code>) para prevenir calentamiento térmico en Meta Quest y móviles.
+        </p>
+        <div class="crosslinks-row">
+          <a href="#art-webxr" class="crosslink-btn">WebXR a 90 FPS →</a>
+        </div>
+      </article>
+
+      <!-- 4. Recursos 3D -->
+      <article id="art-assets" class="doc-article">
+        <span class="article-badge">Pipeline de Modelos</span>
+        <h2 class="article-title">4. Recursos 3D y Auto-Grounding</h2>
+        <p class="article-p">
+          Carga modelos 3D con centrado automático y alineación de suelo mediante <code style="color: #38bdf8;">Box3</code>:
+        </p>
+        <div class="code-box">
+<span class="kw">const</span> model = <span class="kw">await</span> app.<span class="fn">loadModel</span>(<span class="str">'./models/artefacto.glb'</span>, {
+  <span class="prop">autoCenter</span>: <span class="num">true</span>,
+  <span class="prop">autoGround</span>: <span class="num">true</span>,
+  <span class="prop">castShadow</span>: <span class="num">true</span>
+});
+        </div>
+        <p class="article-p">
+          Para liberar memoria al cambiar de escena:
+        </p>
+        <div class="code-box">
+app.assetManager.<span class="fn">disposeObject</span>(model);
+        </div>
+        <div class="crosslinks-row">
+          <a href="#art-scenarios" class="crosslink-btn">Escenarios y Salas →</a>
+        </div>
+      </article>
+
+      <!-- 5. Interacción -->
+      <article id="art-interaction" class="doc-article">
+        <span class="article-badge">Entrada y Controladores</span>
+        <h2 class="article-title">5. Interacción Unificada (XRInput)</h2>
+        <p class="article-p">
+          <code style="color: #38bdf8;">XRInput</code> unifica la entrada de ratón, teclado (WASD) y mandos WebXR con botones y gatillos:
+        </p>
+        <div class="code-box">
+<span class="kw">import</span> { <span class="fn">XRInput</span> } <span class="kw">from</span> <span class="str">'vxr'</span>;
+
+<span class="kw">const</span> input = <span class="kw">new</span> <span class="fn">XRInput</span>({ <span class="prop">canvas</span>: app.renderer.domElement });
+input.<span class="fn">on</span>(<span class="str">'select'</span>, (event) => {
+  console.log(<span class="str">'Intersección con objeto:'</span>, event.intersection?.object);
+});
+        </div>
+        <div class="crosslinks-row">
+          <a href="#art-webxr" class="crosslink-btn">Mandos en WebXR →</a>
+        </div>
+      </article>
+
+      <!-- 6. WebXR -->
+      <article id="art-webxr" class="doc-article">
+        <span class="article-badge">Inmersión Standalone</span>
+        <h2 class="article-title">6. Soporte WebXR y Meta Quest</h2>
+        <p class="article-p">
+          Gestión nativa de sesiones inmersivas para Meta Quest Browser y DesktopRuntime para PC:
+        </p>
+        <div class="code-box">
+<span class="cmt"># Comandos de auditoría y compilación para Meta Quest</span>
+npx vxr doctor
+npx vxr build --target quest
+npx vxr serve --https
+        </div>
+        <div class="crosslinks-row">
+          <a href="#art-troubleshooting" class="crosslink-btn">HTTPS y Certificados →</a>
+        </div>
+      </article>
+
+      <!-- 7. Escenarios y salas -->
+      <article id="art-scenarios" class="doc-article">
+        <span class="article-badge">Arquitectura Espacial</span>
+        <h2 class="article-title">7. Escenarios y Salas Modulares</h2>
+        <p class="article-p">
+          Construcción procedimental de salas conectadas por pasillos continuos con colisiones automáticas:
+        </p>
+        <div class="code-box">
+<span class="kw">import</span> { <span class="fn">XRRoom</span>, <span class="fn">XRScenario</span> } <span class="kw">from</span> <span class="str">'vxr'</span>;
+
+<span class="kw">const</span> room = <span class="kw">new</span> <span class="fn">XRRoom</span>({
+  <span class="prop">dimensions</span>: { <span class="prop">width</span>: <span class="num">12</span>, <span class="prop">height</span>: <span class="num">4</span>, <span class="prop">depth</span>: <span class="num">12</span> },
+  <span class="prop">materials</span>: { <span class="prop">floor</span>: <span class="str">'marble'</span>, <span class="prop">walls</span>: <span class="str">'white'</span> },
+  <span class="prop">doors</span>: [{ <span class="prop">wall</span>: <span class="str">'north'</span>, <span class="prop">width</span>: <span class="num">2.2</span>, <span class="prop">height</span>: <span class="num">3.0</span> }]
+});
+
+<span class="kw">const</span> scenario = <span class="kw">new</span> <span class="fn">XRScenario</span>();
+scenario.<span class="fn">addRoom</span>(room);
+app.scene.<span class="fn">add</span>(scenario);
+        </div>
+      </article>
+
+      <!-- 8. Referencia de API -->
+      <article id="art-api" class="doc-article">
+        <span class="article-badge">Firmas y Tipado</span>
+        <h2 class="article-title">8. Referencia de API Pública</h2>
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th>Clase</th>
+              <th>Constructor</th>
+              <th>Métodos Clave</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code style="color: #38bdf8;">XRApp</code></td>
+              <td><code style="color: #e2e8f0;">XRAppOptions</code></td>
+              <td><code style="color: #38bdf8;">start(), stop(), loadModel(), dispose()</code></td>
+            </tr>
+            <tr>
+              <td><code style="color: #38bdf8;">XRScene</code></td>
+              <td><code style="color: #e2e8f0;">XRSceneOptions</code></td>
+              <td><code style="color: #38bdf8;">applyLightingPreset(), add(), remove()</code></td>
+            </tr>
+            <tr>
+              <td><code style="color: #38bdf8;">ARExperience</code></td>
+              <td><code style="color: #e2e8f0;">ARExperienceOptions</code></td>
+              <td><code style="color: #38bdf8;">init(), start(), loadModel(), setMode()</code></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="crosslinks-row">
+          <a href="https://github.com/Vickman123/Framework-XVR/blob/main/docs/api-reference.md" target="_blank" class="crosslink-btn">Ver API Reference Completa en GitHub ↗</a>
+        </div>
+      </article>
+
+      <!-- 9. Ejemplos prácticos -->
+      <article id="art-examples" class="doc-article">
+        <span class="article-badge">Tutoriales</span>
+        <h2 class="article-title">9. Ejemplos Prácticos</h2>
+        <p class="article-p">
+          Aprende cómo construir simuladores, recorridos de museos y experiencias de Realidad Aumentada revisando los códigos fuente completos en la carpeta <code style="color: #38bdf8;">examples/</code> del repositorio.
+        </p>
+        <div class="crosslinks-row">
+          <a href="../#ejemplos" class="crosslink-btn">Abrir Galería de Ejemplos en Vivo →</a>
+        </div>
+      </article>
+
+      <!-- 10. Solución de problemas -->
+      <article id="art-troubleshooting" class="doc-article">
+        <span class="article-badge">Diagnóstico</span>
+        <h2 class="article-title">10. Solución de Problemas</h2>
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th>Incidencia</th>
+              <th>Causa</th>
+              <th>Solución</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>WebXR no arranca</td>
+              <td>Red local sin HTTPS.</td>
+              <td>Usa <code style="color: #38bdf8;">npx vxr serve --https</code>.</td>
+            </tr>
+            <tr>
+              <td>Pérdida de contexto WebGL</td>
+              <td>Memoria GPU saturada.</td>
+              <td>Ejecuta <code style="color: #38bdf8;">app.dispose()</code> al cambiar de vista.</td>
+            </tr>
+            <tr>
+              <td>Sin audio en móvil</td>
+              <td>Autoplay policy de Safari/Chrome.</td>
+              <td>Llama a <code style="color: #38bdf8;">audio.unlock()</code> en el primer tap.</td>
+            </tr>
+          </tbody>
+        </table>
+      </article>
+    </main>
+  </div>
+
+  <script>
+    // Sidebar Navigation Click
+    const menuItems = document.querySelectorAll('.doc-menu-item');
+    const articles = document.querySelectorAll('.doc-article');
+
+    menuItems.forEach(item => {
+      item.addEventListener('click', () => {
+        menuItems.forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        const targetId = item.getAttribute('data-target');
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+
+    // Real-time Search
+    const searchInput = document.getElementById('doc-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        articles.forEach(art => {
+          const text = art.textContent.toLowerCase();
+          art.style.display = text.includes(query) ? 'block' : 'none';
+        });
+      });
+    }
+  </script>
+</body>
+</html>
