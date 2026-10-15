@@ -1,64 +1,21 @@
 import * as THREE from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { XRApp, type RoomTheme, type WallDirection } from '@vxr/core';
+import {
+  serializeScene,
+  generateTSCode,
+  generateHTMLCode,
+  generateJSONCode,
+  highlightSyntax,
+  restoreSceneFromJSON,
+  validateSceneExport,
+} from './exportScene.js';
 
 // =============================================================================
 // Interfaces & Types
 // =============================================================================
-export interface RoomDef {
-  id: string;
-  name: string;
-  theme: RoomTheme;
-  dimensions: { width: number; depth: number; height: number };
-  center: [number, number, number];
-  doors: Array<{ wall: WallDirection; targetRoomId: string; width?: number; height?: number }>;
-  spawnPoint?: [number, number, number];
-}
-
-export interface ConnectionDef {
-  id: string;
-  fromRoomId: string;
-  fromWall: WallDirection;
-  toRoomId: string;
-  toWall: WallDirection;
-  width: number;
-  height: number;
-}
-
-export type StudioPropCategory = 'basic' | 'furniture' | 'architecture' | 'decoration' | 'exhibition' | 'model_glb';
-
-export interface StudioPropDef {
-  id: string;
-  roomId: string;
-  category: StudioPropCategory;
-  subtype: string;
-  name: string;
-  relX: number;
-  relY: number;
-  relZ: number;
-  rotX: number;
-  rotY: number;
-  rotZ: number;
-  scaleX: number;
-  scaleY: number;
-  scaleZ: number;
-  color: string;
-  text?: string;
-  intensity?: number;
-  textureUrl?: string;
-
-  // Exhibition & Interactive properties
-  imageUrl?: string;
-  videoUrl?: string;
-  videoId?: string;
-  linkUrl?: string;
-  frameWidth?: number;
-  frameHeight?: number;
-  interactionAction?: 'lightbox' | 'video_popup' | 'open_link' | 'none';
-
-  // External model data
-  modelUrl?: string;
-}
+import type { RoomDef, ConnectionDef, StudioPropCategory, StudioPropDef } from './exportScene.js';
+export type { RoomDef, ConnectionDef, StudioPropCategory, StudioPropDef };
 
 // =============================================================================
 // Application State
@@ -2339,29 +2296,100 @@ function restoreFromAutoSave(): boolean {
   }
 }
 
-// Export Modal
+// Export Modal & Code Generator
 const exportModal = document.getElementById('export-modal') as HTMLElement;
 const exportCodeDisplay = document.getElementById('export-code-display') as HTMLElement;
+const exportLineNumbers = document.getElementById('export-line-numbers') as HTMLElement;
+const exportScrollContainer = document.getElementById('export-scroll-container') as HTMLElement;
+const exportFilename = document.getElementById('export-filename') as HTMLElement;
+const exportLineCount = document.getElementById('export-line-count') as HTMLElement;
+const exportFileSize = document.getElementById('export-file-size') as HTMLElement;
+const exportDescText = document.getElementById('export-desc-text') as HTMLElement;
+const exportStatusTip = document.getElementById('export-status-tip') as HTMLElement;
+const lblCopyCode = document.getElementById('lbl-copy-code') as HTMLElement;
+const btnCopyCode = document.getElementById('btn-copy-code') as HTMLButtonElement;
+const btnDownloadFile = document.getElementById('btn-download-file') as HTMLButtonElement;
+
 let activeExportTab: 'ts' | 'html' | 'json' = 'ts';
+let currentExportRawCode = '';
 
 document.getElementById('btn-export')?.addEventListener('click', () => {
-  exportModal.classList.add('active');
+  exportModal?.classList.add('active');
   updateExportCode();
 });
 
 document.getElementById('btn-close-export')?.addEventListener('click', () => {
-  exportModal.classList.remove('active');
+  exportModal?.classList.remove('active');
 });
 
 function updateExportCode(): void {
+  const lblProjectName = document.getElementById('lbl-project-name');
+  const projectName = lblProjectName?.textContent?.replace('Proyecto:', '').trim() || 'Experiencia VXR Studio';
+
+  const serialized = serializeScene({
+    projectName,
+    rooms,
+    connections,
+    props,
+    environmentPreset: isNightTheme ? 'dark' : 'studio',
+    backgroundColor: isNightTheme ? '#080d1a' : '#1e293b',
+    fov: 50,
+    cameraPosition: [0, 16, 20],
+    cameraTarget: [0, 0, 0],
+  });
+
+  let rawCode = '';
+  let filename = '';
+  let desc = '';
+  let tip = '';
+
   if (activeExportTab === 'ts') {
-    exportCodeDisplay.textContent = generateTSCode();
+    rawCode = generateTSCode(serialized);
+    filename = 'vxr-experience.ts';
+    desc = 'Código TypeScript 100% ejecutable basado en @vxr/core con tipado estricto.';
+    tip = 'Requiere Node.js / Vite y las dependencias @vxr/core y three.';
   } else if (activeExportTab === 'html') {
-    exportCodeDisplay.textContent = generateHTMLCode();
+    rawCode = generateHTMLCode(serialized);
+    filename = 'index.html';
+    desc = 'Documento HTML5 autónomo con Three.js vía import map. Abre directamente en cualquier navegador.';
+    tip = '100% independiente: no requiere servidor de build ni bundler, sólo Three.js CDN.';
   } else {
-    exportCodeDisplay.textContent = JSON.stringify({ rooms, connections, props }, null, 2);
+    rawCode = generateJSONCode(serialized);
+    filename = 'vxr-scene.json';
+    desc = 'Especificación JSON declarativa de arquitectura, conexiones y objetos 3D.';
+    tip = 'Compatible con el importador de VXR Studio y el ScenarioManager de VXR Core.';
   }
+
+  currentExportRawCode = rawCode;
+
+  // Highlight syntax and update code display
+  if (exportCodeDisplay) {
+    exportCodeDisplay.innerHTML = highlightSyntax(rawCode, activeExportTab);
+  }
+
+  // Update line numbers gutter
+  const lines = rawCode.split('\n');
+  const lineNumbers = Array.from({ length: lines.length }, (_, i) => i + 1).join('\n');
+  if (exportLineNumbers) {
+    exportLineNumbers.textContent = lineNumbers;
+  }
+
+  // Update badges
+  if (exportFilename) exportFilename.textContent = filename;
+  if (exportLineCount) exportLineCount.textContent = `${lines.length} líneas`;
+  const bytes = new Blob([rawCode]).size;
+  const sizeText = bytes > 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${bytes} B`;
+  if (exportFileSize) exportFileSize.textContent = sizeText;
+  if (exportDescText) exportDescText.textContent = desc;
+  if (exportStatusTip) exportStatusTip.textContent = tip;
 }
+
+// Synchronize line numbers scroll with code viewport
+exportScrollContainer?.addEventListener('scroll', () => {
+  if (exportLineNumbers && exportScrollContainer) {
+    exportLineNumbers.scrollTop = exportScrollContainer.scrollTop;
+  }
+});
 
 document.querySelectorAll('[data-export-tab]').forEach((btn) => {
   btn.addEventListener('click', () => {
@@ -2372,28 +2400,150 @@ document.querySelectorAll('[data-export-tab]').forEach((btn) => {
   });
 });
 
-function generateTSCode(): string {
-  return `import { XRApp } from '@vxr/core';\n\nconst app = new XRApp({ container: document.body, enableVR: true });\nconst scenario = app.createScenario('VXR Experience');\n\n${JSON.stringify({ rooms, props }, null, 2)}\n\napp.start();`;
-}
+btnCopyCode?.addEventListener('click', async () => {
+  const codeToCopy = currentExportRawCode;
+  let copied = false;
 
-function generateHTMLCode(): string {
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>VXR Experience</title></head><body><script src="https://cdn.jsdelivr.net/npm/three@0.174.0/build/three.min.js"></script></body></html>`;
-}
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(codeToCopy);
+      copied = true;
+    } else {
+      throw new Error('Clipboard API no disponible');
+    }
+  } catch {
+    // Fallback using invisible textarea
+    const ta = document.createElement('textarea');
+    ta.value = codeToCopy;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.top = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      copied = document.execCommand('copy');
+    } catch {
+      copied = false;
+    }
+    document.body.removeChild(ta);
+  }
 
-document.getElementById('btn-copy-code')?.addEventListener('click', () => {
-  navigator.clipboard.writeText(exportCodeDisplay.textContent || '');
-  showToast('✓ Código copiado al portapapeles');
+  if (copied) {
+    if (lblCopyCode) lblCopyCode.textContent = '✓ ¡Copiado!';
+    showToast('✓ Código copiado al portapapeles');
+    setTimeout(() => {
+      if (lblCopyCode) lblCopyCode.textContent = '📋 Copiar Código';
+    }, 2000);
+  } else {
+    showToast('⚠ No se pudo copiar automáticamente. Selecciónalo manualmente.');
+  }
 });
 
-document.getElementById('btn-download-file')?.addEventListener('click', () => {
-  const content = exportCodeDisplay.textContent || '';
-  const filename = activeExportTab === 'ts' ? 'experiencia-vxr.ts' : activeExportTab === 'html' ? 'experiencia.html' : 'escenario.json';
-  const blob = new Blob([content], { type: 'text/plain' });
+btnDownloadFile?.addEventListener('click', () => {
+  const content = currentExportRawCode;
+  let filename = 'vxr-experience.ts';
+  let mimeType = 'text/typescript;charset=utf-8';
+
+  if (activeExportTab === 'html') {
+    filename = 'index.html';
+    mimeType = 'text/html;charset=utf-8';
+  } else if (activeExportTab === 'json') {
+    filename = 'vxr-scene.json';
+    mimeType = 'application/json;charset=utf-8';
+  }
+
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
+  a.href = url;
   a.download = filename;
+  document.body.appendChild(a);
   a.click();
-  showToast(`¡Archivo "${filename}" descargado!`);
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  showToast(`💾 Archivo "${filename}" descargado con éxito`);
+});
+
+// JSON Re-Import System
+const inputImportJson = document.getElementById('input-import-json') as HTMLInputElement | null;
+
+document.getElementById('btn-menu-import')?.addEventListener('click', () => {
+  dropdownMenu.classList.remove('show');
+  inputImportJson?.click();
+});
+
+inputImportJson?.addEventListener('change', (e) => {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    try {
+      const content = evt.target?.result as string;
+      const res = restoreSceneFromJSON(content);
+      if (!res.success || !res.data) {
+        showToast(`❌ Error al importar JSON: ${res.error || 'Archivo inválido'}`);
+        return;
+      }
+
+      const imported = res.data;
+      rooms = imported.rooms || [];
+      connections = imported.connections || [];
+
+      // Map exported props back to StudioPropDef
+      props = (imported.props || []).map((p) => {
+        const parentRoom = p.roomId ? rooms.find((r) => r.id === p.roomId) : (rooms[0] || null);
+        const cx = parentRoom ? parentRoom.center[0] : 0;
+        const cz = parentRoom ? parentRoom.center[2] : 0;
+
+        return {
+          id: p.id,
+          roomId: p.roomId,
+          category: p.category,
+          subtype: p.subtype,
+          name: p.name,
+          relX: p.relativePosition ? p.relativePosition[0] : (p.position[0] - cx),
+          relY: p.relativePosition ? p.relativePosition[1] : p.position[1],
+          relZ: p.relativePosition ? p.relativePosition[2] : (p.position[2] - cz),
+          rotX: p.rotationDeg ? p.rotationDeg[0] : 0,
+          rotY: p.rotationDeg ? p.rotationDeg[1] : 0,
+          rotZ: p.rotationDeg ? p.rotationDeg[2] : 0,
+          scaleX: p.scale ? p.scale[0] : 1,
+          scaleY: p.scale ? p.scale[1] : 1,
+          scaleZ: p.scale ? p.scale[2] : 1,
+          color: p.color || '#38bdf8',
+          text: p.text,
+          intensity: p.intensity,
+          textureUrl: p.textureUrl,
+          imageUrl: p.imageUrl,
+          videoUrl: p.videoUrl,
+          linkUrl: p.linkUrl,
+          modelUrl: p.modelUrl,
+        };
+      });
+
+      selectedRoomId = rooms.length > 0 ? rooms[0].id : null;
+      selectedPropId = null;
+
+      const lblProject = document.getElementById('lbl-project-name');
+      if (lblProject && imported.projectName) {
+        lblProject.textContent = `Proyecto: ${imported.projectName}`;
+      }
+
+      rebuildScenario();
+      app.audio.playWarp();
+      showToast(`✓ Proyecto "${imported.projectName}" importado (${rooms.length} salas, ${props.length} objetos)`);
+      triggerAutoSave();
+    } catch (err: any) {
+      showToast(`❌ Error al procesar archivo JSON: ${err.message}`);
+    } finally {
+      if (inputImportJson) inputImportJson.value = '';
+    }
+  };
+
+  reader.readAsText(file);
 });
 
 // Toast Helper

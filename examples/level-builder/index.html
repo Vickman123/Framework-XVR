@@ -1302,6 +1302,12 @@
       overflow: hidden;
       box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
     }
+    .modal-box.modal-box-export {
+      max-width: 1040px;
+      width: 92vw;
+      height: 86vh;
+      max-height: 860px;
+    }
     .modal-head {
       padding: 16px 20px;
       border-bottom: 1px solid var(--vxr-border);
@@ -1314,6 +1320,148 @@
     .modal-close { background: none; border: none; color: var(--vxr-text-dim); font-size: 18px; cursor: pointer; }
     .modal-close:hover { color: #fff; }
     .modal-body { padding: 18px 20px; overflow-y: auto; max-height: 70vh; }
+    .modal-body-export {
+      padding: 16px 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+      gap: 12px;
+      background: var(--vxr-bg-panel);
+    }
+    .export-desc-bar {
+      font-size: 12px;
+      color: var(--vxr-text-sub);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 4px;
+    }
+    .export-desc-text {
+      color: #94a3b8;
+      font-size: 12px;
+    }
+    .export-editor-window {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #040711;
+      border: 1px solid var(--vxr-border);
+      border-radius: 12px;
+      overflow: hidden;
+      min-height: 0;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.6);
+    }
+    .export-window-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px;
+      background: #090e1a;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .window-dots {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .window-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .window-dot.dot-red { background: #ef4444; }
+    .window-dot.dot-yellow { background: #f59e0b; }
+    .window-dot.dot-green { background: #10b981; }
+    .window-file-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: #cbd5e1;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 3px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .window-meta-badges {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .window-meta-badge {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: #64748b;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .code-editor-viewport {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+      overflow: hidden;
+      position: relative;
+    }
+    .code-line-numbers {
+      width: 46px;
+      padding: 14px 10px 14px 6px;
+      background: #03050c;
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      color: #475569;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      line-height: 1.6;
+      text-align: right;
+      user-select: none;
+      -webkit-user-select: none;
+      overflow: hidden;
+      white-space: pre;
+    }
+    .code-scroll-container {
+      flex: 1;
+      overflow: auto;
+      min-height: 0;
+      background: #040711;
+      padding: 14px 16px;
+      user-select: text !important;
+      -webkit-user-select: text !important;
+    }
+    .code-pre {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      border: none;
+      font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      tab-size: 2;
+      white-space: pre !important;
+      word-break: normal;
+      overflow-wrap: normal;
+      color: #e2e8f0;
+      user-select: text !important;
+      -webkit-user-select: text !important;
+    }
+    .code-pre * {
+      user-select: text !important;
+      -webkit-user-select: text !important;
+    }
+    /* Syntax Highlighting */
+    .hl-keyword { color: #c084fc; font-weight: 600; }
+    .hl-string  { color: #34d399; }
+    .hl-number  { color: #fbbf24; }
+    .hl-comment { color: #64748b; font-style: italic; }
+    .hl-tag     { color: #38bdf8; font-weight: 600; }
+    .hl-func    { color: #60a5fa; }
+
     .code-display {
       background: #040711;
       border: 1px solid var(--vxr-border);
@@ -1324,7 +1472,9 @@
       color: #38bdf8;
       max-height: 320px;
       overflow-y: auto;
-      white-space: pre-wrap;
+      white-space: pre;
+      user-select: text !important;
+      -webkit-user-select: text !important;
     }
     .modal-foot {
       padding: 14px 20px;
@@ -1602,6 +1752,7 @@
               <span>🔊</span> Alternar Sonido: <b id="lbl-sound-status">ON</b>
             </button>
           </div>
+          <input type="file" id="input-import-json" accept=".json,application/json" style="display: none;" />
         </div>
       </div>
     </header>
@@ -2321,28 +2472,66 @@
        MODAL 1: EXPORTAR PROYECTO
        ======================================================================= -->
   <div id="export-modal" class="modal-overlay">
-    <div class="modal-box">
+    <div class="modal-box modal-box-export">
       <div class="modal-head">
-        <span class="modal-title">🚀 Exportar Experiencia VXR Studio</span>
-        <button id="btn-close-export" class="modal-close">✕</button>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 20px;">🚀</span>
+          <div>
+            <span class="modal-title">Exportar Experiencia VXR Studio</span>
+            <div style="font-size: 11px; color: var(--vxr-text-dim); margin-top: 1px;">Genera código listo para producción y reutilizable en WebGL & WebXR</div>
+          </div>
+        </div>
+        <button id="btn-close-export" class="modal-close" title="Cerrar modal">✕</button>
       </div>
 
-      <div class="category-pills" style="padding: 12px 20px 0; background: var(--vxr-bg-panel);">
-        <button class="category-pill active" data-export-tab="ts">TypeScript / VXR</button>
-        <button class="category-pill" data-export-tab="html">HTML Autónomo (1 archivo)</button>
-        <button class="category-pill" data-export-tab="json">JSON Declarativo</button>
+      <div class="category-pills" style="padding: 12px 20px 8px; background: var(--vxr-bg-panel); border-bottom: 1px solid var(--vxr-border);">
+        <button class="category-pill active" data-export-tab="ts">📦 TypeScript / VXR Core</button>
+        <button class="category-pill" data-export-tab="html">🌐 HTML Autónomo (1 Archivo)</button>
+        <button class="category-pill" data-export-tab="json">📄 JSON Declarativo (Restaurable)</button>
       </div>
 
-      <div class="modal-body">
-        <pre><code id="export-code-display" class="code-display">Generando código...</code></pre>
+      <div class="modal-body modal-body-export">
+        <div class="export-desc-bar">
+          <span id="export-desc-text" class="export-desc-text">Código TypeScript ejecutable con arquitectura espacial y objetos de @vxr/core.</span>
+          <span id="export-badge-schema" class="window-meta-badge">Schema v1.0.0</span>
+        </div>
+
+        <div class="export-editor-window">
+          <div class="export-window-header">
+            <div class="window-dots">
+              <span class="window-dot dot-red"></span>
+              <span class="window-dot dot-yellow"></span>
+              <span class="window-dot dot-green"></span>
+            </div>
+            <div id="export-file-badge" class="window-file-badge">
+              <span>📄</span>
+              <span id="export-filename">experience.ts</span>
+            </div>
+            <div class="window-meta-badges">
+              <span id="export-line-count" class="window-meta-badge">0 líneas</span>
+              <span id="export-file-size" class="window-meta-badge">0 KB</span>
+            </div>
+          </div>
+
+          <div class="code-editor-viewport">
+            <div id="export-line-numbers" class="code-line-numbers">1</div>
+            <div id="export-scroll-container" class="code-scroll-container">
+              <pre class="code-pre"><code id="export-code-display" class="code-content">Generando código...</code></pre>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="modal-foot">
-        <button id="btn-copy-code" class="btn-top">
-          <span>📋 Copiar Código</span>
+        <div style="margin-right: auto; font-size: 11px; color: var(--vxr-text-dim); display: flex; align-items: center; gap: 6px;">
+          <span style="color: #38bdf8;">✓</span>
+          <span id="export-status-tip">Selecciona, copia o descarga este archivo para integrarlo en cualquier servidor web.</span>
+        </div>
+        <button id="btn-copy-code" class="btn-top" title="Copiar código al portapapeles">
+          <span id="lbl-copy-code">📋 Copiar Código</span>
         </button>
-        <button id="btn-download-file" class="btn-top btn-top-export">
-          <span>💾 Descargar Archivo</span>
+        <button id="btn-download-file" class="btn-top btn-top-export" title="Descargar archivo en disco local">
+          <span id="lbl-download-code">💾 Descargar Archivo</span>
         </button>
       </div>
     </div>
