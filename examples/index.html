@@ -2842,7 +2842,8 @@ app.<span class="fn">start</span>();
       scene.background = new THREE.Color(0x060913);
 
       const camera = new THREE.PerspectiveCamera(45, heroMount.clientWidth / heroMount.clientHeight, 0.1, 100);
-      camera.position.set(0, 1.2, 3.2);
+      // Elevated isometric-style perspective viewing complete building from distance
+      camera.position.set(7.5, 6.0, 9.5);
 
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
@@ -2854,33 +2855,45 @@ app.<span class="fn">start</span>();
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.05;
-      controls.autoRotate = true;
-      controls.autoRotateSpeed = 1.2;
-      controls.maxPolarAngle = Math.PI / 2 + 0.1;
+      controls.autoRotate = false;
+      controls.target.set(0, 0.2, 0);
+      controls.minDistance = 3.5;
+      controls.maxDistance = 25;
+      controls.maxPolarAngle = Math.PI / 2 - 0.05;
+      controls.update();
 
-      // Grid
-      const grid = new THREE.GridHelper(10, 20, 0x38bdf8, 0x1e293b);
+      // Cyber Grid Floor
+      const grid = new THREE.GridHelper(16, 24, 0x38bdf8, 0x142036);
       grid.position.y = -0.5;
       scene.add(grid);
 
-      // Lights
-      const ambLight = new THREE.AmbientLight(0xffffff, 0.8);
+      // Balanced Lighting
+      const ambLight = new THREE.AmbientLight(0xffffff, 0.9);
       scene.add(ambLight);
 
-      const dirLight = new THREE.DirectionalLight(0x38bdf8, 2.0);
-      dirLight.position.set(4, 6, 4);
+      const dirLight = new THREE.DirectionalLight(0x38bdf8, 2.2);
+      dirLight.position.set(6, 8, 5);
       dirLight.castShadow = true;
+      dirLight.shadow.mapSize.width = 1024;
+      dirLight.shadow.mapSize.height = 1024;
       scene.add(dirLight);
 
-      const pointLight = new THREE.PointLight(0xa855f7, 2.5, 10);
-      pointLight.position.set(-3, 2, -2);
+      // Neon purple accent light on building corner (matches Image 1)
+      const pointLight = new THREE.PointLight(0xc084fc, 3.5, 14);
+      pointLight.position.set(-2.6, 1.2, -1.2);
       scene.add(pointLight);
 
-      // Procedural Geometric Pedestal + Artifact
+      // Glow helper on point light
+      const glowDot = new THREE.Mesh(
+        new THREE.SphereGeometry(0.06, 16, 16),
+        new THREE.MeshBasicMaterial({ color: 0xffffff })
+      );
+      pointLight.add(glowDot);
+
+      // Procedural Geometric Pedestal + Artifact (fallback before model loads)
       const group = new THREE.Group();
       scene.add(group);
 
-      // Pedestal base
       const pedGeo = new THREE.CylinderGeometry(0.8, 0.9, 0.2, 32);
       const pedMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.3, metalness: 0.8 });
       const pedestal = new THREE.Mesh(pedGeo, pedMat);
@@ -2888,7 +2901,6 @@ app.<span class="fn">start</span>();
       pedestal.receiveShadow = true;
       group.add(pedestal);
 
-      // Center Artifact Mesh
       const artGeo = new THREE.IcosahedronGeometry(0.55, 1);
       const artMat = new THREE.MeshStandardMaterial({
         color: 0x0284c7,
@@ -2901,39 +2913,71 @@ app.<span class="fn">start</span>();
       artifact.castShadow = true;
       group.add(artifact);
 
-      // Try loading real model.glb if available
+      // Load model.glb and frame it cleanly with comfortable distance & padding
+      let activeLoadedModel = null;
       const gltfLoader = new GLTFLoader();
       gltfLoader.load('./model.glb', (gltf) => {
         artifact.visible = false;
+        pedestal.visible = false;
         const model = gltf.scene;
-        model.scale.set(0.6, 0.6, 0.6);
-        model.position.y = -0.3;
+        activeLoadedModel = model;
+
+        // Auto-center and normalize model dimensions
+        const bbox = new THREE.Box3().setFromObject(model);
+        const center = bbox.getCenter(new THREE.Vector3());
+        const size = bbox.getSize(new THREE.Vector3());
+
+        // Target dimension so building is completely framed with comfortable padding
+        const maxDim = Math.max(size.x, size.z);
+        const scale = 5.2 / (maxDim || 1);
+        model.scale.set(scale, scale, scale);
+
+        // Center on X and Z, and place base directly on the grid (y = -0.5)
+        model.position.x = -center.x * scale;
+        model.position.z = -center.z * scale;
+        model.position.y = -bbox.min.y * scale - 0.5;
+
         model.traverse(child => {
           if (child.isMesh) {
             child.castShadow = true;
             child.receiveShadow = true;
           }
         });
+
         group.add(model);
+
+        // Ensure camera frames complete model cleanly as in Image 1
+        camera.position.set(7.5, 6.0, 9.5);
+        controls.target.set(0, 0.2, 0);
+        controls.update();
       }, undefined, () => {
-        // Fallback to geometric artifact if model.glb fails
         artifact.visible = true;
+        pedestal.visible = true;
       });
 
       // Controls buttons
       const btnWireframe = document.getElementById('btn-hero-wireframe');
       if (btnWireframe) {
+        let isWireframe = false;
         btnWireframe.addEventListener('click', () => {
-          artMat.wireframe = !artMat.wireframe;
-          btnWireframe.classList.toggle('active', artMat.wireframe);
+          isWireframe = !isWireframe;
+          artMat.wireframe = isWireframe;
+          if (activeLoadedModel) {
+            activeLoadedModel.traverse(c => {
+              if (c.isMesh && c.material) {
+                c.material.wireframe = isWireframe;
+              }
+            });
+          }
+          btnWireframe.classList.toggle('active', isWireframe);
         });
       }
 
       let lightPresetIdx = 0;
       const lightPresets = [
-        { name: 'Luz: Estudio', dir: 0x38bdf8, point: 0xa855f7, amb: 0.8 },
-        { name: 'Luz: Cyber', dir: 0x06b6d4, point: 0xf43f5e, amb: 0.5 },
-        { name: 'Luz: Atardecer', dir: 0xfb923c, point: 0xc084fc, amb: 0.7 }
+        { name: 'Luz: Estudio', dir: 0x38bdf8, point: 0xc084fc, amb: 0.9 },
+        { name: 'Luz: Cyber', dir: 0x06b6d4, point: 0xf43f5e, amb: 0.6 },
+        { name: 'Luz: Atardecer', dir: 0xfb923c, point: 0xd946ef, amb: 0.8 }
       ];
 
       const btnLight = document.getElementById('btn-hero-light');
@@ -2951,8 +2995,8 @@ app.<span class="fn">start</span>();
       const btnReset = document.getElementById('btn-hero-reset');
       if (btnReset) {
         btnReset.addEventListener('click', () => {
-          camera.position.set(0, 1.2, 3.2);
-          controls.target.set(0, 0, 0);
+          camera.position.set(7.5, 6.0, 9.5);
+          controls.target.set(0, 0.2, 0);
           controls.update();
         });
       }
