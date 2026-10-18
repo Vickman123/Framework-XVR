@@ -1,21 +1,22 @@
 <p align="center">
-  <img src="./vxr-logo.png" alt="VXR Framework" width="560" />
+  <img src="./vxr-logo.png" alt="VXR / XVR Framework" width="560" />
 </p>
 
-# 🌌 VXR — High-Level WebXR & 3D Interactive Framework for Three.js
+# 🌌 VXR / XVR — High-Level WebXR & 3D Interactive Framework for Three.js
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg?logo=typescript)](https://www.typescriptlang.org/)
 [![Three.js](https://img.shields.io/badge/Three.js-r174-black.svg?logo=three.js)](https://threejs.org/)
 [![WebXR](https://img.shields.io/badge/WebXR-Device%20API-orange.svg)](https://immersiveweb.dev/)
 [![Meta Quest](https://img.shields.io/badge/Meta%20Quest-2%20%7C%203%20%7C%203S%20%7C%20Pro-0081fb.svg?logo=meta)](https://www.meta.com/quest/)
+[![Official Website](https://img.shields.io/badge/Website-vxrframework.space-00F0FF?style=flat&logo=googlechrome&logoColor=black)](https://vxrframework.space)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> **VXR (Virtual & Extended Reality Framework)** es una capa de abstracción de alto nivel en TypeScript construida **sobre Three.js y la WebXR Device API**.
+> **VXR / XVR (Virtual & Extended Reality Framework)** es una capa de abstracción de alto nivel en TypeScript construida **sobre Three.js y la WebXR Device API**.
 >
 > Diseñada para crear visualizadores arquitectónicos, simuladores técnicos interactivos y videojuegos inmersivos en minutos, eliminando más del **70% del código repetitivo** de configuración de WebGL, auto-grounding y mandos de realidad virtual.
 
-🌐 **Demo & Catálogo Interactivo en Vivo**:  
-👉 **[https://vickman123.github.io/Framework-XVR/](https://vickman123.github.io/Framework-XVR/)**
+🌐 **Sitio Web Oficial & Catálogo Interactivo en Vivo**:  
+👉 **[https://vxrframework.space](https://vxrframework.space)** *(o https://vickman123.github.io/Framework-XVR/)*
 
 ---
 
@@ -264,7 +265,7 @@ El repositorio incluye un catálogo interactivo con **7 experiencias en vivo** l
 | **👾 CyberStrike Arcade XR** | Caso de Estudio | Three.js, WebXR | Videojuego arcade 3D FPS de 90 FPS optimizado para Meta Quest. |
 | **💻 Simulador de Ensamble Técnico** | Caso de Estudio | Three.js, WebXR | Simulador interactivo de ensamble, mantenimiento y tareas guiadas. |
 
-🌐 **Prueba el catálogo en vivo**: [https://vickman123.github.io/Framework-XVR/](https://vickman123.github.io/Framework-XVR/)
+🌐 **Prueba el catálogo en vivo**: [https://vxrframework.space](https://vxrframework.space) *(o https://vickman123.github.io/Framework-XVR/)*
 
 ---
 
